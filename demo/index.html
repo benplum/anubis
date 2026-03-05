@@ -156,9 +156,6 @@
     <div class="demo-grid">
       <section class="demo-card">
         <h2>Preset Layouts</h2>
-        <p>
-          Active preset: <strong id="activePreset"></strong>
-        </p>
         <div class="demo-actions">
           <a href="?preset=default" class="button">Default preset</a>
           <a href="?preset=dialog-first" class="button">Dialog-first preset</a>
@@ -197,9 +194,28 @@
           console.log(label, payload || '');
         };
 
+        const logStateOnLoad = () => {
+          if (!window.Anubis || typeof window.Anubis.getState !== 'function') {
+            return false;
+          }
+          pushLog('state:on-load', window.Anubis.getState());
+          return true;
+        };
+
         document.addEventListener('consent:ready', (e) => pushLog('ready', e.detail));
         document.addEventListener('consent:changed', (e) => pushLog('changed', e.detail));
         document.addEventListener('consent:revoked', (e) => pushLog('revoked', e.detail));
+
+        if (!logStateOnLoad()) {
+          let attempts = 0;
+          const maxAttempts = 40;
+          const intervalId = setInterval(() => {
+            attempts += 1;
+            if (logStateOnLoad() || attempts >= maxAttempts) {
+              clearInterval(intervalId);
+            }
+          }, 50);
+        }
 
         document.getElementById('showState').addEventListener('click', () => {
           if (!window.Anubis) {

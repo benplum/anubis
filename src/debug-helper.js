@@ -84,15 +84,24 @@
         padding: 8px 10px;
         border-bottom: 1px solid #334155;
       }
-      .anubis-debug-label {
-        font-size: 11px;
-        opacity: 0.85;
-        margin-bottom: 6px;
-      }
       .anubis-debug-tokens {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
         gap: 6px;
+      }
+      .anubis-debug-state-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 6px 0;
+      }
+      .anubis-debug-state-row + .anubis-debug-state-row {
+        border-top: 1px solid #334155;
+      }
+      .anubis-debug-state-key {
+        font-size: 11px;
+        color: #e2e8f0;
+        word-break: break-word;
       }
       .anubis-debug-token {
         font-size: 11px;
@@ -175,7 +184,6 @@
         <button type="button" class="anubis-debug-tab" role="tab" aria-selected="false" data-anubis-debug-tab="datalayer">DataLayer</button>
       </div>
       <section class="anubis-debug-section" data-anubis-debug="state-wrap">
-        <div class="anubis-debug-label">Internal Consent State</div>
         <div class="anubis-debug-tokens" data-anubis-debug="tokens"></div>
       </section>
       <section class="anubis-debug-body" data-anubis-debug="consent-log" hidden></section>
@@ -208,7 +216,7 @@
     function renderTokens(state) {
       const entries = Object.entries(state || {});
       if (!entries.length) {
-        tokensNode.innerHTML = '<span class="anubis-debug-token anubis-debug-token--denied">No consent state yet</span>';
+        tokensNode.innerHTML = '<div class="anubis-debug-state-row"><span class="anubis-debug-state-key">No consent state yet</span></div>';
         return;
       }
 
@@ -216,7 +224,7 @@
         .map(([key, value]) => {
           const granted = value === 'granted';
           const klass = granted ? 'anubis-debug-token--granted' : 'anubis-debug-token--denied';
-          return `<span class="anubis-debug-token ${klass}">${key}: ${granted ? 'granted' : 'denied'}</span>`;
+          return `<div class="anubis-debug-state-row"><span class="anubis-debug-state-key">${key}</span><span class="anubis-debug-token ${klass}">${granted ? 'granted' : 'denied'}</span></div>`;
         })
         .join('');
     }
