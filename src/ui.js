@@ -17,15 +17,18 @@ function categoryRowsMarkup(options) {
       const label = escapeHtml(text.label || name);
       const description = escapeHtml(text.description || '');
       const disabled = name === 'necessary' ? 'disabled aria-disabled="true" checked' : '';
-      return `<div class="anubis-category-row">
-  <div class="anubis-category-text">
-    <label class="anubis-category-label">
+      return `<details class="anubis-category-row" data-anubis-category-row="${escapeHtml(name)}">
+  <summary class="anubis-category-summary">
+    <span class="anubis-category-summary-left">
+      <span class="anubis-category-arrow" aria-hidden="true"></span>
+      <span class="anubis-category-title">${label}</span>
+    </span>
+    <label class="anubis-category-switch" data-anubis-toggle-wrap="${escapeHtml(name)}">
       <input class="anubis-toggle" type="checkbox" data-anubis-category="${escapeHtml(name)}" ${disabled}>
-      ${label}
     </label>
-    ${description ? `<p class="anubis-category-description">${description}</p>` : ''}
-  </div>
-</div>`;
+  </summary>
+  ${description ? `<p class="anubis-category-description">${description}</p>` : ''}
+</details>`;
     })
     .join('');
 }
@@ -86,6 +89,12 @@ export function renderConsentUI(options, hooks) {
   const toggleMap = {};
   Object.keys(options.categories).forEach((name) => {
     toggleMap[name] = container.querySelector(`input[data-anubis-category="${name}"]`);
+  });
+
+  container.querySelectorAll('.anubis-category-switch, .anubis-toggle').forEach((node) => {
+    node.addEventListener('click', (event) => {
+      event.stopPropagation();
+    });
   });
 
   if (cancelButton) {

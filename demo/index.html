@@ -109,6 +109,7 @@
           <button data-consent-trigger="accept-all">Accept All</button>
           <button data-consent-trigger="reject-all">Reject All</button>
           <button id="showState">Log Current State</button>
+          <button id="resetAnubis">Reset Demo</button>
         </div>
       </section>
 
@@ -137,6 +138,47 @@
             return;
           }
           pushLog('state', window.Anubis.getState());
+        });
+
+        const deleteCookie = (name) => {
+          const host = location.hostname || '';
+          const hostParts = host.split('.').filter(Boolean);
+          const domains = [''];
+          for (let i = 0; i < hostParts.length; i += 1) {
+            domains.push(`.${hostParts.slice(i).join('.')}`);
+            domains.push(hostParts.slice(i).join('.'));
+          }
+          Array.from(new Set(domains)).forEach((domain) => {
+            const domainPart = domain ? `; domain=${domain}` : '';
+            document.cookie = `${name}=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/${domainPart}`;
+            document.cookie = `${name}=; Max-Age=0; Path=/${domainPart}`;
+          });
+        };
+
+        document.getElementById('resetAnubis').addEventListener('click', () => {
+          const storageKey = (window.AnubisOptions && window.AnubisOptions.storageKey) || 'anubis-consent';
+
+          try {
+            localStorage.removeItem(storageKey);
+            localStorage.removeItem('anibus-consent');
+            localStorage.removeItem('anubis-consent');
+            localStorage.removeItem('demo_preferences');
+          } catch (_error) {
+          }
+
+          deleteCookie(storageKey);
+          deleteCookie('anibus-consent');
+          deleteCookie('anubis-consent');
+          deleteCookie('demo_analytics');
+          deleteCookie('demo_marketing');
+
+          pushLog('reset', {
+            cleared: [storageKey, 'anibus-consent', 'anubis-consent', 'demo_preferences', 'demo_analytics', 'demo_marketing'],
+          });
+
+          setTimeout(() => {
+            location.reload();
+          }, 150);
         });
       }());
     </script>
