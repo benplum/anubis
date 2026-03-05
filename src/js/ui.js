@@ -9,25 +9,37 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-function categoryRowsMarkup(options) {
+function toIdFragment(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'item';
+}
+
+function categoryRowsMarkup(options, ids) {
   const categoryNames = Object.keys(options.categories);
   return categoryNames
     .map((name) => {
+      const safeName = toIdFragment(name);
+      const rowId = `${ids.prefix}-cat-${safeName}`;
+      const titleId = `${rowId}-title`;
+      const descriptionId = `${rowId}-description`;
       const text = (options.strings.categories && options.strings.categories[name]) || {};
       const label = escapeHtml(text.label || name);
       const description = escapeHtml(text.description || '');
       const disabled = name === 'necessary' ? 'disabled aria-disabled="true" checked' : '';
-      return `<details class="anubis-category-row" data-anubis-category-row="${escapeHtml(name)}">
+      const describedBy = description ? ` aria-describedby="${descriptionId}"` : '';
+      return `<details class="anubis-category-row" data-anubis-category-row="${escapeHtml(name)}" id="${rowId}">
   <summary class="anubis-category-summary">
     <span class="anubis-category-summary-left">
       <span class="anubis-category-arrow" aria-hidden="true"></span>
-      <span class="anubis-category-title">${label}</span>
+      <span class="anubis-category-title" id="${titleId}">${label}</span>
     </span>
     <label class="anubis-category-switch" data-anubis-toggle-wrap="${escapeHtml(name)}">
-      <input class="anubis-toggle" type="checkbox" data-anubis-category="${escapeHtml(name)}" ${disabled}>
+      <input class="anubis-toggle" type="checkbox" data-anubis-category="${escapeHtml(name)}" aria-labelledby="${titleId}"${describedBy} ${disabled}>
     </label>
   </summary>
-  ${description ? `<p class="anubis-category-description">${description}</p>` : ''}
+  ${description ? `<p class="anubis-category-description" id="${descriptionId}">${description}</p>` : ''}
 </details>`;
     })
     .join('');
@@ -120,28 +132,38 @@ export function renderConsentUI(options, hooks) {
   const strings = options.strings;
   const container = document.createElement('div');
   container.className = 'anubis-root';
+  const idSeed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const ids = {
+    prefix: `anubis-${idSeed}`,
+    bannerTitle: `anubis-banner-title-${idSeed}`,
+    bannerDescription: `anubis-banner-description-${idSeed}`,
+    dialogTitle: `anubis-dialog-title-${idSeed}`,
+    dialogDescription: `anubis-dialog-description-${idSeed}`,
+  };
+  const bannerDescribedBy = strings.bannerDescription ? ` aria-describedby="${ids.bannerDescription}"` : '';
+  const dialogDescribedBy = strings.dialogDescription ? ` aria-describedby="${ids.dialogDescription}"` : '';
 
-  container.innerHTML = `<section class="anubis-banner" role="region" aria-label="${escapeHtml(strings.bannerTitle || 'Privacy choices')}">
+  container.innerHTML = `<section class="anubis-banner" role="region" aria-labelledby="${ids.bannerTitle}"${bannerDescribedBy}>
   <div class="anubis-content">
-    <h2 class="anubis-title">${escapeHtml(strings.bannerTitle || '')}</h2>
-    ${strings.bannerDescription ? `<p class="anubis-description">${escapeHtml(strings.bannerDescription)}</p>` : ''}
+    <h2 class="anubis-title" id="${ids.bannerTitle}">${escapeHtml(strings.bannerTitle || 'Privacy choices')}</h2>
+    ${strings.bannerDescription ? `<p class="anubis-description" id="${ids.bannerDescription}">${escapeHtml(strings.bannerDescription)}</p>` : ''}
     ${policyLinkMarkup(strings, options.links || {})}
   </div>
   <div class="anubis-actions">
     ${bannerActionsMarkup(options, strings)}
   </div>
 </section>
-<dialog class="anubis-dialog" aria-label="${escapeHtml(strings.dialogTitle || 'Consent preferences')}">
+<dialog class="anubis-dialog" aria-labelledby="${ids.dialogTitle}"${dialogDescribedBy} aria-modal="true">
   <form class="anubis-form" method="dialog">
     <div class="anubis-dialog-head">
-      <h3 class="anubis-dialog-title">${escapeHtml(strings.dialogTitle || '')}</h3>
+      <h3 class="anubis-dialog-title" id="${ids.dialogTitle}" tabindex="-1">${escapeHtml(strings.dialogTitle || 'Consent preferences')}</h3>
       <div class="anubis-dialog-head-actions">
         ${dialogHeaderActionsMarkup(options, strings)}
       </div>
     </div>
-    ${strings.dialogDescription ? `<p class="anubis-dialog-description">${escapeHtml(strings.dialogDescription)}</p>` : ''}
+    ${strings.dialogDescription ? `<p class="anubis-dialog-description" id="${ids.dialogDescription}">${escapeHtml(strings.dialogDescription)}</p>` : ''}
     <div class="anubis-categories">
-      ${categoryRowsMarkup(options)}
+      ${categoryRowsMarkup(options, ids)}
     </div>
     <div class="anubis-dialog-actions">
       ${dialogFooterActionsMarkup(options, strings)}
@@ -173,9 +195,9 @@ export function renderConsentUI(options, hooks) {
     }
     lastFocus = document.activeElement;
     dialog.showModal();
-    const firstToggle = dialog.querySelector('input[data-anubis-category]:not([disabled])');
-    if (firstToggle) {
-      firstToggle.focus();
+    const titleNode = dialog.querySelector('.anubis-dialog-title');
+    if (titleNode && typeof titleNode.focus === 'function') {
+      titleNode.focus();
     }
   }
 

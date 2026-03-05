@@ -67,3 +67,51 @@
   border-color: var(--anubis-border);
   border-radius: 8px;
 }
+
+.anubis-toggle {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid #94a3b8;
+  background: #e2e8f0;
+  position: relative;
+  margin: 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.anubis-toggle::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.anubis-toggle:checked {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.anubis-toggle:checked::after {
+  transform: translateX(16px);
+}
+
+.anubis-toggle:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
+}
+
+.anubis-toggle:disabled {
+  cursor: default;
+  background: #dbeafe;
+  border-color: #93c5fd;
+  opacity: 0.95;
+}
