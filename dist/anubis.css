@@ -1,0 +1,120 @@
+:root {
+  --anubis-font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --anubis-bg: #ffffff;
+  --anubis-fg: #1f2937;
+  --anubis-muted: #6b7280;
+  --anubis-border: #d1d5db;
+  --anubis-primary: #111827;
+  --anubis-primary-contrast: #ffffff;
+  --anubis-overlay: rgba(0, 0, 0, 0.48);
+  --anubis-radius: 10px;
+  --anubis-space: 12px;
+  --anubis-z: 99999;
+}
+
+.anubis-root {
+  font-family: var(--anubis-font-family);
+  color: var(--anubis-fg);
+}
+
+.anubis-banner {
+  position: fixed;
+  inset: auto 16px 16px;
+  max-width: 460px;
+  padding: calc(var(--anubis-space) + 2px);
+  border: 1px solid var(--anubis-border);
+  border-radius: var(--anubis-radius);
+  background: var(--anubis-bg);
+  box-sizing: border-box;
+  z-index: var(--anubis-z);
+}
+
+.anubis-title {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.anubis-description,
+.anubis-dialog-description,
+.anubis-category-description {
+  margin: 0 0 8px;
+  color: var(--anubis-muted);
+  font-size: 0.9rem;
+}
+
+.anubis-actions,
+.anubis-dialog-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.anubis-btn {
+  border: 1px solid var(--anubis-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.anubis-btn-primary {
+  background: var(--anubis-primary);
+  color: var(--anubis-primary-contrast);
+  border-color: var(--anubis-primary);
+}
+
+.anubis-btn-link {
+  text-decoration: underline;
+  border: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.anubis-link {
+  display: inline-block;
+  margin: 0 0 10px;
+  color: inherit;
+}
+
+.anubis-dialog {
+  border: 1px solid var(--anubis-border);
+  border-radius: var(--anubis-radius);
+  width: min(560px, calc(100vw - 24px));
+  padding: 16px;
+}
+
+.anubis-dialog::backdrop {
+  background: var(--anubis-overlay);
+}
+
+.anubis-form {
+  margin: 0;
+}
+
+.anubis-dialog-title {
+  margin: 0 0 8px;
+}
+
+.anubis-categories {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.anubis-category-row {
+  border: 1px solid var(--anubis-border);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.anubis-category-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.anubis-toggle {
+  margin: 0;
+}

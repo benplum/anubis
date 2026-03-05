@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Anubis Consent Demo</title>
+    <style>
+      :root {
+        --anubis-primary: #0f172a;
+        --anubis-primary-contrast: #ffffff;
+        --anubis-bg: #ffffff;
+        --anubis-fg: #0f172a;
+        --anubis-border: #cbd5e1;
+        --anubis-muted: #475569;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+
+      h1 {
+        margin-top: 0;
+      }
+
+      .demo-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      }
+
+      .demo-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 16px;
+      }
+
+      .demo-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+
+      pre {
+        max-height: 240px;
+        overflow: auto;
+        background: #0b1020;
+        color: #e2e8f0;
+        padding: 12px;
+        border-radius: 8px;
+      }
+    </style>
+
+    <script>
+      window.AnubisOptions = {
+        consentVersion: 1,
+        defaultConsentMode: 'opt-out',
+        cookieDays: 180,
+        links: {
+          privacyPolicyUrl: '#privacy',
+          cookiePolicyUrl: '#cookies'
+        },
+        i18n: {
+          locales: {
+            en: {
+              bannerTitle: 'Privacy choices',
+              bannerDescription: 'Control consent categories for this demo page.',
+              acceptAll: 'Accept all',
+              rejectAll: 'Reject all',
+              manage: 'Manage',
+              dialogTitle: 'Consent settings',
+              dialogDescription: 'Enable categories you want to allow.',
+              save: 'Save',
+              cancel: 'Cancel',
+              policyLabel: 'Read policy',
+              categories: {
+                necessary: { label: 'Necessary', description: 'Always required.' },
+                marketing: { label: 'Marketing', description: 'Ads and related storage.' },
+                analytics: { label: 'Analytics', description: 'Measurement scripts.' },
+                preferences: { label: 'Preferences', description: 'Personalization settings.' }
+              }
+            }
+          }
+        }
+      };
+    </script>
+    <script src="../dist/anubis.iife.js"></script>
+  </head>
+  <body>
+    <h1>Anubis Consent Demo</h1>
+
+    <div class="demo-grid">
+      <section class="demo-card">
+        <h2>Developer Triggers</h2>
+        <div class="demo-actions">
+          <button data-consent-trigger="open">Open Preferences</button>
+          <button data-consent-trigger="accept-all">Accept All</button>
+          <button data-consent-trigger="reject-all">Reject All</button>
+          <button id="showState">Log Current State</button>
+        </div>
+      </section>
+
+      <section class="demo-card">
+        <h2>Console Events</h2>
+        <pre id="log"></pre>
+      </section>
+    </div>
+
+    <script>
+      (function () {
+        const logNode = document.getElementById('log');
+        const pushLog = (label, payload) => {
+          const line = `[${new Date().toLocaleTimeString()}] ${label} ${payload ? JSON.stringify(payload) : ''}`;
+          logNode.textContent = `${line}\n${logNode.textContent}`;
+          console.log(label, payload || '');
+        };
+
+        document.addEventListener('consent:ready', (e) => pushLog('ready', e.detail));
+        document.addEventListener('consent:changed', (e) => pushLog('changed', e.detail));
+        document.addEventListener('consent:revoked', (e) => pushLog('revoked', e.detail));
+
+        document.getElementById('showState').addEventListener('click', () => {
+          if (!window.Anubis) {
+            pushLog('state', { error: 'Anubis API not ready' });
+            return;
+          }
+          pushLog('state', window.Anubis.getState());
+        });
+      }());
+    </script>
+
+    <script data-consent-category="analytics" src="./scripts/analytics.js"></script>
+    <script data-consent-category="marketing" src="./scripts/marketing.js"></script>
+    <script data-consent-category="preferences" src="./scripts/preferences.js"></script>
+  </body>
+</html>

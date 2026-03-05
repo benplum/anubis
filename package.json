@@ -1,0 +1,16 @@
+{
+  "name": "anubis-consent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/anubis.iife.js",
+  "module": "dist/anubis.esm.js",
+  "scripts": {
+    "build": "node build.config.js",
+    "build:esm": "esbuild src/index.js --bundle --format=esm --outfile=dist/anubis.esm.js --minify",
+    "build:iife": "esbuild src/index.js --bundle --format=iife --global-name=AnubisConsent --outfile=dist/anubis.iife.js --minify"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.1"
+  }
+}
