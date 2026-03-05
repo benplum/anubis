@@ -217,8 +217,9 @@
         };
       }
     </script>
-    <script src="../dist/anubis.js"></script>
-    <script src="../dist/anubis-debug.js"></script>
+    <link id="anubisTheme" rel="stylesheet" href="../dist/css/theme-light.css" />
+    <script src="../dist/js/anubis.js"></script>
+    <script src="../dist/js/anubis-debug.js"></script>
   </head>
   <body>
     <h1>Consent Demo</h1>
@@ -231,6 +232,15 @@
           <a href="?preset=dialog-first" class="button">Dialog-first preset</a>
           <a href="?preset=accept-only" class="button">Accept-only preset</a>
           <a href="?preset=opt-out-except-eu-ca" class="button">Opt-out except EU/CA</a>
+        </div>
+      </section>
+
+      <section class="demo-card">
+        <h2>Theme</h2>
+        <div class="demo-actions">
+          <button type="button" data-theme="none">None</button>
+          <button type="button" data-theme="light">Light</button>
+          <button type="button" data-theme="dark">Dark</button>
         </div>
       </section>
 
@@ -257,6 +267,39 @@
         //   new URLSearchParams(window.location.search).get('preset') || 'default';
         const active = document.querySelector(`[href*="preset=${preset}"]`);
         active.classList.add('active');
+
+        const params = new URLSearchParams(window.location.search);
+        const allowedThemes = new Set(['none', 'light', 'dark']);
+        const initialTheme = params.get('theme');
+        let theme = allowedThemes.has(initialTheme) ? initialTheme : 'light';
+        const themeLink = document.getElementById('anubisTheme');
+        const themeButtons = Array.from(document.querySelectorAll('[data-theme]'));
+
+        const applyTheme = (nextTheme) => {
+          if (!allowedThemes.has(nextTheme)) {
+            return;
+          }
+          theme = nextTheme;
+          if (theme === 'none') {
+            themeLink.removeAttribute('href');
+          } else {
+            themeLink.setAttribute('href', `../dist/css/theme-${theme}.css`);
+          }
+          params.set('theme', theme);
+          history.replaceState(null, '', `${location.pathname}?${params.toString()}`);
+          themeButtons.forEach((button) => {
+            const isActive = button.getAttribute('data-theme') === theme;
+            button.classList.toggle('active', isActive);
+          });
+        };
+
+        themeButtons.forEach((button) => {
+          button.addEventListener('click', () => {
+            applyTheme(button.getAttribute('data-theme'));
+          });
+        });
+
+        applyTheme(theme);
 
         const logNode = document.getElementById('log');
         const pushLog = (label, payload) => {

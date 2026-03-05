@@ -1,0 +1,69 @@
+:root {
+  --anubis-font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --anubis-bg: #ffffff;
+  --anubis-fg: #1f2937;
+  --anubis-muted: #6b7280;
+  --anubis-border: #d1d5db;
+  --anubis-primary: #111827;
+  --anubis-primary-contrast: #ffffff;
+  --anubis-overlay: rgba(0, 0, 0, 0.48);
+  --anubis-radius: 10px;
+  --anubis-space: 12px;
+  --anubis-z: 99999;
+}
+
+.anubis-root {
+  font-family: var(--anubis-font-family);
+  color: var(--anubis-fg);
+}
+
+.anubis-banner {
+  border-color: var(--anubis-border);
+  border-radius: var(--anubis-radius);
+  background: var(--anubis-bg);
+  color: var(--anubis-fg);
+}
+
+.anubis-description,
+.anubis-dialog-description,
+.anubis-category-description {
+  color: var(--anubis-muted);
+}
+
+.anubis-btn {
+  border-color: var(--anubis-border);
+  background: transparent;
+  color: inherit;
+}
+
+.anubis-btn-primary {
+  background: var(--anubis-primary);
+  color: var(--anubis-primary-contrast);
+  border-color: var(--anubis-primary);
+}
+
+.anubis-link {
+  color: inherit;
+}
+
+.anubis-dialog {
+  border-color: var(--anubis-border);
+  border-radius: var(--anubis-radius);
+  background: var(--anubis-bg);
+  color: var(--anubis-fg);
+}
+
+.anubis-dialog::backdrop {
+  background: var(--anubis-overlay);
+}
+
+.anubis-btn-icon {
+  border-color: var(--anubis-border);
+  background: transparent;
+  color: inherit;
+}
+
+.anubis-category-row {
+  border-color: var(--anubis-border);
+  border-radius: 8px;
+}
