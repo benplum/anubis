@@ -115,15 +115,39 @@ export async function initAnubis(rawOptions = {}) {
   }
 
   const scriptGate = createScriptGate(options, (category) => isCategoryAllowed(state, options, category));
-  const ui = renderConsentUI(options, {
-    onSave: (choices) => {
-      commitState(applyCategoryChoices(state, choices, options), 'dialog');
-    },
-    onAcceptAll: () => {
+  function handleAction(action, meta = {}) {
+    if (action === 'open') {
+      ui.openDialog();
+      return;
+    }
+    if (action === 'close') {
+      ui.closeDialog();
+      return;
+    }
+    if (action === 'accept-all') {
       acceptAll();
-    },
-    onRejectAll: () => {
+      return;
+    }
+    if (action === 'reject-all') {
       rejectAll();
+      return;
+    }
+    if (action === 'save') {
+      const choices = typeof meta.readCategoryChoices === 'function' ? meta.readCategoryChoices() : ui.readCategoryChoices();
+      commitState(applyCategoryChoices(state, choices, options), meta.source === 'dialog' ? 'dialog' : 'trigger-save');
+      return;
+    }
+
+    emitConsentEvent('consent:action', {
+      action,
+      source: meta.source || 'ui',
+      state,
+    });
+  }
+
+  const ui = renderConsentUI(options, {
+    onAction: (action, meta) => {
+      handleAction(action, meta);
     },
   });
 
@@ -181,21 +205,7 @@ export async function initAnubis(rawOptions = {}) {
   }
 
   const unbindTriggers = bindConsentTriggers((action) => {
-    if (action === 'open') {
-      ui.openDialog();
-      return;
-    }
-    if (action === 'accept-all') {
-      acceptAll();
-      return;
-    }
-    if (action === 'reject-all') {
-      rejectAll();
-      return;
-    }
-    if (action === 'save') {
-      commitState(applyCategoryChoices(state, ui.readCategoryChoices(), options), 'trigger-save');
-    }
+    handleAction(action, { source: 'trigger' });
   });
 
   ui.updateFromState(state);

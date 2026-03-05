@@ -19,6 +19,25 @@ const EN_STRINGS = {
   },
 };
 
+const VALID_ACTION_IDS = new Set(['open', 'accept-all', 'reject-all', 'save', 'close']);
+const VALID_ACTION_VARIANTS = new Set(['primary', 'secondary', 'link', 'icon']);
+
+const DEFAULT_ACTIONS = {
+  banner: [
+    { id: 'reject-all', variant: 'secondary', labelKey: 'rejectAll' },
+    { id: 'accept-all', variant: 'primary', labelKey: 'acceptAll' },
+    { id: 'open', variant: 'link', labelKey: 'manage' },
+  ],
+  dialog: {
+    header: [{ id: 'close', variant: 'icon', labelKey: 'cancel', closeDialog: true }],
+    footer: [
+      { id: 'reject-all', variant: 'secondary', labelKey: 'rejectAll', closeDialog: true },
+      { id: 'accept-all', variant: 'secondary', labelKey: 'acceptAll', closeDialog: true },
+      { id: 'save', variant: 'primary', labelKey: 'save', closeDialog: true },
+    ],
+  },
+};
+
 export const DEFAULT_OPTIONS = {
   version: '1.0.0',
   consentVersion: 1,
@@ -55,6 +74,7 @@ export const DEFAULT_OPTIONS = {
     privacyPolicyUrl: '',
     cookiePolicyUrl: '',
   },
+  actions: DEFAULT_ACTIONS,
 };
 
 function isObject(value) {
@@ -77,6 +97,81 @@ function mergeDeep(target, source) {
     out[key] = sourceValue;
   });
   return out;
+}
+
+function normalizeAction(item, fallback) {
+  const input = isObject(item) ? item : {};
+  const candidateId = typeof input.id === 'string' ? input.id.trim() : '';
+  const id = VALID_ACTION_IDS.has(candidateId) ? candidateId : fallback.id;
+  if (!id || !VALID_ACTION_IDS.has(id)) {
+    return null;
+  }
+
+  const variantCandidate = typeof input.variant === 'string' ? input.variant.trim() : '';
+  const fallbackVariant = typeof fallback.variant === 'string' ? fallback.variant : 'secondary';
+  const variant = VALID_ACTION_VARIANTS.has(variantCandidate)
+    ? variantCandidate
+    : VALID_ACTION_VARIANTS.has(fallbackVariant)
+      ? fallbackVariant
+      : 'secondary';
+
+  const normalized = {
+    id,
+    variant,
+    visible: input.visible !== false,
+  };
+
+  if (typeof input.label === 'string' && input.label.trim()) {
+    normalized.label = input.label.trim();
+  } else if (typeof fallback.label === 'string' && fallback.label.trim()) {
+    normalized.label = fallback.label.trim();
+  }
+
+  if (typeof input.labelKey === 'string' && input.labelKey.trim()) {
+    normalized.labelKey = input.labelKey.trim();
+  } else if (typeof fallback.labelKey === 'string' && fallback.labelKey.trim()) {
+    normalized.labelKey = fallback.labelKey.trim();
+  }
+
+  if (typeof input.closeDialog === 'boolean') {
+    normalized.closeDialog = input.closeDialog;
+  } else if (typeof fallback.closeDialog === 'boolean') {
+    normalized.closeDialog = fallback.closeDialog;
+  } else {
+    normalized.closeDialog = false;
+  }
+
+  return normalized;
+}
+
+function normalizeActionList(inputList, fallbackList) {
+  const source = Array.isArray(inputList) ? inputList : fallbackList;
+  const normalized = source
+    .map((item, index) => normalizeAction(item, fallbackList[index] || fallbackList[0] || {}))
+    .filter(Boolean)
+    .filter((item) => item.visible !== false);
+
+  if (normalized.length) {
+    return normalized;
+  }
+
+  return fallbackList
+    .map((item) => normalizeAction(item, item))
+    .filter(Boolean)
+    .filter((item) => item.visible !== false);
+}
+
+function normalizeActions(actions) {
+  const source = isObject(actions) ? actions : {};
+  const dialog = isObject(source.dialog) ? source.dialog : {};
+
+  return {
+    banner: normalizeActionList(source.banner, DEFAULT_ACTIONS.banner),
+    dialog: {
+      header: normalizeActionList(dialog.header, DEFAULT_ACTIONS.dialog.header),
+      footer: normalizeActionList(dialog.footer, DEFAULT_ACTIONS.dialog.footer),
+    },
+  };
 }
 
 function coerceCategoryMap(categories) {
@@ -328,6 +423,8 @@ export async function resolveOptions(rawOptions = {}) {
     options = mergeDeep(options, regionOverrides[region]);
     options.categories = coerceCategoryMap(options.categories);
   }
+
+  options.actions = normalizeActions(options.actions);
 
   const consentKeys = uniqueConsentKeys(options.categories);
   const consentMapping = buildConsentMapping(consentKeys, options.consentMapping);

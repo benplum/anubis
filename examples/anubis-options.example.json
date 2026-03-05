@@ -50,6 +50,55 @@
     "privacyPolicyUrl": "/privacy",
     "cookiePolicyUrl": "/cookies"
   },
+  "actions": {
+    "banner": [
+      {
+        "id": "reject-all",
+        "variant": "secondary",
+        "labelKey": "rejectAll"
+      },
+      {
+        "id": "accept-all",
+        "variant": "primary",
+        "labelKey": "acceptAll"
+      },
+      {
+        "id": "open",
+        "variant": "link",
+        "labelKey": "manage"
+      }
+    ],
+    "dialog": {
+      "header": [
+        {
+          "id": "close",
+          "variant": "icon",
+          "labelKey": "cancel",
+          "closeDialog": true
+        }
+      ],
+      "footer": [
+        {
+          "id": "reject-all",
+          "variant": "secondary",
+          "labelKey": "rejectAll",
+          "closeDialog": true
+        },
+        {
+          "id": "accept-all",
+          "variant": "secondary",
+          "labelKey": "acceptAll",
+          "closeDialog": true
+        },
+        {
+          "id": "save",
+          "variant": "primary",
+          "labelKey": "save",
+          "closeDialog": true
+        }
+      ]
+    }
+  },
   "i18n": {
     "activeLocale": "en",
     "fallbackLocale": "en",

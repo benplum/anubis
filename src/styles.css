@@ -99,11 +99,17 @@
   gap: 8px;
 }
 
+.anubis-dialog-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .anubis-dialog-title {
   margin: 0 0 8px;
 }
 
-.anubis-dialog-close {
+.anubis-btn-icon {
   border: 1px solid var(--anubis-border);
   background: transparent;
   color: inherit;
@@ -112,10 +118,26 @@
   height: 30px;
   line-height: 1;
   font-size: 18px;
-  cursor: pointer;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.anubis-btn-icon::before {
+  content: '×';
+}
+
+.anubis-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .anubis-categories {

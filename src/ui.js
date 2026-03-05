@@ -41,6 +41,53 @@ function policyLinkMarkup(strings, links) {
   return `<a class="anubis-link" href="${escapeHtml(href)}" rel="noopener noreferrer">${escapeHtml(strings.policyLabel || 'Learn more')}</a>`;
 }
 
+function getStringByKey(strings, key, fallback = '') {
+  if (!key || typeof key !== 'string') {
+    return fallback;
+  }
+  const value = strings[key];
+  return typeof value === 'string' && value ? value : fallback;
+}
+
+function resolveActionText(action, strings) {
+  if (typeof action.label === 'string' && action.label) {
+    return action.label;
+  }
+  if (typeof action.labelKey === 'string') {
+    return getStringByKey(strings, action.labelKey, '');
+  }
+  return action.id;
+}
+
+function actionButtonMarkup(action, strings, useTriggerAttribute) {
+  const variant = action.variant || 'secondary';
+  const text = resolveActionText(action, strings);
+  const isIcon = variant === 'icon';
+  const className = isIcon ? 'anubis-btn anubis-btn-icon' : `anubis-btn anubis-btn-${variant}`;
+  const triggerAttribute = useTriggerAttribute ? ` data-consent-trigger="${escapeHtml(action.id)}"` : '';
+
+  if (isIcon) {
+    return `<button type="button" class="${escapeHtml(className)}" data-anubis-action="${escapeHtml(action.id)}" data-anubis-close-dialog="${action.closeDialog ? '1' : '0'}"${triggerAttribute}><span class="anubis-visually-hidden">${escapeHtml(text)}</span></button>`;
+  }
+
+  return `<button type="button" class="${escapeHtml(className)}" data-anubis-action="${escapeHtml(action.id)}" data-anubis-close-dialog="${action.closeDialog ? '1' : '0'}"${triggerAttribute}>${escapeHtml(text)}</button>`;
+}
+
+function bannerActionsMarkup(options, strings) {
+  const actions = (options.actions && options.actions.banner) || [];
+  return actions.map((action) => actionButtonMarkup(action, strings, true)).join('');
+}
+
+function dialogHeaderActionsMarkup(options, strings) {
+  const actions = (options.actions && options.actions.dialog && options.actions.dialog.header) || [];
+  return actions.map((action) => actionButtonMarkup(action, strings, false)).join('');
+}
+
+function dialogFooterActionsMarkup(options, strings) {
+  const actions = (options.actions && options.actions.dialog && options.actions.dialog.footer) || [];
+  return actions.map((action) => actionButtonMarkup(action, strings, false)).join('');
+}
+
 export function renderConsentUI(options, hooks) {
   if (typeof document === 'undefined') {
     return {
@@ -61,25 +108,23 @@ export function renderConsentUI(options, hooks) {
   ${strings.bannerDescription ? `<p class="anubis-description">${escapeHtml(strings.bannerDescription)}</p>` : ''}
   ${policyLinkMarkup(strings, options.links || {})}
   <div class="anubis-actions">
-    <button type="button" class="anubis-btn anubis-btn-secondary" data-consent-trigger="reject-all">${escapeHtml(strings.rejectAll || 'Reject all')}</button>
-    <button type="button" class="anubis-btn anubis-btn-primary" data-consent-trigger="accept-all">${escapeHtml(strings.acceptAll || 'Accept all')}</button>
-    <button type="button" class="anubis-btn anubis-btn-link" data-consent-trigger="open">${escapeHtml(strings.manage || 'Manage')}</button>
+    ${bannerActionsMarkup(options, strings)}
   </div>
 </section>
 <dialog class="anubis-dialog" aria-label="${escapeHtml(strings.dialogTitle || 'Consent preferences')}">
   <form class="anubis-form" method="dialog">
     <div class="anubis-dialog-head">
       <h3 class="anubis-dialog-title">${escapeHtml(strings.dialogTitle || '')}</h3>
-      <button type="button" class="anubis-dialog-close" data-anubis-action="close" aria-label="${escapeHtml(strings.cancel || 'Close')}">×</button>
+      <div class="anubis-dialog-head-actions">
+        ${dialogHeaderActionsMarkup(options, strings)}
+      </div>
     </div>
     ${strings.dialogDescription ? `<p class="anubis-dialog-description">${escapeHtml(strings.dialogDescription)}</p>` : ''}
     <div class="anubis-categories">
       ${categoryRowsMarkup(options)}
     </div>
     <div class="anubis-dialog-actions">
-      <button type="button" class="anubis-btn anubis-btn-secondary" data-anubis-action="reject-all">${escapeHtml(strings.rejectAll || 'Reject all')}</button>
-      <button type="button" class="anubis-btn anubis-btn-secondary" data-anubis-action="accept-all">${escapeHtml(strings.acceptAll || 'Accept all')}</button>
-      <button type="submit" class="anubis-btn anubis-btn-primary">${escapeHtml(strings.save || 'Save')}</button>
+      ${dialogFooterActionsMarkup(options, strings)}
     </div>
   </form>
 </dialog>`;
@@ -89,9 +134,6 @@ export function renderConsentUI(options, hooks) {
   const banner = container.querySelector('.anubis-banner');
   const dialog = container.querySelector('.anubis-dialog');
   const form = container.querySelector('.anubis-form');
-  const closeButton = container.querySelector('[data-anubis-action="close"]');
-  const dialogAcceptAllButton = container.querySelector('[data-anubis-action="accept-all"]');
-  const dialogRejectAllButton = container.querySelector('[data-anubis-action="reject-all"]');
   const toggleMap = {};
   Object.keys(options.categories).forEach((name) => {
     toggleMap[name] = container.querySelector(`input[data-anubis-category="${name}"]`);
@@ -103,31 +145,8 @@ export function renderConsentUI(options, hooks) {
     });
   });
 
-  if (closeButton) {
-    closeButton.addEventListener('click', () => {
-      closeDialog();
-    });
-  }
-
-  if (dialogAcceptAllButton) {
-    dialogAcceptAllButton.addEventListener('click', () => {
-      if (typeof hooks.onAcceptAll === 'function') {
-        hooks.onAcceptAll();
-      }
-      closeDialog();
-    });
-  }
-
-  if (dialogRejectAllButton) {
-    dialogRejectAllButton.addEventListener('click', () => {
-      if (typeof hooks.onRejectAll === 'function') {
-        hooks.onRejectAll();
-      }
-      closeDialog();
-    });
-  }
-
   let lastFocus = null;
+
   function openDialog() {
     if (dialog.open) {
       return;
@@ -172,11 +191,36 @@ export function renderConsentUI(options, hooks) {
     banner.hidden = !visible;
   }
 
+  container.addEventListener('click', (event) => {
+    const actionButton = event.target && event.target.closest ? event.target.closest('[data-anubis-action]') : null;
+    if (!actionButton || !container.contains(actionButton)) {
+      return;
+    }
+
+    const action = (actionButton.getAttribute('data-anubis-action') || '').trim();
+    if (!action) {
+      return;
+    }
+
+    const closeAfter = actionButton.getAttribute('data-anubis-close-dialog') === '1';
+    const source = actionButton.closest('.anubis-dialog') ? 'dialog' : 'banner';
+
+    if (typeof hooks.onAction === 'function') {
+      hooks.onAction(action, {
+        source,
+        closeDialog: closeAfter,
+        readCategoryChoices,
+      });
+    }
+
+    if (closeAfter) {
+      closeDialog();
+    }
+  });
+
   if (form) {
     form.addEventListener('submit', (event) => {
       event.preventDefault();
-      hooks.onSave(readCategoryChoices());
-      closeDialog();
     });
   }
 

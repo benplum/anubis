@@ -29,7 +29,7 @@
       .demo-grid {
         display: grid;
         gap: 16px;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        grid-template-columns: 1fr;
       }
 
       .demo-card {
@@ -64,6 +64,8 @@
     </style>
 
     <script>
+      const preset = new URLSearchParams(window.location.search).get('preset') || 'default';
+
       window.AnubisOptions = {
         consentVersion: 1,
         defaultConsentMode: 'opt-out',
@@ -95,6 +97,40 @@
           }
         }
       };
+
+      if (preset === 'dialog-first') {
+        window.AnubisOptions.actions = {
+          banner: [
+            { id: 'open', variant: 'primary', label: 'Review choices' }
+          ],
+          dialog: {
+            header: [
+              { id: 'close', variant: 'icon', label: 'Close dialog', closeDialog: true }
+            ],
+            footer: [
+              { id: 'reject-all', variant: 'secondary', labelKey: 'rejectAll', closeDialog: true },
+              { id: 'accept-all', variant: 'secondary', labelKey: 'acceptAll', closeDialog: true },
+              { id: 'save', variant: 'primary', labelKey: 'save', closeDialog: true }
+            ]
+          }
+        };
+      } else if (preset === 'accept-only') {
+        window.AnubisOptions.actions = {
+          banner: [
+            { id: 'accept-all', variant: 'primary', label: 'Accept all' },
+            { id: 'open', variant: 'link', label: 'Customize' }
+          ],
+          dialog: {
+            header: [
+              { id: 'close', variant: 'icon', label: 'Close dialog', closeDialog: true }
+            ],
+            footer: [
+              { id: 'reject-all', variant: 'secondary', labelKey: 'rejectAll', closeDialog: true },
+              { id: 'save', variant: 'primary', labelKey: 'save', closeDialog: true }
+            ]
+          }
+        };
+      }
     </script>
     <script src="../dist/anubis.iife.js"></script>
     <script src="../dist/anubis-debug.iife.js"></script>
@@ -103,6 +139,18 @@
     <h1>Anubis Consent Demo</h1>
 
     <div class="demo-grid">
+      <section class="demo-card">
+        <h2>Preset Layouts</h2>
+        <p>
+          Active preset: <strong id="activePreset"></strong>
+        </p>
+        <div class="demo-actions">
+          <a href="?preset=default">Default preset</a> ·
+          <a href="?preset=dialog-first">Dialog-first preset</a> ·
+          <a href="?preset=accept-only">Accept-only preset</a>
+        </div>
+      </section>
+
       <section class="demo-card">
         <h2>Developer Triggers</h2>
         <div class="demo-actions">
@@ -122,6 +170,9 @@
 
     <script>
       (function () {
+        document.getElementById('activePreset').textContent =
+          new URLSearchParams(window.location.search).get('preset') || 'default';
+
         const logNode = document.getElementById('log');
         const pushLog = (label, payload) => {
           const line = `[${new Date().toLocaleTimeString()}] ${label} ${payload ? JSON.stringify(payload) : ''}`;

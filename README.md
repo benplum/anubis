@@ -76,6 +76,14 @@ interface AnubisOptions {
     cookiePolicyUrl?: string;
   };
 
+  actions?: {
+    banner?: ConsentAction[];
+    dialog?: {
+      header?: ConsentAction[];
+      footer?: ConsentAction[];
+    };
+  };
+
   region?: string;
   resolveRegion?: () => Promise<string> | string;
   resolveRegionTimeoutMs?: number;
@@ -87,9 +95,20 @@ interface AnubisOptions {
   };
   regionOverrides?: Record<string, Partial<AnubisOptions>>;
 }
+
+interface ConsentAction {
+  id: 'open' | 'accept-all' | 'reject-all' | 'save' | 'close';
+  variant?: 'primary' | 'secondary' | 'link' | 'icon';
+  label?: string;
+  labelKey?: string;
+  closeDialog?: boolean;
+  visible?: boolean;
+}
 ```
 
 `resolveRegion` lookups are cached by default (`regionCache.enabled: true`) to avoid repeated network calls.
+
+`actions` lets teams control which built-in buttons render in banner/dialog and in what order.
 
 ### Defaults precedence
 
