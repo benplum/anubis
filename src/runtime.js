@@ -43,6 +43,34 @@ function statesEqual(a, b) {
   return true;
 }
 
+function enforceNecessaryGranted(state, categories) {
+  const next = { ...state };
+  (categories.necessary || []).forEach((key) => {
+    next[key] = 'granted';
+  });
+  return next;
+}
+
+function isValidStoredConsent(stored, version) {
+  return Boolean(
+    stored
+    && typeof stored === 'object'
+    && Number(stored.version) === Number(version)
+    && stored.grants
+    && typeof stored.grants === 'object',
+  );
+}
+
+function buildConsentEventDetail(options, state) {
+  return {
+    state,
+    mode: options.defaultConsentMode,
+    locale: options.activeLocale,
+    region: options.region,
+    version: options.version,
+  };
+}
+
 function applyFastStoredDefault(rawOptions) {
   const input = isObject(rawOptions) ? rawOptions : {};
   const enabled = input.fastDefaultFromStorage !== false;
@@ -56,22 +84,14 @@ function applyFastStoredDefault(rawOptions) {
   const version = Number(input.version ?? DEFAULT_OPTIONS.version);
 
   const stored = readStoredConsent({ storageKey });
-  const validStored =
-    stored &&
-    typeof stored === 'object' &&
-    Number(stored.version) === version &&
-    stored.grants &&
-    typeof stored.grants === 'object';
+  const validStored = isValidStoredConsent(stored, version);
 
   if (!validStored) {
     return { applied: false, googleState: null };
   }
 
   const categories = coerceCategories(input.categories || DEFAULT_OPTIONS.categories);
-  const internalState = { ...stored.grants };
-  categories.necessary.forEach((key) => {
-    internalState[key] = 'granted';
-  });
+  const internalState = enforceNecessaryGranted(stored.grants, categories);
 
   const mappingInput = isObject(input.consentMapping) ? input.consentMapping : {};
   const consentMapping = {};
@@ -133,10 +153,7 @@ function createAllState(options, value) {
   options.consentKeys.forEach((key) => {
     state[key] = value;
   });
-  options.categories.necessary.forEach((key) => {
-    state[key] = 'granted';
-  });
-  return state;
+  return enforceNecessaryGranted(state, options.categories);
 }
 
 function applyCategoryChoices(currentState, categoryChoices, options) {
@@ -153,11 +170,7 @@ function applyCategoryChoices(currentState, categoryChoices, options) {
     });
   });
 
-  options.categories.necessary.forEach((key) => {
-    next[key] = 'granted';
-  });
-
-  return next;
+  return enforceNecessaryGranted(next, options.categories);
 }
 
 function isCategoryAllowed(state, options, category) {
@@ -175,12 +188,7 @@ export async function initAnubis(rawOptions = {}) {
   await waitForBody();
   const options = await resolveOptions(rawOptions);
   const stored = readStoredConsent(options);
-  const validStored =
-    stored &&
-    typeof stored === 'object' &&
-    Number(stored.version) === Number(options.version) &&
-    stored.grants &&
-    typeof stored.grants === 'object';
+  const validStored = isValidStoredConsent(stored, options.version);
 
   let state = { ...options.defaultConsentInternal };
   if (validStored) {
@@ -188,9 +196,7 @@ export async function initAnubis(rawOptions = {}) {
       ...state,
       ...stored.grants,
     };
-    options.categories.necessary.forEach((key) => {
-      state[key] = 'granted';
-    });
+    state = enforceNecessaryGranted(state, options.categories);
   }
 
   if (!fastDefault.applied) {
@@ -206,26 +212,26 @@ export async function initAnubis(rawOptions = {}) {
 
   const scriptGate = createScriptGate(options, (category) => isCategoryAllowed(state, options, category));
   function handleAction(action, meta = {}) {
-    if (action === 'open') {
-      ui.openDialog();
-      return;
-    }
-    if (action === 'close') {
-      ui.closeDialog();
-      return;
-    }
-    if (action === 'accept-all') {
-      acceptAll();
-      return;
-    }
-    if (action === 'reject-all') {
-      rejectAll();
-      return;
-    }
-    if (action === 'save') {
-      const choices = typeof meta.readCategoryChoices === 'function' ? meta.readCategoryChoices() : ui.readCategoryChoices();
-      commitState(applyCategoryChoices(state, choices, options), meta.source === 'dialog' ? 'dialog' : 'trigger-save');
-      return;
+    switch (action) {
+      case 'open':
+        ui.openDialog();
+        return;
+      case 'close':
+        ui.closeDialog();
+        return;
+      case 'accept-all':
+        acceptAll();
+        return;
+      case 'reject-all':
+        rejectAll();
+        return;
+      case 'save': {
+        const choices = typeof meta.readCategoryChoices === 'function' ? meta.readCategoryChoices() : ui.readCategoryChoices();
+        commitState(applyCategoryChoices(state, choices, options), meta.source === 'dialog' ? 'dialog' : 'trigger-save');
+        return;
+      }
+      default:
+        break;
     }
 
     emitConsentEvent('consent:action', {
@@ -235,20 +241,13 @@ export async function initAnubis(rawOptions = {}) {
     });
   }
 
-  const ui = renderConsentUI(options, {
-    onAction: (action, meta) => {
-      handleAction(action, meta);
-    },
-  });
+  const ui = renderConsentUI(options, { onAction: handleAction });
 
   function commitState(nextState, source) {
     const previous = state;
     const revoked = hasGrantedToDeniedChange(previous, nextState);
 
-    state = { ...nextState };
-    options.categories.necessary.forEach((key) => {
-      state[key] = 'granted';
-    });
+    state = enforceNecessaryGranted(nextState, options.categories);
 
     saveStoredConsent(
       {
@@ -267,12 +266,8 @@ export async function initAnubis(rawOptions = {}) {
 
     emitConsentEvent('consent:changed', {
       source,
-      state,
       googleState,
-      mode: options.defaultConsentMode,
-      locale: options.activeLocale,
-      region: options.region,
-      version: options.version,
+      ...buildConsentEventDetail(options, state),
     });
 
     if (revoked) {
@@ -303,11 +298,7 @@ export async function initAnubis(rawOptions = {}) {
 
   emitConsentEvent('consent:ready', {
     hasStoredConsent: Boolean(validStored),
-    state,
-    mode: options.defaultConsentMode,
-    locale: options.activeLocale,
-    region: options.region,
-    version: options.version,
+    ...buildConsentEventDetail(options, state),
   });
 
   return {

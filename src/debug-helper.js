@@ -212,6 +212,7 @@
     const tabs = panel.querySelectorAll('[data-anubis-debug-tab]');
     const consentLogs = [];
     const dataLayerLogs = [];
+    const consentEventUnsubscribers = [];
 
     function renderTokens(state) {
       const entries = Object.entries(state || {});
@@ -240,28 +241,24 @@
         .join('');
     }
 
-    function pushConsentLog(name, detail) {
-      consentLogs.unshift({
+    function pushLog(logs, maxEntries, targetNode, name, detail) {
+      logs.unshift({
         time: nowLabel(),
         name,
         data: safeStringify(detail || {}),
       });
-      if (consentLogs.length > 80) {
-        consentLogs.length = 80;
+      if (logs.length > maxEntries) {
+        logs.length = maxEntries;
       }
-      renderLog(consentLogNode, consentLogs);
+      renderLog(targetNode, logs);
+    }
+
+    function pushConsentLog(name, detail) {
+      pushLog(consentLogs, 80, consentLogNode, name, detail);
     }
 
     function pushDataLayerLog(name, detail) {
-      dataLayerLogs.unshift({
-        time: nowLabel(),
-        name,
-        data: safeStringify(detail || {}),
-      });
-      if (dataLayerLogs.length > 120) {
-        dataLayerLogs.length = 120;
-      }
-      renderLog(dataLayerLogNode, dataLayerLogs);
+      pushLog(dataLayerLogs, 120, dataLayerLogNode, name, detail);
     }
 
     function setTab(tabName) {
@@ -292,19 +289,17 @@
       });
     });
 
-    document.addEventListener('consent:ready', (event) => {
-      pushConsentLog('consent:ready', event.detail);
-      updateFromDetail(event.detail);
-    });
+    function bindConsentLogEvent(name) {
+      const handler = (event) => {
+        pushConsentLog(name, event.detail);
+        updateFromDetail(event.detail);
+      };
+      document.addEventListener(name, handler);
+      return () => document.removeEventListener(name, handler);
+    }
 
-    document.addEventListener('consent:changed', (event) => {
-      pushConsentLog('consent:changed', event.detail);
-      updateFromDetail(event.detail);
-    });
-
-    document.addEventListener('consent:revoked', (event) => {
-      pushConsentLog('consent:revoked', event.detail);
-      updateFromDetail(event.detail);
+    ['consent:ready', 'consent:changed', 'consent:revoked'].forEach((eventName) => {
+      consentEventUnsubscribers.push(bindConsentLogEvent(eventName));
     });
 
     const dataLayer = ensureDataLayer();
@@ -318,7 +313,7 @@
     dataLayer.push = function anubisDebugDataLayerPush(...items) {
       const first = items[0];
       const eventName = first && typeof first === 'object' && first.event ? String(first.event) : 'dataLayer.push';
-      const command = first && typeof first === 'object' ? first.anubisConsentCommand || first.event || '' : '';
+      const command = first && typeof first === 'object' ? first.cmpCommand || first.event || '' : '';
 
       pushDataLayerLog(eventName, {
         command,
@@ -421,6 +416,7 @@
 
     window.AnubisDebugPanel = {
       destroy() {
+        consentEventUnsubscribers.forEach((unsubscribe) => unsubscribe());
         dataLayer.push = originalPush;
         cleanupGtagLogger();
         panel.remove();

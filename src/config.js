@@ -313,8 +313,10 @@ function getRegionOverrideKeys(region) {
 }
 
 async function resolveRegion(options) {
+  const fallbackRegion = normalizeRegionCode(options.region);
+
   if (typeof options.resolveRegion !== 'function') {
-    return normalizeRegionCode(options.region);
+    return fallbackRegion;
   }
 
   const cached = readRegionCache(options);
@@ -324,7 +326,7 @@ async function resolveRegion(options) {
 
   const timeoutMs = Number(options.resolveRegionTimeoutMs) > 0 ? Number(options.resolveRegionTimeoutMs) : 500;
   const timeoutPromise = new Promise((resolve) => {
-    setTimeout(() => resolve(normalizeRegionCode(options.region)), timeoutMs);
+    setTimeout(() => resolve(fallbackRegion), timeoutMs);
   });
 
   try {
@@ -335,10 +337,10 @@ async function resolveRegion(options) {
       return normalized;
     }
   } catch (error) {
-    return normalizeRegionCode(options.region);
+    return fallbackRegion;
   }
 
-  return normalizeRegionCode(options.region);
+  return fallbackRegion;
 }
 
 function getRegionCacheConfig(options) {
@@ -438,21 +440,20 @@ function freezeShallow(object) {
 export async function resolveOptions(rawOptions = {}) {
   let options = mergeDeep(DEFAULT_OPTIONS, isObject(rawOptions) ? rawOptions : {});
 
-  options.categories = coerceCategoryMap(options.categories);
   const region = await resolveRegion(options);
   const regionOverrides = isObject(options.regionOverrides) ? options.regionOverrides : {};
   const regionOverrideKeys = getRegionOverrideKeys(region);
   regionOverrideKeys.forEach((overrideKey) => {
     if (isObject(regionOverrides[overrideKey])) {
       options = mergeDeep(options, regionOverrides[overrideKey]);
-      options.categories = coerceCategoryMap(options.categories);
     }
   });
 
   if (!region && isObject(regionOverrides.default)) {
     options = mergeDeep(options, regionOverrides.default);
-    options.categories = coerceCategoryMap(options.categories);
   }
+
+  options.categories = coerceCategoryMap(options.categories);
 
   options.actions = normalizeActions(options.actions);
 
