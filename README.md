@@ -1,4 +1,4 @@
-# Anubis Consent Library
+# Anubis
 
 Small, script-first consent mode library for Google/GTM aligned consent controls.
 
