@@ -291,33 +291,54 @@ function pickLocale(options) {
   };
 }
 
+function normalizeRegionCode(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+  return value.trim().replace(/_/g, '-').toUpperCase();
+}
+
+function getRegionOverrideKeys(region) {
+  const normalized = normalizeRegionCode(region);
+  if (!normalized) {
+    return [];
+  }
+
+  const parts = normalized.split('-').filter(Boolean);
+  const keys = [];
+  for (let i = 1; i <= parts.length; i += 1) {
+    keys.push(parts.slice(0, i).join('-'));
+  }
+  return keys;
+}
+
 async function resolveRegion(options) {
   if (typeof options.resolveRegion !== 'function') {
-    return options.region || '';
+    return normalizeRegionCode(options.region);
   }
 
   const cached = readRegionCache(options);
   if (cached) {
-    return cached;
+    return normalizeRegionCode(cached);
   }
 
   const timeoutMs = Number(options.resolveRegionTimeoutMs) > 0 ? Number(options.resolveRegionTimeoutMs) : 500;
   const timeoutPromise = new Promise((resolve) => {
-    setTimeout(() => resolve(options.region || ''), timeoutMs);
+    setTimeout(() => resolve(normalizeRegionCode(options.region)), timeoutMs);
   });
 
   try {
     const result = await Promise.race([Promise.resolve(options.resolveRegion()), timeoutPromise]);
-    if (typeof result === 'string' && result.trim()) {
-      const normalized = result.trim();
+    const normalized = normalizeRegionCode(result);
+    if (normalized) {
       writeRegionCache(options, normalized);
       return normalized;
     }
   } catch (error) {
-    return options.region || '';
+    return normalizeRegionCode(options.region);
   }
 
-  return options.region || '';
+  return normalizeRegionCode(options.region);
 }
 
 function getRegionCacheConfig(options) {
@@ -420,8 +441,16 @@ export async function resolveOptions(rawOptions = {}) {
   options.categories = coerceCategoryMap(options.categories);
   const region = await resolveRegion(options);
   const regionOverrides = isObject(options.regionOverrides) ? options.regionOverrides : {};
-  if (region && isObject(regionOverrides[region])) {
-    options = mergeDeep(options, regionOverrides[region]);
+  const regionOverrideKeys = getRegionOverrideKeys(region);
+  regionOverrideKeys.forEach((overrideKey) => {
+    if (isObject(regionOverrides[overrideKey])) {
+      options = mergeDeep(options, regionOverrides[overrideKey]);
+      options.categories = coerceCategoryMap(options.categories);
+    }
+  });
+
+  if (!region && isObject(regionOverrides.default)) {
+    options = mergeDeep(options, regionOverrides.default);
     options.categories = coerceCategoryMap(options.categories);
   }
 

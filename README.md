@@ -114,8 +114,36 @@ interface ConsentAction {
 ### Defaults precedence
 
 1. Base options
-2. Region override
+2. Region override chain (broad to specific, e.g. `US` then `US-CA`)
 3. Stored user choice (if `version` matches)
+
+`regionOverrides` supports state/province level keys when `region` (or `resolveRegion`) returns a composite code like `US-CA`.
+Region values are normalized to uppercase with `-` separators (so `us_ca`, `us-ca`, and `US-CA` are treated the same).
+
+Example (CCPA / CPRA style):
+
+```js
+window.AnubisOptions = {
+  resolveRegion: async () => 'US-CA',
+  regionOverrides: {
+    US: {
+      links: {
+        privacyPolicyUrl: '/privacy-us',
+      },
+    },
+    'US-CA': {
+      defaultConsentMode: 'opt-out',
+      actions: {
+        banner: [
+          { id: 'reject-all', variant: 'secondary', label: 'Reject all' },
+          { id: 'accept-all', variant: 'primary', label: 'Accept all' },
+          { id: 'open', variant: 'link', label: 'Your Privacy Choices' },
+        ],
+      },
+    },
+  },
+};
+```
 
 ## i18n options
 
