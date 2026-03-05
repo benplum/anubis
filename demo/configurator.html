@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Anubis Configurator</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(340px, 42%) 1fr;
+        gap: 12px;
+        min-height: 100vh;
+        padding: 12px;
+      }
+      .panel {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        min-width: 0;
+      }
+      .panel-head {
+        padding: 12px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .panel-body {
+        padding: 12px;
+      }
+      h1 { margin: 0; font-size: 18px; }
+      h2 { margin: 0 0 8px; font-size: 14px; }
+      .section {
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+      .grid {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .field {
+        display: grid;
+        gap: 4px;
+      }
+      .field-full { grid-column: 1 / -1; }
+      label { font-size: 12px; color: #475569; }
+      input, select, textarea, button {
+        font: inherit;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 7px 8px;
+        background: #fff;
+        color: #0f172a;
+      }
+      textarea { min-height: 82px; resize: vertical; }
+      .inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+      }
+      .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      .space-between { justify-content: space-between; }
+      .muted { color: #64748b; font-size: 12px; }
+      .repeater {
+        display: grid;
+        gap: 8px;
+      }
+      .repeater-item {
+        border: 1px dashed #cbd5e1;
+        border-radius: 10px;
+        padding: 8px;
+        display: grid;
+        gap: 8px;
+      }
+      .repeater-actions {
+        display: flex;
+        justify-content: flex-end;
+      }
+      .error {
+        color: #991b1b;
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 8px;
+        font-size: 12px;
+        margin-bottom: 8px;
+        display: none;
+      }
+      iframe {
+        width: 100%;
+        min-height: 56vh;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        background: #fff;
+      }
+      #jsonOutput {
+        width: 100%;
+        min-height: 32vh;
+        background: #0b1020;
+        color: #e2e8f0;
+      }
+      @media (max-width: 1100px) {
+        .layout { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <section class="panel">
+        <div class="panel-head">
+          <h1>Configuration</h1>
+        </div>
+        <div class="panel-body">
+          <div id="error" class="error"></div>
+
+          <div class="section">
+            <h2>Core</h2>
+            <div class="grid">
+              <div class="field"><label>Version</label><input id="version" type="number" value="1" /></div>
+              <div class="field"><label>Storage key</label><input id="storageKey" value="anubis-consent" /></div>
+              <div class="field"><label>Cookie days</label><input id="cookieDays" type="number" value="180" /></div>
+              <div class="field"><label>Default mode</label><select id="defaultConsentMode"><option value="opt-out">opt-out</option><option value="opt-in">opt-in</option></select></div>
+              <div class="field"><label>Unknown category policy</label><select id="unknownCategoryPolicy"><option value="block">block</option><option value="allow">allow</option></select></div>
+              <div class="field"><label>Resolve timeout (ms)</label><input id="resolveRegionTimeoutMs" type="number" value="800" /></div>
+            </div>
+            <div class="row" style="margin-top:8px;">
+              <label class="inline"><input id="autoStart" type="checkbox" checked /> autoStart</label>
+              <label class="inline"><input id="fastDefaultFromStorage" type="checkbox" checked /> fastDefaultFromStorage</label>
+              <label class="inline"><input id="reloadOnRevoke" type="checkbox" checked /> reloadOnRevoke</label>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>Links + Locale</h2>
+            <div class="grid">
+              <div class="field"><label>Active locale</label><input id="activeLocale" value="" placeholder="en" /></div>
+              <div class="field"><label>Fallback locale</label><input id="fallbackLocale" value="en" /></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="row space-between">
+              <h2>Link actions</h2>
+              <button id="addLinkAction" type="button">Add link</button>
+            </div>
+            <p class="muted">Configurable links shown in the banner (`title` + `url`).</p>
+            <div id="linksRepeater" class="repeater"></div>
+          </div>
+
+          <div class="section">
+            <div class="row space-between">
+              <h2>Categories</h2>
+              <button id="addCategory" type="button">Add category</button>
+            </div>
+            <p class="muted">Category key + consent keys (comma separated).</p>
+            <div id="categoriesRepeater" class="repeater"></div>
+          </div>
+
+          <div class="section">
+            <div class="row space-between">
+              <h2>Locales</h2>
+              <button id="addLocale" type="button">Add locale</button>
+            </div>
+            <p class="muted">Locale code + JSON payload for localized strings.</p>
+            <div id="localesRepeater" class="repeater"></div>
+          </div>
+
+          <div class="section">
+            <div class="row space-between">
+              <h2>Region overrides</h2>
+              <button id="addRegionOverride" type="button">Add override</button>
+            </div>
+            <p class="muted">Region key (e.g. `US-CA`, `EU`) + JSON partial options.</p>
+            <div id="regionOverridesRepeater" class="repeater"></div>
+          </div>
+
+          <div class="section">
+            <h2>Preview Theme</h2>
+            <div class="row">
+              <label class="inline"><input type="radio" name="theme" value="light" checked /> light</label>
+              <label class="inline"><input type="radio" name="theme" value="dark" /> dark</label>
+              <label class="inline"><input type="radio" name="theme" value="none" /> none</label>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>Advanced JSON override (merged last)</h2>
+            <textarea id="advancedJson" class="field-full" spellcheck="false" placeholder='{"regionOverrides":{"US-CA":{"defaultConsentMode":"opt-in"}}}'></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h1>Preview + JSON Output</h1>
+        </div>
+        <div class="panel-body">
+          <iframe id="previewFrame" title="Anubis Preview"></iframe>
+          <div class="row" style="margin:10px 0 8px;">
+            <button id="importJson" type="button">Import JSON</button>
+            <button id="copyJson" type="button">Copy JSON</button>
+            <button id="downloadJson" type="button">Download JSON</button>
+          </div>
+          <input id="importJsonFile" type="file" accept="application/json,.json" style="display:none;" />
+          <textarea id="jsonOutput" readonly spellcheck="false"></textarea>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      (function () {
+        const errorNode = document.getElementById('error');
+        const frame = document.getElementById('previewFrame');
+        const jsonOutput = document.getElementById('jsonOutput');
+        const copyJson = document.getElementById('copyJson');
+        const importJson = document.getElementById('importJson');
+        const downloadJson = document.getElementById('downloadJson');
+        const importJsonFile = document.getElementById('importJsonFile');
+        const categoriesRepeater = document.getElementById('categoriesRepeater');
+        const linksRepeater = document.getElementById('linksRepeater');
+        const localesRepeater = document.getElementById('localesRepeater');
+        const regionOverridesRepeater = document.getElementById('regionOverridesRepeater');
+        const addCategory = document.getElementById('addCategory');
+        const addLinkAction = document.getElementById('addLinkAction');
+        const addLocale = document.getElementById('addLocale');
+        const addRegionOverride = document.getElementById('addRegionOverride');
+
+        function parseCsv(value) {
+          return String(value || '')
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean);
+        }
+
+        function parseJsonField(raw, fallback = {}) {
+          const text = String(raw || '').trim();
+          if (!text) {
+            return fallback;
+          }
+          return JSON.parse(text);
+        }
+
+        function isObject(value) {
+          return value && typeof value === 'object' && !Array.isArray(value);
+        }
+
+        function mergeDeep(target, source) {
+          if (!isObject(target) || !isObject(source)) {
+            return source;
+          }
+          const out = { ...target };
+          Object.keys(source).forEach((key) => {
+            const next = source[key];
+            const prev = out[key];
+            out[key] = isObject(prev) && isObject(next) ? mergeDeep(prev, next) : next;
+          });
+          return out;
+        }
+
+        function readTheme() {
+          const selected = document.querySelector('input[name="theme"]:checked');
+          return selected ? selected.value : 'light';
+        }
+
+        function createRepeaterItem(container, template) {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'repeater-item';
+          wrapper.innerHTML = template;
+          container.appendChild(wrapper);
+          return wrapper;
+        }
+
+        function addCategoryRow(name = '', keys = '') {
+          return createRepeaterItem(
+            categoriesRepeater,
+            `<div class="grid">
+              <div class="field"><label>Category name</label><input data-role="cat-name" value="${name}" /></div>
+              <div class="field"><label>Consent keys (csv)</label><input data-role="cat-keys" value="${keys}" /></div>
+            </div>
+            <div class="repeater-actions">
+              <button type="button" data-action="remove-row">Remove</button>
+            </div>`,
+          );
+        }
+
+        function addLinkActionRow(title = '', url = '') {
+          return createRepeaterItem(
+            linksRepeater,
+            `<div class="grid">
+              <div class="field"><label>Link title</label><input data-role="link-title" value="${title}" placeholder="Privacy policy" /></div>
+              <div class="field"><label>Link URL</label><input data-role="link-url" value="${url}" placeholder="/privacy" /></div>
+            </div>
+            <div class="repeater-actions">
+              <button type="button" data-action="remove-row">Remove</button>
+            </div>`,
+          );
+        }
+
+        function addLocaleRow(code = '', json = '') {
+          return createRepeaterItem(
+            localesRepeater,
+            `<div class="grid">
+              <div class="field"><label>Locale code</label><input data-role="locale-code" value="${code}" placeholder="en" /></div>
+              <div class="field field-full"><label>Locale JSON</label><textarea data-role="locale-json" spellcheck="false" placeholder='{"bannerTitle":"Privacy choices"}'>${json}</textarea></div>
+            </div>
+            <div class="repeater-actions">
+              <button type="button" data-action="remove-row">Remove</button>
+            </div>`,
+          );
+        }
+
+        function addRegionOverrideRow(region = '', json = '') {
+          return createRepeaterItem(
+            regionOverridesRepeater,
+            `<div class="grid">
+              <div class="field"><label>Region key</label><input data-role="region-key" value="${region}" placeholder="US-CA" /></div>
+              <div class="field field-full"><label>Override JSON</label><textarea data-role="region-json" spellcheck="false" placeholder='{"defaultConsentMode":"opt-in"}'>${json}</textarea></div>
+            </div>
+            <div class="repeater-actions">
+              <button type="button" data-action="remove-row">Remove</button>
+            </div>`,
+          );
+        }
+
+        function clearRepeater(container) {
+          container.innerHTML = '';
+        }
+
+        function encodeInlineJson(value) {
+          if (!isObject(value)) {
+            return '';
+          }
+          return JSON.stringify(value, null, 2);
+        }
+
+        function rowsToCategoryObject() {
+          const out = {};
+          categoriesRepeater.querySelectorAll('.repeater-item').forEach((item) => {
+            const name = item.querySelector('[data-role="cat-name"]').value.trim();
+            const keys = parseCsv(item.querySelector('[data-role="cat-keys"]').value);
+            if (name && keys.length) {
+              out[name] = keys;
+            }
+          });
+          return out;
+        }
+
+        function rowsToLinkActions() {
+          const out = [];
+          linksRepeater.querySelectorAll('.repeater-item').forEach((item) => {
+            const title = item.querySelector('[data-role="link-title"]').value.trim();
+            const url = item.querySelector('[data-role="link-url"]').value.trim();
+            if (title && url) {
+              out.push({ title, url });
+            }
+          });
+          return out;
+        }
+
+        function rowsToLocalesObject() {
+          const locales = {};
+          localesRepeater.querySelectorAll('.repeater-item').forEach((item) => {
+            const code = item.querySelector('[data-role="locale-code"]').value.trim();
+            const jsonText = item.querySelector('[data-role="locale-json"]').value;
+            if (!code || !jsonText.trim()) {
+              return;
+            }
+            const parsed = parseJsonField(jsonText, {});
+            if (!isObject(parsed)) {
+              throw new Error(`Locale ${code} JSON must be an object.`);
+            }
+            locales[code] = parsed;
+          });
+          return locales;
+        }
+
+        function rowsToRegionOverrides() {
+          const overrides = {};
+          regionOverridesRepeater.querySelectorAll('.repeater-item').forEach((item) => {
+            const key = item.querySelector('[data-role="region-key"]').value.trim();
+            const jsonText = item.querySelector('[data-role="region-json"]').value;
+            if (!key || !jsonText.trim()) {
+              return;
+            }
+            const parsed = parseJsonField(jsonText, {});
+            if (!isObject(parsed)) {
+              throw new Error(`Region override ${key} JSON must be an object.`);
+            }
+            overrides[key] = parsed;
+          });
+          return overrides;
+        }
+
+        function buildOptions() {
+          const locales = rowsToLocalesObject();
+          const regionOverrides = rowsToRegionOverrides();
+
+          const base = {
+            autoStart: document.getElementById('autoStart').checked,
+            version: Number(document.getElementById('version').value) || 1,
+            storageKey: document.getElementById('storageKey').value.trim() || 'anubis-consent',
+            cookieDays: Number(document.getElementById('cookieDays').value) || 180,
+            defaultConsentMode: document.getElementById('defaultConsentMode').value,
+            fastDefaultFromStorage: document.getElementById('fastDefaultFromStorage').checked,
+            unknownCategoryPolicy: document.getElementById('unknownCategoryPolicy').value,
+            reloadOnRevoke: document.getElementById('reloadOnRevoke').checked,
+            resolveRegionTimeoutMs: Number(document.getElementById('resolveRegionTimeoutMs').value) || 800,
+            activeLocale: document.getElementById('activeLocale').value.trim(),
+            fallbackLocale: document.getElementById('fallbackLocale').value.trim() || 'en',
+            links: {
+              actions: rowsToLinkActions(),
+            },
+            categories: rowsToCategoryObject(),
+            regionOverrides,
+            i18n: Object.keys(locales).length
+              ? {
+                activeLocale: document.getElementById('activeLocale').value.trim(),
+                fallbackLocale: document.getElementById('fallbackLocale').value.trim() || 'en',
+                locales,
+              }
+              : undefined,
+          };
+
+          const advanced = parseJsonField(document.getElementById('advancedJson').value, {});
+          if (!isObject(advanced)) {
+            throw new Error('Advanced JSON override must be an object.');
+          }
+
+          return mergeDeep(base, advanced);
+        }
+
+        function applyOptionsToForm(options) {
+          const source = isObject(options) ? options : {};
+
+          document.getElementById('autoStart').checked = source.autoStart !== false;
+          document.getElementById('version').value = Number(source.version) || 1;
+          document.getElementById('storageKey').value = source.storageKey || 'anubis-consent';
+          document.getElementById('cookieDays').value = Number(source.cookieDays) || 180;
+          document.getElementById('defaultConsentMode').value = source.defaultConsentMode === 'opt-in' ? 'opt-in' : 'opt-out';
+          document.getElementById('fastDefaultFromStorage').checked = source.fastDefaultFromStorage !== false;
+          document.getElementById('unknownCategoryPolicy').value = source.unknownCategoryPolicy === 'allow' ? 'allow' : 'block';
+          document.getElementById('reloadOnRevoke').checked = source.reloadOnRevoke !== false;
+          document.getElementById('resolveRegionTimeoutMs').value = Number(source.resolveRegionTimeoutMs) || 800;
+
+          const links = isObject(source.links) ? source.links : {};
+
+          clearRepeater(linksRepeater);
+          if (Array.isArray(links.actions) && links.actions.length) {
+            links.actions.forEach((item) => {
+              if (isObject(item)) {
+                addLinkActionRow(item.title || '', item.url || '');
+              }
+            });
+          } else {
+            if (links.privacyPolicyUrl) {
+              addLinkActionRow('Privacy policy', links.privacyPolicyUrl);
+            }
+            if (links.cookiePolicyUrl) {
+              addLinkActionRow('Cookie policy', links.cookiePolicyUrl);
+            }
+          }
+
+          document.getElementById('activeLocale').value = source.activeLocale || '';
+          document.getElementById('fallbackLocale').value = source.fallbackLocale || 'en';
+
+          clearRepeater(categoriesRepeater);
+          const categories = isObject(source.categories) ? source.categories : {};
+          const categoryEntries = Object.entries(categories);
+          if (categoryEntries.length) {
+            categoryEntries.forEach(([name, keys]) => {
+              const csv = Array.isArray(keys) ? keys.join(',') : '';
+              addCategoryRow(name, csv);
+            });
+          } else {
+            addCategoryRow('necessary', 'security_storage');
+          }
+
+          clearRepeater(localesRepeater);
+          const i18n = isObject(source.i18n) ? source.i18n : {};
+          const localeEntries = isObject(i18n.locales) ? Object.entries(i18n.locales) : [];
+          if (localeEntries.length) {
+            localeEntries.forEach(([code, payload]) => {
+              addLocaleRow(code, encodeInlineJson(payload));
+            });
+          }
+
+          clearRepeater(regionOverridesRepeater);
+          const regionOverrides = isObject(source.regionOverrides) ? source.regionOverrides : {};
+          const overrideEntries = Object.entries(regionOverrides);
+          if (overrideEntries.length) {
+            overrideEntries.forEach(([region, payload]) => {
+              addRegionOverrideRow(region, encodeInlineJson(payload));
+            });
+          }
+
+          const advanced = { ...source };
+          delete advanced.autoStart;
+          delete advanced.version;
+          delete advanced.storageKey;
+          delete advanced.cookieDays;
+          delete advanced.defaultConsentMode;
+          delete advanced.fastDefaultFromStorage;
+          delete advanced.unknownCategoryPolicy;
+          delete advanced.reloadOnRevoke;
+          delete advanced.resolveRegionTimeoutMs;
+          delete advanced.activeLocale;
+          delete advanced.fallbackLocale;
+          delete advanced.links;
+          delete advanced.categories;
+          delete advanced.regionOverrides;
+          delete advanced.i18n;
+
+          const i18nExtras = isObject(i18n)
+            ? Object.fromEntries(Object.entries(i18n).filter(([key]) => !['activeLocale', 'fallbackLocale', 'locales'].includes(key)))
+            : {};
+          if (Object.keys(i18nExtras).length) {
+            advanced.i18n = i18nExtras;
+          }
+
+          const linksExtras = isObject(links)
+            ? Object.fromEntries(Object.entries(links).filter(([key]) => !['actions', 'privacyPolicyUrl', 'cookiePolicyUrl'].includes(key)))
+            : {};
+          if (Object.keys(linksExtras).length) {
+            advanced.links = linksExtras;
+          }
+
+          document.getElementById('advancedJson').value = Object.keys(advanced).length
+            ? JSON.stringify(advanced, null, 2)
+            : '';
+        }
+
+        function update() {
+          try {
+            const options = buildOptions();
+            const json = JSON.stringify(options, null, 2);
+            jsonOutput.value = json;
+
+            const params = new URLSearchParams({
+              theme: readTheme(),
+              options: encodeURIComponent(json),
+            });
+            frame.src = `./preview.html?${params.toString()}`;
+
+            errorNode.style.display = 'none';
+            errorNode.textContent = '';
+          } catch (error) {
+            errorNode.style.display = 'block';
+            errorNode.textContent = error && error.message ? error.message : String(error);
+          }
+        }
+
+        let t = null;
+        const scheduleUpdate = () => {
+          clearTimeout(t);
+          t = setTimeout(update, 120);
+        };
+
+        async function copyText(text) {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return true;
+          }
+
+          const helper = document.createElement('textarea');
+          helper.value = text;
+          helper.setAttribute('readonly', '');
+          helper.style.position = 'fixed';
+          helper.style.top = '-9999px';
+          helper.style.left = '-9999px';
+          document.body.appendChild(helper);
+          helper.focus();
+          helper.select();
+          helper.setSelectionRange(0, helper.value.length);
+
+          let success = false;
+          try {
+            success = document.execCommand('copy');
+          } finally {
+            helper.remove();
+          }
+
+          if (!success) {
+            throw new Error('Clipboard copy command was blocked.');
+          }
+
+          return true;
+        }
+
+        addCategory.addEventListener('click', () => {
+          addCategoryRow();
+          scheduleUpdate();
+        });
+
+        addLinkAction.addEventListener('click', () => {
+          addLinkActionRow();
+          scheduleUpdate();
+        });
+
+        addLocale.addEventListener('click', () => {
+          addLocaleRow();
+          scheduleUpdate();
+        });
+
+        addRegionOverride.addEventListener('click', () => {
+          addRegionOverrideRow();
+          scheduleUpdate();
+        });
+
+        document.body.addEventListener('click', (event) => {
+          const button = event.target.closest('[data-action="remove-row"]');
+          if (!button) {
+            return;
+          }
+          const row = button.closest('.repeater-item');
+          if (row) {
+            row.remove();
+            scheduleUpdate();
+          }
+        });
+
+        document.body.addEventListener('input', (event) => {
+          if (event.target.matches('input, select, textarea')) {
+            scheduleUpdate();
+          }
+        });
+
+        document.body.addEventListener('change', (event) => {
+          if (event.target.matches('input, select, textarea')) {
+            scheduleUpdate();
+          }
+        });
+
+        copyJson.addEventListener('click', async () => {
+          try {
+            await copyText(jsonOutput.value);
+            copyJson.textContent = 'Copied';
+            setTimeout(() => {
+              copyJson.textContent = 'Copy JSON';
+            }, 900);
+          } catch (_error) {
+            copyJson.textContent = 'Copy failed';
+            setTimeout(() => {
+              copyJson.textContent = 'Copy JSON';
+            }, 900);
+          }
+        });
+
+        importJson.addEventListener('click', () => {
+          importJsonFile.click();
+        });
+
+        importJsonFile.addEventListener('change', async () => {
+          const file = importJsonFile.files && importJsonFile.files[0];
+          if (!file) {
+            return;
+          }
+
+          try {
+            const text = await file.text();
+            const parsed = JSON.parse(text);
+            if (!isObject(parsed)) {
+              throw new Error('Imported JSON must be an object.');
+            }
+
+            applyOptionsToForm(parsed);
+            update();
+            importJson.textContent = 'Imported';
+            setTimeout(() => {
+              importJson.textContent = 'Import JSON';
+            }, 900);
+          } catch (error) {
+            errorNode.style.display = 'block';
+            errorNode.textContent = error && error.message ? error.message : String(error);
+            importJson.textContent = 'Import failed';
+            setTimeout(() => {
+              importJson.textContent = 'Import JSON';
+            }, 900);
+          } finally {
+            importJsonFile.value = '';
+          }
+        });
+
+        downloadJson.addEventListener('click', () => {
+          try {
+            const blob = new Blob([jsonOutput.value], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'anubis-options.json';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+            downloadJson.textContent = 'Downloaded';
+            setTimeout(() => {
+              downloadJson.textContent = 'Download JSON';
+            }, 900);
+          } catch (_error) {
+            downloadJson.textContent = 'Download failed';
+            setTimeout(() => {
+              downloadJson.textContent = 'Download JSON';
+            }, 900);
+          }
+        });
+
+        addCategoryRow('necessary', 'security_storage');
+        addCategoryRow('marketing', 'ad_storage,ad_user_data,ad_personalization');
+        addCategoryRow('analytics', 'analytics_storage');
+        addCategoryRow('preferences', 'functionality_storage,personalization_storage');
+
+        addLinkActionRow('Privacy policy', '#privacy');
+        addLinkActionRow('Cookie policy', '#cookies');
+
+        addLocaleRow('en', '{\n  "bannerTitle": "Privacy choices",\n  "bannerDescription": "Control consent categories for this demo page."\n}');
+        addRegionOverrideRow('US-CA', '{\n  "defaultConsentMode": "opt-in"\n}');
+
+        update();
+      }());
+    </script>
+  </body>
+</html>

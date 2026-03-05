@@ -17,6 +17,10 @@
   font-size: 1rem;
 }
 
+.anubis-content {
+  margin: 0 0 10px;
+}
+
 .anubis-description,
 .anubis-dialog-description,
 .anubis-category-description {
@@ -51,6 +55,13 @@
 
 .anubis-link {
   display: inline-block;
+  margin: 0;
+}
+
+.anubis-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin: 0 0 10px;
 }
 

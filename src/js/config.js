@@ -74,6 +74,7 @@ export const DEFAULT_OPTIONS = {
   links: {
     privacyPolicyUrl: '',
     cookiePolicyUrl: '',
+    actions: [],
   },
   actions: DEFAULT_ACTIONS,
 };
@@ -173,6 +174,33 @@ function normalizeActions(actions) {
       footer: normalizeActionList(dialog.footer, DEFAULT_ACTIONS.dialog.footer),
     },
   };
+}
+
+function normalizeLinks(links) {
+  const source = isObject(links) ? links : {};
+  const normalized = {
+    privacyPolicyUrl: typeof source.privacyPolicyUrl === 'string' ? source.privacyPolicyUrl.trim() : '',
+    cookiePolicyUrl: typeof source.cookiePolicyUrl === 'string' ? source.cookiePolicyUrl.trim() : '',
+    actions: [],
+  };
+
+  if (Array.isArray(source.actions)) {
+    normalized.actions = source.actions
+      .map((item) => {
+        if (!isObject(item)) {
+          return null;
+        }
+        const title = typeof item.title === 'string' ? item.title.trim() : '';
+        const url = typeof item.url === 'string' ? item.url.trim() : '';
+        if (!title || !url) {
+          return null;
+        }
+        return { title, url };
+      })
+      .filter(Boolean);
+  }
+
+  return normalized;
 }
 
 function coerceCategoryMap(categories) {
@@ -454,6 +482,7 @@ export async function resolveOptions(rawOptions = {}) {
   }
 
   options.categories = coerceCategoryMap(options.categories);
+  options.links = normalizeLinks(options.links);
 
   options.actions = normalizeActions(options.actions);
 

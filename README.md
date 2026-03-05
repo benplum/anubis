@@ -69,9 +69,15 @@ window.AnubisOptions = {
   links: {
     privacyPolicyUrl: '/privacy',
     cookiePolicyUrl: '/cookies',
+    actions: [
+      { title: 'Privacy policy', url: '/privacy' },
+      { title: 'Cookie policy', url: '/cookies' },
+    ],
   },
 
   categories: {
+
+`links.actions` supports any number of banner links (`title` + `url`). If not provided, Anubis falls back to `privacyPolicyUrl` / `cookiePolicyUrl`.
     necessary: ['security_storage'],
     marketing: ['ad_storage', 'ad_user_data', 'ad_personalization'],
     analytics: ['analytics_storage'],
@@ -289,6 +295,7 @@ Demo includes:
 - Preset selector (`default`, `dialog-first`, `accept-only`, `opt-out-except-eu-ca`)
 - Theme selector (`none`, `light`, `dark`) via query param `?theme=`
 - Developer triggers and live event/state logging
+- In-browser configurator at `demo/configurator.html` (left-side options, right-side preview + JSON)
 
 ## Notes / limits
 

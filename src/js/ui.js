@@ -34,11 +34,29 @@ function categoryRowsMarkup(options) {
 }
 
 function policyLinkMarkup(strings, links) {
+  const actions = Array.isArray(links.actions)
+    ? links.actions
+      .filter((item) => item && typeof item === 'object')
+      .map((item) => {
+        const title = typeof item.title === 'string' ? item.title.trim() : '';
+        const url = typeof item.url === 'string' ? item.url.trim() : '';
+        if (!title || !url) {
+          return '';
+        }
+        return `<a class="anubis-link" href="${escapeHtml(url)}" rel="noopener noreferrer">${escapeHtml(title)}</a>`;
+      })
+      .filter(Boolean)
+    : [];
+
+  if (actions.length) {
+    return `<div class="anubis-links">${actions.join('')}</div>`;
+  }
+
   const href = links.privacyPolicyUrl || links.cookiePolicyUrl;
   if (!href) {
     return '';
   }
-  return `<a class="anubis-link" href="${escapeHtml(href)}" rel="noopener noreferrer">${escapeHtml(strings.policyLabel || 'Learn more')}</a>`;
+  return `<div class="anubis-links"><a class="anubis-link" href="${escapeHtml(href)}" rel="noopener noreferrer">${escapeHtml(strings.policyLabel || 'Learn more')}</a></div>`;
 }
 
 function getStringByKey(strings, key, fallback = '') {
@@ -104,9 +122,11 @@ export function renderConsentUI(options, hooks) {
   container.className = 'anubis-root';
 
   container.innerHTML = `<section class="anubis-banner" role="region" aria-label="${escapeHtml(strings.bannerTitle || 'Privacy choices')}">
-  <h2 class="anubis-title">${escapeHtml(strings.bannerTitle || '')}</h2>
-  ${strings.bannerDescription ? `<p class="anubis-description">${escapeHtml(strings.bannerDescription)}</p>` : ''}
-  ${policyLinkMarkup(strings, options.links || {})}
+  <div class="anubis-content">
+    <h2 class="anubis-title">${escapeHtml(strings.bannerTitle || '')}</h2>
+    ${strings.bannerDescription ? `<p class="anubis-description">${escapeHtml(strings.bannerDescription)}</p>` : ''}
+    ${policyLinkMarkup(strings, options.links || {})}
+  </div>
   <div class="anubis-actions">
     ${bannerActionsMarkup(options, strings)}
   </div>
