@@ -79,9 +79,17 @@ interface AnubisOptions {
   region?: string;
   resolveRegion?: () => Promise<string> | string;
   resolveRegionTimeoutMs?: number;
+  regionCache?: {
+    enabled?: boolean; // default true
+    storage?: 'localStorage' | 'sessionStorage'; // default 'localStorage'
+    key?: string; // default 'anubis-region-cache'
+    ttlSeconds?: number; // default 86400 (24h)
+  };
   regionOverrides?: Record<string, Partial<AnubisOptions>>;
 }
 ```
+
+`resolveRegion` lookups are cached by default (`regionCache.enabled: true`) to avoid repeated network calls.
 
 ### Defaults precedence
 

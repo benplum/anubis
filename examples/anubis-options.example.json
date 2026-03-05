@@ -1,0 +1,137 @@
+{
+  "autoStart": true,
+  "consentVersion": 2,
+  "storageKey": "anubis-consent",
+  "cookieDays": 180,
+  "defaultConsentMode": "opt-out",
+  "defaultConsentOverrides": {
+    "analytics_storage": "denied",
+    "functionality_storage": "granted"
+  },
+  "unknownCategoryPolicy": "block",
+  "reloadOnRevoke": true,
+  "resolveRegionTimeoutMs": 800,
+  "regionCache": {
+    "enabled": true,
+    "storage": "localStorage",
+    "key": "anubis-region-cache",
+    "ttlSeconds": 86400
+  },
+  "activeLocale": "en",
+  "fallbackLocale": "en",
+  "region": "US",
+  "categories": {
+    "necessary": [
+      "security_storage"
+    ],
+    "marketing": [
+      "ad_storage",
+      "ad_user_data",
+      "ad_personalization"
+    ],
+    "analytics": [
+      "analytics_storage"
+    ],
+    "preferences": [
+      "functionality_storage",
+      "personalization_storage"
+    ]
+  },
+  "consentMapping": {
+    "security_storage": "security_storage",
+    "ad_storage": "ad_storage",
+    "ad_user_data": "ad_user_data",
+    "ad_personalization": "ad_personalization",
+    "analytics_storage": "analytics_storage",
+    "functionality_storage": "functionality_storage",
+    "personalization_storage": "personalization_storage"
+  },
+  "links": {
+    "privacyPolicyUrl": "/privacy",
+    "cookiePolicyUrl": "/cookies"
+  },
+  "i18n": {
+    "activeLocale": "en",
+    "fallbackLocale": "en",
+    "locales": {
+      "en": {
+        "bannerTitle": "Your privacy choices",
+        "bannerDescription": "Choose how this site uses cookies and similar technologies.",
+        "acceptAll": "Accept all",
+        "rejectAll": "Reject all",
+        "manage": "Manage choices",
+        "dialogTitle": "Manage consent preferences",
+        "dialogDescription": "Choose which categories you allow. Necessary is always enabled.",
+        "save": "Save choices",
+        "cancel": "Close",
+        "policyLabel": "Learn more",
+        "categories": {
+          "necessary": {
+            "label": "Necessary",
+            "description": "Required for core site functionality."
+          },
+          "marketing": {
+            "label": "Marketing",
+            "description": "Advertising and campaign-related storage."
+          },
+          "analytics": {
+            "label": "Analytics",
+            "description": "Measurement and analytics storage."
+          },
+          "preferences": {
+            "label": "Preferences",
+            "description": "Remembering settings and personalization."
+          }
+        }
+      },
+      "es": {
+        "bannerTitle": "Tus opciones de privacidad",
+        "bannerDescription": "Elige cómo este sitio usa cookies y tecnologías similares.",
+        "acceptAll": "Aceptar todo",
+        "rejectAll": "Rechazar todo",
+        "manage": "Gestionar opciones",
+        "dialogTitle": "Gestionar preferencias de consentimiento",
+        "dialogDescription": "Elige qué categorías permites. Necesarias siempre está activada.",
+        "save": "Guardar opciones",
+        "cancel": "Cerrar",
+        "policyLabel": "Más información",
+        "categories": {
+          "necessary": {
+            "label": "Necesarias",
+            "description": "Requeridas para el funcionamiento básico del sitio."
+          },
+          "marketing": {
+            "label": "Marketing",
+            "description": "Almacenamiento relacionado con publicidad y campañas."
+          },
+          "analytics": {
+            "label": "Analítica",
+            "description": "Almacenamiento para medición y analítica."
+          },
+          "preferences": {
+            "label": "Preferencias",
+            "description": "Recordar ajustes y personalización."
+          }
+        }
+      }
+    }
+  },
+  "regionOverrides": {
+    "US": {
+      "defaultConsentMode": "opt-out",
+      "activeLocale": "en"
+    },
+    "ES": {
+      "defaultConsentMode": "opt-out",
+      "activeLocale": "es"
+    },
+    "BR": {
+      "defaultConsentMode": "opt-in",
+      "activeLocale": "en",
+      "defaultConsentOverrides": {
+        "analytics_storage": "denied",
+        "ad_storage": "denied"
+      }
+    }
+  }
+}

@@ -158,11 +158,20 @@
 
         document.getElementById('resetAnubis').addEventListener('click', () => {
           const storageKey = (window.AnubisOptions && window.AnubisOptions.storageKey) || 'anubis-consent';
+          const regionCacheKey =
+            (window.AnubisOptions &&
+              window.AnubisOptions.regionCache &&
+              window.AnubisOptions.regionCache.key) ||
+            'anubis-region-cache';
 
           try {
             localStorage.removeItem(storageKey);
             localStorage.removeItem('anibus-consent');
             localStorage.removeItem('anubis-consent');
+            localStorage.removeItem(regionCacheKey);
+            localStorage.removeItem('anubis-region-cache');
+            sessionStorage.removeItem(regionCacheKey);
+            sessionStorage.removeItem('anubis-region-cache');
             localStorage.removeItem('demo_preferences');
           } catch (_error) {
           }
@@ -174,7 +183,16 @@
           deleteCookie('demo_marketing');
 
           pushLog('reset', {
-            cleared: [storageKey, 'anibus-consent', 'anubis-consent', 'demo_preferences', 'demo_analytics', 'demo_marketing'],
+            cleared: [
+              storageKey,
+              'anibus-consent',
+              'anubis-consent',
+              regionCacheKey,
+              'anubis-region-cache',
+              'demo_preferences',
+              'demo_analytics',
+              'demo_marketing',
+            ],
           });
 
           setTimeout(() => {

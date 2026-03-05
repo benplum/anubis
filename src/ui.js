@@ -68,13 +68,17 @@ export function renderConsentUI(options, hooks) {
 </section>
 <dialog class="anubis-dialog" aria-label="${escapeHtml(strings.dialogTitle || 'Consent preferences')}">
   <form class="anubis-form" method="dialog">
-    <h3 class="anubis-dialog-title">${escapeHtml(strings.dialogTitle || '')}</h3>
+    <div class="anubis-dialog-head">
+      <h3 class="anubis-dialog-title">${escapeHtml(strings.dialogTitle || '')}</h3>
+      <button type="button" class="anubis-dialog-close" data-anubis-action="close" aria-label="${escapeHtml(strings.cancel || 'Close')}">×</button>
+    </div>
     ${strings.dialogDescription ? `<p class="anubis-dialog-description">${escapeHtml(strings.dialogDescription)}</p>` : ''}
     <div class="anubis-categories">
       ${categoryRowsMarkup(options)}
     </div>
     <div class="anubis-dialog-actions">
-      <button type="button" class="anubis-btn anubis-btn-secondary" data-anubis-action="cancel">${escapeHtml(strings.cancel || 'Cancel')}</button>
+      <button type="button" class="anubis-btn anubis-btn-secondary" data-anubis-action="reject-all">${escapeHtml(strings.rejectAll || 'Reject all')}</button>
+      <button type="button" class="anubis-btn anubis-btn-secondary" data-anubis-action="accept-all">${escapeHtml(strings.acceptAll || 'Accept all')}</button>
       <button type="submit" class="anubis-btn anubis-btn-primary">${escapeHtml(strings.save || 'Save')}</button>
     </div>
   </form>
@@ -85,7 +89,9 @@ export function renderConsentUI(options, hooks) {
   const banner = container.querySelector('.anubis-banner');
   const dialog = container.querySelector('.anubis-dialog');
   const form = container.querySelector('.anubis-form');
-  const cancelButton = container.querySelector('[data-anubis-action="cancel"]');
+  const closeButton = container.querySelector('[data-anubis-action="close"]');
+  const dialogAcceptAllButton = container.querySelector('[data-anubis-action="accept-all"]');
+  const dialogRejectAllButton = container.querySelector('[data-anubis-action="reject-all"]');
   const toggleMap = {};
   Object.keys(options.categories).forEach((name) => {
     toggleMap[name] = container.querySelector(`input[data-anubis-category="${name}"]`);
@@ -97,9 +103,27 @@ export function renderConsentUI(options, hooks) {
     });
   });
 
-  if (cancelButton) {
-    cancelButton.addEventListener('click', () => {
-      dialog.close();
+  if (closeButton) {
+    closeButton.addEventListener('click', () => {
+      closeDialog();
+    });
+  }
+
+  if (dialogAcceptAllButton) {
+    dialogAcceptAllButton.addEventListener('click', () => {
+      if (typeof hooks.onAcceptAll === 'function') {
+        hooks.onAcceptAll();
+      }
+      closeDialog();
+    });
+  }
+
+  if (dialogRejectAllButton) {
+    dialogRejectAllButton.addEventListener('click', () => {
+      if (typeof hooks.onRejectAll === 'function') {
+        hooks.onRejectAll();
+      }
+      closeDialog();
     });
   }
 

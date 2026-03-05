@@ -119,6 +119,12 @@ export async function initAnubis(rawOptions = {}) {
     onSave: (choices) => {
       commitState(applyCategoryChoices(state, choices, options), 'dialog');
     },
+    onAcceptAll: () => {
+      acceptAll();
+    },
+    onRejectAll: () => {
+      rejectAll();
+    },
   });
 
   function commitState(nextState, source) {

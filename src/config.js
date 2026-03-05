@@ -29,6 +29,12 @@ export const DEFAULT_OPTIONS = {
   unknownCategoryPolicy: 'block',
   reloadOnRevoke: true,
   resolveRegionTimeoutMs: 500,
+  regionCache: {
+    enabled: true,
+    storage: 'localStorage',
+    key: 'anubis-region-cache',
+    ttlSeconds: 86400,
+  },
   activeLocale: '',
   fallbackLocale: 'en',
   region: '',
@@ -194,6 +200,11 @@ async function resolveRegion(options) {
     return options.region || '';
   }
 
+  const cached = readRegionCache(options);
+  if (cached) {
+    return cached;
+  }
+
   const timeoutMs = Number(options.resolveRegionTimeoutMs) > 0 ? Number(options.resolveRegionTimeoutMs) : 500;
   const timeoutPromise = new Promise((resolve) => {
     setTimeout(() => resolve(options.region || ''), timeoutMs);
@@ -202,13 +213,105 @@ async function resolveRegion(options) {
   try {
     const result = await Promise.race([Promise.resolve(options.resolveRegion()), timeoutPromise]);
     if (typeof result === 'string' && result.trim()) {
-      return result.trim();
+      const normalized = result.trim();
+      writeRegionCache(options, normalized);
+      return normalized;
     }
   } catch (error) {
     return options.region || '';
   }
 
   return options.region || '';
+}
+
+function getRegionCacheConfig(options) {
+  const incoming = isObject(options.regionCache) ? options.regionCache : {};
+  return {
+    enabled: incoming.enabled !== false,
+    storage: incoming.storage === 'sessionStorage' ? 'sessionStorage' : 'localStorage',
+    key: typeof incoming.key === 'string' && incoming.key.trim() ? incoming.key.trim() : 'anubis-region-cache',
+    ttlSeconds: Number(incoming.ttlSeconds) > 0 ? Number(incoming.ttlSeconds) : 86400,
+  };
+}
+
+function getStorageArea(type) {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  try {
+    if (type === 'sessionStorage' && window.sessionStorage) {
+      return window.sessionStorage;
+    }
+    if (window.localStorage) {
+      return window.localStorage;
+    }
+  } catch (_error) {
+    return null;
+  }
+  return null;
+}
+
+function readRegionCache(options) {
+  const config = getRegionCacheConfig(options);
+  if (!config.enabled) {
+    return '';
+  }
+
+  const storage = getStorageArea(config.storage);
+  if (!storage) {
+    return '';
+  }
+
+  try {
+    const raw = storage.getItem(config.key);
+    if (!raw) {
+      return '';
+    }
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') {
+      storage.removeItem(config.key);
+      return '';
+    }
+
+    const value = typeof parsed.value === 'string' ? parsed.value.trim() : '';
+    const expiresAt = Number(parsed.expiresAt);
+    if (!value || !Number.isFinite(expiresAt)) {
+      storage.removeItem(config.key);
+      return '';
+    }
+
+    if (Date.now() > expiresAt) {
+      storage.removeItem(config.key);
+      return '';
+    }
+
+    return value;
+  } catch (_error) {
+    return '';
+  }
+}
+
+function writeRegionCache(options, value) {
+  const config = getRegionCacheConfig(options);
+  if (!config.enabled || !value) {
+    return;
+  }
+
+  const storage = getStorageArea(config.storage);
+  if (!storage) {
+    return;
+  }
+
+  try {
+    storage.setItem(
+      config.key,
+      JSON.stringify({
+        value,
+        expiresAt: Date.now() + config.ttlSeconds * 1000,
+      }),
+    );
+  } catch (_error) {
+  }
 }
 
 function freezeShallow(object) {
