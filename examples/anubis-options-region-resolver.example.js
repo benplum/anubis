@@ -139,4 +139,4 @@ window.AnubisOptions = {
 };
 
 // Load Anubis after assigning options
-// <script src="/dist/anubis.iife.js"></script>
+// <script src="/dist/anubis.js"></script>

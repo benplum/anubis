@@ -17,7 +17,7 @@ await build({
   format: 'iife',
   globalName: 'AnubisConsent',
   minify: true,
-  outfile: 'dist/anubis.iife.js',
+  outfile: 'dist/anubis.js',
 });
 
 await build({
@@ -25,14 +25,14 @@ await build({
   bundle: true,
   format: 'iife',
   minify: true,
-  outfile: 'dist/anubis-debug.iife.js',
+  outfile: 'dist/anubis-debug.js',
 });
 
 const css = await readFile('src/styles.css', 'utf8');
-const js = await readFile('dist/anubis.iife.js', 'utf8');
+const js = await readFile('dist/anubis.js', 'utf8');
 
 const escapedCss = JSON.stringify(css);
 const injected = `(function(){if(typeof document==='undefined'){return;}if(document.getElementById('anubis-styles')){return;}var s=document.createElement('style');s.id='anubis-styles';s.textContent=${escapedCss};document.head.appendChild(s);}());\n${js}`;
 
-await writeFile('dist/anubis.iife.js', injected, 'utf8');
+await writeFile('dist/anubis.js', injected, 'utf8');
 await writeFile('dist/anubis.css', css, 'utf8');

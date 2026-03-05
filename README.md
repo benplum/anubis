@@ -40,7 +40,7 @@ Load the library first on page, before tag scripts that should be consent-gated.
     }
   };
 </script>
-<script src="/dist/anubis.iife.js"></script>
+<script src="/dist/anubis.js"></script>
 
 <script data-consent-category="analytics" src="https://example.com/analytics.js"></script>
 ```
@@ -251,8 +251,8 @@ npm run build
 Outputs:
 
 - `dist/anubis.esm.js`
-- `dist/anubis.iife.js` (includes style injection)
-- `dist/anubis-debug.iife.js` (debug panel helper)
+- `dist/anubis.js` (includes style injection)
+- `dist/anubis-debug.js` (debug panel helper)
 - `dist/anubis.css`
 
 ## Debug Helper
@@ -260,8 +260,8 @@ Outputs:
 Include this only in development/debug sessions:
 
 ```html
-<script src="/dist/anubis.iife.js"></script>
-<script src="/dist/anubis-debug.iife.js"></script>
+<script src="/dist/anubis.js"></script>
+<script src="/dist/anubis-debug.js"></script>
 ```
 
 The helper shows a floating bottom-right panel with:
