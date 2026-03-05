@@ -132,7 +132,22 @@ Outputs:
 
 - `dist/anubis.esm.js`
 - `dist/anubis.iife.js` (includes style injection)
+- `dist/anubis-debug.iife.js` (debug panel helper)
 - `dist/anubis.css`
+
+## Debug Helper
+
+Include this only in development/debug sessions:
+
+```html
+<script src="/dist/anubis.iife.js"></script>
+<script src="/dist/anubis-debug.iife.js"></script>
+```
+
+The helper shows a floating bottom-right panel with:
+
+- current internal consent state as red/green tokens
+- event log entries for `consent:ready`, `consent:changed`, and `consent:revoked`
 
 ## Demo
 

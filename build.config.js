@@ -20,6 +20,14 @@ await build({
   outfile: 'dist/anubis.iife.js',
 });
 
+await build({
+  entryPoints: ['src/debug-helper.js'],
+  bundle: true,
+  format: 'iife',
+  minify: true,
+  outfile: 'dist/anubis-debug.iife.js',
+});
+
 const css = await readFile('src/styles.css', 'utf8');
 const js = await readFile('dist/anubis.iife.js', 'utf8');
 
