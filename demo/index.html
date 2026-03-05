@@ -145,6 +145,76 @@
             ]
           }
         };
+      } else if (preset === 'opt-out-except-eu-ca') {
+        window.AnubisOptions.defaultConsentMode = 'opt-in';
+        window.AnubisOptions.resolveRegionTimeoutMs = 1200;
+        window.AnubisOptions.regionCache = {
+          enabled: true,
+          storage: 'localStorage',
+          key: 'anubis-region-cache',
+          ttlSeconds: 86400,
+        };
+        window.AnubisOptions.regionOverrides = {
+          NON_EU_CA: {
+            defaultConsentMode: 'opt-out',
+          },
+          EU: {
+            defaultConsentMode: 'opt-in',
+          },
+          'US-CA': {
+            defaultConsentMode: 'opt-in',
+          },
+        };
+        
+        let resolveLocation = async () => {
+            const response = await fetch('https://privacyauthenticator.com/location', {
+              method: 'GET',
+              headers: { Accept: 'application/json' },
+              credentials: 'omit',
+              cache: 'no-store',
+            });
+
+            if (!response.ok) {
+              return '';
+            }
+
+            const data = await response.json();
+            const country = String(data?.country || data?.countryCode || '').trim().toUpperCase();
+            const region = String(data?.region || data?.state || '').trim().toUpperCase();
+
+            if (!country) {
+              return '';
+            }
+
+            if (country === 'US') {
+              if (region === 'CA' || region === 'CALIFORNIA') {
+                return 'US-CA';
+              }
+              return 'NON_EU_CA';
+            }
+
+            const euCountryCodes = new Set([
+              'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR',
+              'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK',
+              'SI', 'ES', 'SE',
+            ]);
+
+            if (euCountryCodes.has(country)) {
+              return 'EU';
+            }
+
+            return 'NON_EU_CA';
+        }
+        
+        window.AnubisOptions.resolveRegion = async () => {
+          try {
+            let loc = resolveLocation();
+            console.log(loc);
+            return loc;
+          } catch (_error) {
+            return '';
+          }
+        };
       }
     </script>
     <script src="../dist/anubis.iife.js"></script>
@@ -160,6 +230,7 @@
           <a href="?preset=default" class="button">Default preset</a>
           <a href="?preset=dialog-first" class="button">Dialog-first preset</a>
           <a href="?preset=accept-only" class="button">Accept-only preset</a>
+          <a href="?preset=opt-out-except-eu-ca" class="button">Opt-out except EU/CA</a>
         </div>
       </section>
 
