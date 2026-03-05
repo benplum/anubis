@@ -3,7 +3,7 @@
 
 window.AnubisOptions = {
   autoStart: true,
-  consentVersion: 2,
+  version: 2,
   storageKey: 'anubis-consent',
   cookieDays: 180,
   defaultConsentMode: 'opt-out',

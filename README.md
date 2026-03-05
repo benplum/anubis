@@ -33,7 +33,7 @@ Load the library first on page, before tag scripts that should be consent-gated.
 <script>
   window.AnubisOptions = {
     defaultConsentMode: 'opt-out',
-    consentVersion: 1,
+    version: 1,
     links: {
       privacyPolicyUrl: '/privacy',
       cookiePolicyUrl: '/cookies'
@@ -52,7 +52,7 @@ type GrantState = 'granted' | 'denied';
 
 interface AnubisOptions {
   autoStart?: boolean;
-  consentVersion?: number;
+  version?: number;
   storageKey?: string;
   cookieDays?: number;
   defaultConsentMode?: 'opt-in' | 'opt-out';
@@ -114,7 +114,7 @@ interface ConsentAction {
 
 1. Base options
 2. Region override
-3. Stored user choice (if `consentVersion` matches)
+3. Stored user choice (if `version` matches)
 
 ## i18n options
 
@@ -148,6 +148,61 @@ document.addEventListener('consent:changed', (event) => {
 });
 ```
 
+## GTM Setup (Consent + Triggers)
+
+Anubis does both:
+
+- Sends Google Consent Mode commands (`gtag('consent', 'default'|'update', ...)`) when `gtag` exists.
+- Pushes custom `dataLayer` events every time consent default/update is applied.
+
+### What is pushed to `dataLayer`
+
+On default:
+
+- `event: 'anubis_consent_default'`
+- `anubisConsentCommand: 'default'`
+- `anubisConsent` object with consent keys
+- flattened consent keys at top-level (for GTM variable access)
+- `anubisRegion`, `anubisversion`
+
+On update:
+
+- `event: 'anubis_consent_update'`
+- `anubisConsentCommand: 'update'`
+- same payload fields as above
+
+### Recommended GTM pattern (primary)
+
+Use GTM Consent Settings to block/fire tags by consent key:
+
+1. In GTM, open each tag and configure Consent Settings.
+2. Require the relevant consent types, for example:
+  - Ads tags: `ad_storage` (+ `ad_user_data`, `ad_personalization` when needed)
+  - Analytics tags: `analytics_storage`
+  - Preference/personalization tags: `functionality_storage` / `personalization_storage`
+3. Publish container.
+
+This is the preferred approach for consent gating in GTM.
+
+### Optional custom trigger pattern
+
+If you need custom logic, use Anubis `dataLayer` events:
+
+1. Create GTM Event Triggers:
+  - `anubis_consent_default`
+  - `anubis_consent_update`
+2. Create Data Layer Variables for keys you care about (for example `analytics_storage`, `ad_storage`).
+3. Add trigger conditions such as:
+  - fire only when `analytics_storage` equals `granted`
+  - block or exception when `ad_storage` equals `denied`
+
+### Category mapping reference
+
+- `marketing` → `ad_storage`, `ad_user_data`, `ad_personalization`
+- `analytics` → `analytics_storage`
+- `preferences` → `functionality_storage`, `personalization_storage`
+- `necessary` → `security_storage` (always granted)
+
 ## Build
 
 ```bash
@@ -173,8 +228,8 @@ Include this only in development/debug sessions:
 
 The helper shows a floating bottom-right panel with:
 
-- current internal consent state as red/green tokens
-- event log entries for `consent:ready`, `consent:changed`, and `consent:revoked`
+- `Consent` tab: current internal consent state as red/green tokens + consent event log
+- `DataLayer` tab: recent `dataLayer` snapshot and new pushes as they happen
 
 ## Demo
 

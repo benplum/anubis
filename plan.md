@@ -50,7 +50,7 @@ Start-Today Additions
 
 Config hardening
 
-* Add `consentVersion` to `window.AnubisOptions`; if saved version differs, reset to defaults and re-show banner.
+* Add `version` to `window.AnubisOptions`; if saved version differs, reset to defaults and re-show banner.
 * Add `unknownCategoryPolicy: 'block' | 'allow'` (default `'block'`) for missing/invalid `data-consent-category` values.
 * Define deterministic precedence: base options → region override → persisted user choice.
 

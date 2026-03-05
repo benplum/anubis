@@ -39,8 +39,8 @@ const DEFAULT_ACTIONS = {
 };
 
 export const DEFAULT_OPTIONS = {
-  version: '1.0.0',
-  consentVersion: 1,
+//   version: '1.0.0',
+  version: 1,
   storageKey: 'anubis-consent',
   cookieDays: 180,
   defaultConsentMode: 'opt-out',

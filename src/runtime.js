@@ -93,7 +93,7 @@ export async function initAnubis(rawOptions = {}) {
   const validStored =
     stored &&
     typeof stored === 'object' &&
-    Number(stored.version) === Number(options.consentVersion) &&
+    Number(stored.version) === Number(options.version) &&
     stored.grants &&
     typeof stored.grants === 'object';
 
@@ -162,7 +162,7 @@ export async function initAnubis(rawOptions = {}) {
 
     saveStoredConsent(
       {
-        version: options.consentVersion,
+        version: options.version,
         grants: state,
         updatedAt: Date.now(),
       },
@@ -182,7 +182,7 @@ export async function initAnubis(rawOptions = {}) {
       mode: options.defaultConsentMode,
       locale: options.activeLocale,
       region: options.region,
-      version: options.consentVersion,
+      version: options.version,
     });
 
     if (revoked) {
@@ -217,7 +217,7 @@ export async function initAnubis(rawOptions = {}) {
     mode: options.defaultConsentMode,
     locale: options.activeLocale,
     region: options.region,
-    version: options.consentVersion,
+    version: options.version,
   });
 
   return {

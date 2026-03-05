@@ -38,6 +38,10 @@
         border-radius: 10px;
         padding: 16px;
       }
+      
+      .demo-card h2 {
+        margin-top: 0;
+      }
 
       .demo-actions {
         display: flex;
@@ -45,11 +49,15 @@
         flex-wrap: wrap;
       }
 
-      button {
+      button,
+      a.button {
         border: 1px solid #cbd5e1;
         background: #fff;
         border-radius: 8px;
+        color: #0f172a;
+        font-size: 14px;
         padding: 8px 12px;
+        text-decoration: none;
         cursor: pointer;
       }
 
@@ -67,7 +75,7 @@
       const preset = new URLSearchParams(window.location.search).get('preset') || 'default';
 
       window.AnubisOptions = {
-        consentVersion: 1,
+        version: 1,
         defaultConsentMode: 'opt-out',
         cookieDays: 180,
         links: {
@@ -145,9 +153,9 @@
           Active preset: <strong id="activePreset"></strong>
         </p>
         <div class="demo-actions">
-          <a href="?preset=default">Default preset</a> ·
-          <a href="?preset=dialog-first">Dialog-first preset</a> ·
-          <a href="?preset=accept-only">Accept-only preset</a>
+          <a href="?preset=default" class="button">Default preset</a>
+          <a href="?preset=dialog-first" class="button">Dialog-first preset</a>
+          <a href="?preset=accept-only" class="button">Accept-only preset</a>
         </div>
       </section>
 

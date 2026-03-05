@@ -15,10 +15,10 @@ function pushDataLayer(command, consent, options) {
   }
   dataLayer.push({
     event: command === 'default' ? 'anubis_consent_default' : 'anubis_consent_update',
-    anubisConsentCommand: command,
+    anubisCommand: command,
     anubisConsent: { ...consent },
     anubisRegion: options.region || '',
-    anubisConsentVersion: options.consentVersion,
+    anubisVersion: options.version,
     ...consent,
   });
 }
