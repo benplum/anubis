@@ -7,6 +7,7 @@ window.AnubisOptions = {
   storageKey: 'anubis-consent',
   cookieDays: 180,
   defaultConsentMode: 'opt-out',
+  fastDefaultFromStorage: true,
   unknownCategoryPolicy: 'block',
   reloadOnRevoke: true,
   resolveRegionTimeoutMs: 1200,

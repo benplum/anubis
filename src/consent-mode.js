@@ -8,23 +8,39 @@ function ensureDataLayer() {
   return window.dataLayer;
 }
 
+function ensureGtag() {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  ensureDataLayer();
+
+  if (typeof window.gtag !== 'function') {
+    window.gtag = function gtag() {
+      window.dataLayer.push(arguments);
+    };
+  }
+
+  return typeof window.gtag === 'function';
+}
+
 function pushDataLayer(command, consent, options) {
   const dataLayer = ensureDataLayer();
   if (!dataLayer) {
     return;
   }
   dataLayer.push({
-    event: command === 'default' ? 'anubis_consent_default' : 'anubis_consent_update',
-    anubisCommand: command,
-    anubisConsent: { ...consent },
-    anubisRegion: options.region || '',
-    anubisVersion: options.version,
+    event: command === 'default' ? 'cmp_consent_default' : 'cmp_consent_update',
+    cmpCommand: command,
+    cmpConsent: { ...consent },
+    cmpRegion: options.region || '',
+    cmpVersion: options.version,
     ...consent,
   });
 }
 
 function applyWithGtag(command, consent) {
-  if (typeof window === 'undefined' || typeof window.gtag !== 'function') {
+  if (!ensureGtag()) {
     return false;
   }
   window.gtag('consent', command, consent);

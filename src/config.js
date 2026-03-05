@@ -44,6 +44,7 @@ export const DEFAULT_OPTIONS = {
   storageKey: 'anubis-consent',
   cookieDays: 180,
   defaultConsentMode: 'opt-out',
+  fastDefaultFromStorage: true,
   defaultConsentOverrides: {},
   unknownCategoryPolicy: 'block',
   reloadOnRevoke: true,

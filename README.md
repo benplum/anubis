@@ -56,6 +56,7 @@ interface AnubisOptions {
   storageKey?: string;
   cookieDays?: number;
   defaultConsentMode?: 'opt-in' | 'opt-out';
+  fastDefaultFromStorage?: boolean; // default true
   defaultConsentOverrides?: Record<string, GrantState>;
   unknownCategoryPolicy?: 'block' | 'allow';
   reloadOnRevoke?: boolean;
@@ -155,20 +156,29 @@ Anubis does both:
 - Sends Google Consent Mode commands (`gtag('consent', 'default'|'update', ...)`) when `gtag` exists.
 - Pushes custom `dataLayer` events every time consent default/update is applied.
 
+If `gtag` is not present, Anubis creates a Google-style fallback shim:
+
+```js
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+```
+
+Then consent commands still execute through `gtag('consent', ...)` and land in `dataLayer`.
+
 ### What is pushed to `dataLayer`
 
 On default:
 
-- `event: 'anubis_consent_default'`
-- `anubisConsentCommand: 'default'`
-- `anubisConsent` object with consent keys
+- `event: 'cmp_consent_default'`
+- `cmpCommand: 'default'`
+- `cmpConsent` object with consent keys
 - flattened consent keys at top-level (for GTM variable access)
-- `anubisRegion`, `anubisversion`
+- `cmpRegion`, `cmpVersion`
 
 On update:
 
-- `event: 'anubis_consent_update'`
-- `anubisConsentCommand: 'update'`
+- `event: 'cmp_consent_update'`
+- `cmpCommand: 'update'`
 - same payload fields as above
 
 ### Recommended GTM pattern (primary)
@@ -189,8 +199,8 @@ This is the preferred approach for consent gating in GTM.
 If you need custom logic, use Anubis `dataLayer` events:
 
 1. Create GTM Event Triggers:
-  - `anubis_consent_default`
-  - `anubis_consent_update`
+  - `cmp_consent_default`
+  - `cmp_consent_update`
 2. Create Data Layer Variables for keys you care about (for example `analytics_storage`, `ad_storage`).
 3. Add trigger conditions such as:
   - fire only when `analytics_storage` equals `granted`

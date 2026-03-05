@@ -163,7 +163,7 @@
     panel.setAttribute('aria-live', 'polite');
     panel.innerHTML = `
       <div class="anubis-debug-header">
-        <span class="anubis-debug-title">Anubis Debug</span>
+        <span class="anubis-debug-title">Anubis</span>
         <div>
           <button type="button" class="anubis-debug-btn" data-anubis-debug="toggle">Collapse</button>
           <button type="button" class="anubis-debug-btn" data-anubis-debug="clear">Clear log</button>
@@ -171,7 +171,7 @@
       </div>
       <div class="anubis-debug-tabs" role="tablist" aria-label="Anubis debug tabs">
         <button type="button" class="anubis-debug-tab" role="tab" aria-selected="true" data-anubis-debug-tab="state">State</button>
-        <button type="button" class="anubis-debug-tab" role="tab" aria-selected="false" data-anubis-debug-tab="internal">Internal Log</button>
+        <button type="button" class="anubis-debug-tab" role="tab" aria-selected="false" data-anubis-debug-tab="internal">Log</button>
         <button type="button" class="anubis-debug-tab" role="tab" aria-selected="false" data-anubis-debug-tab="datalayer">DataLayer</button>
       </div>
       <section class="anubis-debug-section" data-anubis-debug="state-wrap">
@@ -320,6 +320,74 @@
       return originalPush(...items);
     };
 
+    function attachGtagLogger() {
+      let pollId = null;
+      let timeoutId = null;
+
+      function wrapCurrent(reason) {
+        if (typeof window.gtag !== 'function') {
+          return false;
+        }
+
+        const current = window.gtag;
+        if (current.__anubisDebugWrapped) {
+          return true;
+        }
+
+        const original = current;
+        const wrapped = function anubisDebugGtag(...args) {
+          pushDataLayerLog('gtag()', { args });
+          return original.apply(this, args);
+        };
+
+        wrapped.__anubisDebugWrapped = true;
+        wrapped.__anubisDebugOriginal = original;
+        window.gtag = wrapped;
+        pushDataLayerLog('gtag:hooked', { status: reason });
+        return true;
+      }
+
+      if (!wrapCurrent('wrapped-existing')) {
+        pushDataLayerLog('gtag:hooked', { status: 'not-found' });
+
+        pollId = window.setInterval(() => {
+          if (wrapCurrent('wrapped-late')) {
+            if (pollId) {
+              clearInterval(pollId);
+              pollId = null;
+            }
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+              timeoutId = null;
+            }
+          }
+        }, 300);
+
+        timeoutId = window.setTimeout(() => {
+          if (pollId) {
+            clearInterval(pollId);
+            pollId = null;
+          }
+        }, 10000);
+      }
+
+      return function cleanupGtagLogger() {
+        if (pollId) {
+          clearInterval(pollId);
+        }
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+
+        const current = window.gtag;
+        if (typeof current === 'function' && current.__anubisDebugWrapped && typeof current.__anubisDebugOriginal === 'function') {
+          window.gtag = current.__anubisDebugOriginal;
+        }
+      };
+    }
+
+    const cleanupGtagLogger = attachGtagLogger();
+
     if (window.Anubis && typeof window.Anubis.getState === 'function') {
       const state = window.Anubis.getState();
       renderTokens(state);
@@ -346,6 +414,7 @@
     window.AnubisDebugPanel = {
       destroy() {
         dataLayer.push = originalPush;
+        cleanupGtagLogger();
         panel.remove();
         delete window.AnubisDebugPanel;
       },

@@ -1,9 +1,93 @@
-import { resolveOptions, toGoogleConsent, categoryGranted } from './config.js';
+import { resolveOptions, toGoogleConsent, categoryGranted, DEFAULT_OPTIONS } from './config.js';
 import { readStoredConsent, saveStoredConsent, clearClientCookies } from './storage.js';
 import { applyDefaultConsent, applyUpdatedConsent } from './consent-mode.js';
 import { emitConsentEvent, bindConsentTriggers } from './events.js';
 import { createScriptGate } from './script-gate.js';
 import { renderConsentUI } from './ui.js';
+
+function isObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function coerceCategories(categories) {
+  const input = isObject(categories) ? categories : {};
+  const normalized = {};
+
+  Object.keys(input).forEach((name) => {
+    if (!Array.isArray(input[name])) {
+      return;
+    }
+    const keys = input[name].filter((key) => typeof key === 'string' && key.trim()).map((key) => key.trim());
+    if (keys.length) {
+      normalized[name.trim()] = Array.from(new Set(keys));
+    }
+  });
+
+  if (!normalized.necessary && normalized.nessecary) {
+    normalized.necessary = normalized.nessecary.slice();
+  }
+  if (!normalized.necessary || !normalized.necessary.length) {
+    normalized.necessary = ['security_storage'];
+  }
+
+  return normalized;
+}
+
+function statesEqual(a, b) {
+  const keys = new Set([...Object.keys(a || {}), ...Object.keys(b || {})]);
+  for (const key of keys) {
+    if ((a && a[key]) !== (b && b[key])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function applyFastStoredDefault(rawOptions) {
+  const input = isObject(rawOptions) ? rawOptions : {};
+  const enabled = input.fastDefaultFromStorage !== false;
+  if (!enabled) {
+    return { applied: false, googleState: null };
+  }
+
+  const storageKey = typeof input.storageKey === 'string' && input.storageKey.trim()
+    ? input.storageKey.trim()
+    : DEFAULT_OPTIONS.storageKey;
+  const version = Number(input.version ?? DEFAULT_OPTIONS.version);
+
+  const stored = readStoredConsent({ storageKey });
+  const validStored =
+    stored &&
+    typeof stored === 'object' &&
+    Number(stored.version) === version &&
+    stored.grants &&
+    typeof stored.grants === 'object';
+
+  if (!validStored) {
+    return { applied: false, googleState: null };
+  }
+
+  const categories = coerceCategories(input.categories || DEFAULT_OPTIONS.categories);
+  const internalState = { ...stored.grants };
+  categories.necessary.forEach((key) => {
+    internalState[key] = 'granted';
+  });
+
+  const mappingInput = isObject(input.consentMapping) ? input.consentMapping : {};
+  const consentMapping = {};
+  Object.keys(internalState).forEach((key) => {
+    const mapped = mappingInput[key];
+    consentMapping[key] = typeof mapped === 'string' && mapped.trim() ? mapped.trim() : key;
+  });
+
+  const googleState = toGoogleConsent(internalState, consentMapping);
+  applyDefaultConsent(googleState, {
+    region: typeof input.region === 'string' ? input.region : '',
+    version,
+  });
+
+  return { applied: true, googleState };
+}
 
 function waitForBody() {
   if (typeof document === 'undefined' || document.body) {
@@ -87,6 +171,7 @@ function isCategoryAllowed(state, options, category) {
 }
 
 export async function initAnubis(rawOptions = {}) {
+  const fastDefault = applyFastStoredDefault(rawOptions);
   await waitForBody();
   const options = await resolveOptions(rawOptions);
   const stored = readStoredConsent(options);
@@ -108,10 +193,15 @@ export async function initAnubis(rawOptions = {}) {
     });
   }
 
-  applyDefaultConsent(options.defaultConsentGoogle, options);
+  if (!fastDefault.applied) {
+    applyDefaultConsent(options.defaultConsentGoogle, options);
+  }
 
   if (validStored) {
-    applyUpdatedConsent(toGoogleConsent(state, options.consentMapping), options);
+    const storedGoogleState = toGoogleConsent(state, options.consentMapping);
+    if (!fastDefault.applied || !statesEqual(fastDefault.googleState, storedGoogleState)) {
+      applyUpdatedConsent(storedGoogleState, options);
+    }
   }
 
   const scriptGate = createScriptGate(options, (category) => isCategoryAllowed(state, options, category));

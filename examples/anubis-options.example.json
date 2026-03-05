@@ -4,6 +4,7 @@
   "storageKey": "anubis-consent",
   "cookieDays": 180,
   "defaultConsentMode": "opt-out",
+  "fastDefaultFromStorage": true,
   "defaultConsentOverrides": {
     "analytics_storage": "denied",
     "functionality_storage": "granted"
