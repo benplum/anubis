@@ -46,66 +46,59 @@ Load the library first on page, before tag scripts that should be consent-gated.
 <script data-consent-category="analytics" src="https://example.com/analytics.js"></script>
 ```
 
-## `window.AnubisOptions`
+`dist/js/anubis.js` always injects structural CSS. Theme paint is optional and controlled by whichever stylesheet you include (`theme-light`, `theme-dark`, or your own custom theme).
 
-```ts
-type GrantState = 'granted' | 'denied';
+## Source layout
 
-interface AnubisOptions {
-  autoStart?: boolean;
-  version?: number;
-  storageKey?: string;
-  cookieDays?: number;
-  defaultConsentMode?: 'opt-in' | 'opt-out';
-  fastDefaultFromStorage?: boolean; // default true
-  defaultConsentOverrides?: Record<string, GrantState>;
-  unknownCategoryPolicy?: 'block' | 'allow';
-  reloadOnRevoke?: boolean;
+- `src/js/*` → runtime, UI, storage, consent-mode, debug helper
+- `src/css/base.css` → structural-only CSS
+- `src/css/theme-light.css` / `src/css/theme-dark.css` → paint/theme layers
 
-  categories?: Record<string, string[]>;
-  consentMapping?: Record<string, string>;
+## `window.AnubisOptions` (IIFE-first)
 
-  activeLocale?: string;
-  fallbackLocale?: string;
-  i18n?: {
-    activeLocale?: string;
-    fallbackLocale?: string;
-    locales?: Record<string, any>;
-  };
+Most teams use the global options object before loading `dist/js/anubis.js`.
 
-  links?: {
-    privacyPolicyUrl?: string;
-    cookiePolicyUrl?: string;
-  };
+```js
+window.AnubisOptions = {
+  autoStart: true,
+  version: 1,
+  defaultConsentMode: 'opt-out', // or 'opt-in'
+  cookieDays: 180,
+  storageKey: 'anubis-consent',
 
-  actions?: {
-    banner?: ConsentAction[];
-    dialog?: {
-      header?: ConsentAction[];
-      footer?: ConsentAction[];
-    };
-  };
+  links: {
+    privacyPolicyUrl: '/privacy',
+    cookiePolicyUrl: '/cookies',
+  },
 
-  region?: string;
-  resolveRegion?: () => Promise<string> | string;
-  resolveRegionTimeoutMs?: number;
-  regionCache?: {
-    enabled?: boolean; // default true
-    storage?: 'localStorage' | 'sessionStorage'; // default 'localStorage'
-    key?: string; // default 'anubis-region-cache'
-    ttlSeconds?: number; // default 86400 (24h)
-  };
-  regionOverrides?: Record<string, Partial<AnubisOptions>>;
-}
+  categories: {
+    necessary: ['security_storage'],
+    marketing: ['ad_storage', 'ad_user_data', 'ad_personalization'],
+    analytics: ['analytics_storage'],
+    preferences: ['functionality_storage', 'personalization_storage'],
+  },
+};
+```
 
-interface ConsentAction {
-  id: 'open' | 'accept-all' | 'reject-all' | 'save' | 'close';
-  variant?: 'primary' | 'secondary' | 'link' | 'icon';
-  label?: string;
-  labelKey?: string;
-  closeDialog?: boolean;
-  visible?: boolean;
-}
+Common options:
+
+- Core: `autoStart`, `version`, `defaultConsentMode`, `cookieDays`, `storageKey`
+- Consent behavior: `defaultConsentOverrides`, `unknownCategoryPolicy`, `reloadOnRevoke`
+- Categories/mapping: `categories`, `consentMapping`
+- UI/i18n: `links`, `actions`, `activeLocale`, `fallbackLocale`, `i18n.locales`
+- Region: `region`, `resolveRegion`, `resolveRegionTimeoutMs`, `regionCache`, `regionOverrides`
+
+## ESM (advanced)
+
+If you are bundling with Vite/Webpack/Rollup, use ESM:
+
+```js
+import startAnubis from '/dist/js/anubis.esm.js';
+
+startAnubis({
+  defaultConsentMode: 'opt-out',
+  version: 1,
+});
 ```
 
 `resolveRegion` lookups are cached by default (`regionCache.enabled: true`) to avoid repeated network calls.
@@ -270,8 +263,16 @@ Include this only in development/debug sessions:
 
 The helper shows a floating bottom-right panel with:
 
-- `Consent` tab: current internal consent state as red/green tokens + consent event log
-- `DataLayer` tab: recent `dataLayer` snapshot and new pushes as they happen
+- `State` tab: current internal consent state
+- `Log` tab: consent lifecycle events
+- `DataLayer` tab: recent `dataLayer` snapshot + push args (including `gtag()` wrappers)
+
+## Examples
+
+- `examples/anubis-options.example.json` (full baseline options)
+- `examples/region-resolver.example.js` (resolver + region overrides)
+- `examples/us-state-overrides.example.js` (US + state-level overrides)
+- `examples/opt-out-except-eu-ca.example.js` (safe fallback model: default opt-in, opt-out for non-EU/non-CA)
 
 ## Demo
 
@@ -282,6 +283,12 @@ python3 -m http.server 4173
 ```
 
 Then open `http://localhost:4173/demo/`.
+
+Demo includes:
+
+- Preset selector (`default`, `dialog-first`, `accept-only`, `opt-out-except-eu-ca`)
+- Theme selector (`none`, `light`, `dark`) via query param `?theme=`
+- Developer triggers and live event/state logging
 
 ## Notes / limits
 
