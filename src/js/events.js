@@ -11,11 +11,11 @@ export function bindConsentTriggers(handler) {
   }
 
   const onClick = (event) => {
-    const target = event.target && event.target.closest ? event.target.closest('[data-consent-trigger]') : null;
+    const target = event.target && event.target.closest ? event.target.closest('[data-consent]') : null;
     if (!target) {
       return;
     }
-    const action = (target.getAttribute('data-consent-trigger') || '').trim();
+    const action = (target.getAttribute('data-consent') || '').trim();
     if (!action) {
       return;
     }

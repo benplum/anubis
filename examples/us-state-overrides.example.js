@@ -2,25 +2,27 @@
 
 window.AnubisOptions = {
   version: 2,
-  defaultConsentMode: 'opt-out',
+  defaultMode: 'opt-out',
 
   regionOverrides: {
     // Country baseline
     US: {
-      activeLocale: 'en',
-      defaultConsentMode: 'opt-out',
+      localeActive: 'en',
+      defaultMode: 'opt-out',
     },
 
     // State-specific override (applied after US baseline)
     'US-CA': {
       links: {
-        privacyPolicyUrl: '/privacy/california',
-        cookiePolicyUrl: '/cookies/california',
+        actions: [
+          { title: 'Privacy policy', url: '/privacy/california' },
+          { title: 'Cookie policy', url: '/cookies/california' },
+        ],
       },
       actions: {
         banner: [
-          { id: 'reject-all', variant: 'secondary', label: 'Reject all' },
-          { id: 'accept-all', variant: 'primary', label: 'Accept all' },
+          { id: 'reject', label: 'Reject all' },
+          { id: 'accept', variant: 'primary', label: 'Accept all' },
           { id: 'open', variant: 'link', label: 'Your Privacy Choices' },
         ],
       },
@@ -28,11 +30,11 @@ window.AnubisOptions = {
 
     // Optional: fallback when no region can be resolved
     default: {
-      defaultConsentMode: 'opt-out',
+      defaultMode: 'opt-out',
     },
   },
 
-  resolveRegion: async () => {
+  regionResolver: async () => {
     const response = await fetch('https://privacyauthenticator.com/location', {
       method: 'GET',
       headers: { Accept: 'application/json' },

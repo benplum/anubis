@@ -34,11 +34,13 @@ Load the library first on page, before tag scripts that should be consent-gated.
 ```html
 <script>
   window.AnubisOptions = {
-    defaultConsentMode: 'opt-out',
+    defaultMode: 'opt-out',
     version: 1,
     links: {
-      privacyPolicyUrl: '/privacy',
-      cookiePolicyUrl: '/cookies'
+      actions: [
+        { title: 'Privacy policy', url: '/privacy' },
+        { title: 'Cookie policy', url: '/cookies' }
+      ]
     }
   };
 </script>
@@ -70,13 +72,11 @@ Most teams use the global options object before loading `dist/js/anubis.js`.
 window.AnubisOptions = {
   autoStart: true,
   version: 1,
-  defaultConsentMode: 'opt-out', // or 'opt-in'
-  cookieDays: 180,
+  defaultMode: 'opt-out', // or 'opt-in'
+  storageDuration: 180,
   storageKey: 'anubis-consent',
 
   links: {
-    privacyPolicyUrl: '/privacy',
-    cookiePolicyUrl: '/cookies',
     actions: [
       { title: 'Privacy policy', url: '/privacy' },
       { title: 'Cookie policy', url: '/cookies' },
@@ -92,17 +92,17 @@ window.AnubisOptions = {
 };
 ```
 
-`links.actions` supports any number of banner links (`title` + `url`). If not provided, Anubis falls back to `privacyPolicyUrl` / `cookiePolicyUrl`.
+`links.actions` supports any number of banner links (`title` + `url`).
 
 Common options:
 
-- Core: `autoStart`, `version`, `defaultConsentMode`, `cookieDays`, `storageKey`
-- Consent behavior: `defaultConsentOverrides`, `unknownCategoryPolicy`, `reloadOnRevoke`
+- Core: `autoStart`, `version`, `defaultMode`, `storageDuration`, `storageKey`
+- Consent behavior: `defaultConsent`, `unknownPolicy`, `reloadOnRevoke`
 - Categories/mapping: `categories`, `consentMapping`
-- UI/i18n: `links`, `actions`, `activeLocale`, `fallbackLocale`, `i18n.locales`
-- Region: `region`, `resolveRegion`, `resolveRegionTimeoutMs`, `regionCache`, `regionOverrides`
+- UI/i18n: `links`, `actions`, `localeActive`, `localeFallback`, `i18n.locales`
+- Region: `region`, `regionResolver`, `regionTimeout`, `regionCache`, `regionKey`, `regionDuration`, `regionOverrides`
 
-For the necessary-category helper label, you can localize either `alwaysActive` (global UI key) or `categories.necessary.alwaysActive` (category-specific key).
+For the required-category helper label, localize the global `requiredLabel` UI key.
 
 `consentMapping` is optional and only needed when your internal consent keys differ from Google Consent Mode keys. If your category `consent` lists already use Google keys (for example `analytics_storage`, `ad_storage`), you can omit `consentMapping`.
 
@@ -114,12 +114,12 @@ If you are bundling with Vite/Webpack/Rollup, use ESM:
 import startAnubis from '/dist/js/anubis.esm.js';
 
 startAnubis({
-  defaultConsentMode: 'opt-out',
+  defaultMode: 'opt-out',
   version: 1,
 });
 ```
 
-`resolveRegion` lookups are cached by default (`regionCache.enabled: true`) to avoid repeated network calls.
+`regionResolver` lookups are cached by default (`regionCache: true`) and mirrored to both cookie + localStorage.
 
 `actions` lets teams control which built-in buttons render in banner/dialog and in what order.
 
@@ -129,26 +129,28 @@ startAnubis({
 2. Region override chain (broad to specific, e.g. `US` then `US-CA`)
 3. Stored user choice (if `version` matches)
 
-`regionOverrides` supports state/province level keys when `region` (or `resolveRegion`) returns a composite code like `US-CA`.
+`regionOverrides` supports state/province level keys when `region` (or `regionResolver`) returns a composite code like `US-CA`.
 Region values are normalized to uppercase with `-` separators (so `us_ca`, `us-ca`, and `US-CA` are treated the same).
 
 Example (CCPA / CPRA style):
 
 ```js
 window.AnubisOptions = {
-  resolveRegion: async () => 'US-CA',
+  regionResolver: async () => 'US-CA',
   regionOverrides: {
     US: {
       links: {
-        privacyPolicyUrl: '/privacy-us',
+        actions: [
+          { title: 'Privacy policy', url: '/privacy-us' },
+        ],
       },
     },
     'US-CA': {
-      defaultConsentMode: 'opt-out',
+      defaultMode: 'opt-out',
       actions: {
         banner: [
-          { id: 'reject-all', variant: 'secondary', label: 'Reject all' },
-          { id: 'accept-all', variant: 'primary', label: 'Accept all' },
+          { id: 'reject', label: 'Reject all' },
+          { id: 'accept', variant: 'primary', label: 'Accept all' },
           { id: 'open', variant: 'link', label: 'Your Privacy Choices' },
         ],
       },
@@ -161,9 +163,9 @@ window.AnubisOptions = {
 
 Library selects strings in this order:
 
-1. `activeLocale` / `i18n.activeLocale`
+1. `localeActive` / `i18n.localeActive`
 2. `navigator.language` match
-3. `fallbackLocale` / `i18n.fallbackLocale`
+3. `localeFallback` / `i18n.localeFallback`
 4. Built-in English strings
 
 ## Consent triggers
@@ -171,10 +173,10 @@ Library selects strings in this order:
 Use attributes on custom UI elements:
 
 ```html
-<button data-consent-trigger="open">Privacy settings</button>
-<button data-consent-trigger="accept-all">Allow all</button>
-<button data-consent-trigger="reject-all">Reject all</button>
-<button data-consent-trigger="save">Save choices</button>
+<button data-consent="open">Privacy settings</button>
+<button data-consent="accept">Allow all</button>
+<button data-consent="reject">Reject all</button>
+<button data-consent="save">Save choices</button>
 ```
 
 ## Events

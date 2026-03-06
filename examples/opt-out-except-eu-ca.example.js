@@ -8,18 +8,15 @@ window.AnubisOptions = {
   autoStart: true,
   version: 2,
   storageKey: 'anubis-consent',
-  cookieDays: 180,
-  defaultConsentMode: 'opt-in',
-  fastDefaultFromStorage: true,
-  unknownCategoryPolicy: 'block',
+  storageDuration: 180,
+  defaultMode: 'opt-in',
+  fastDefaults: true,
+  unknownPolicy: 'block',
   reloadOnRevoke: true,
-  resolveRegionTimeoutMs: 1200,
-  regionCache: {
-    enabled: true,
-    storage: 'localStorage',
-    key: 'anubis-region-cache',
-    ttlSeconds: 86400,
-  },
+  regionTimeout: 1200,
+  regionCache: true,
+  regionKey: 'anubis-region',
+  regionDuration: 1,
 
   categories: {
     necessary: { consent: ['security_storage'], required: true },
@@ -29,23 +26,25 @@ window.AnubisOptions = {
   },
 
   links: {
-    privacyPolicyUrl: '/privacy',
-    cookiePolicyUrl: '/cookies',
+    actions: [
+      { title: 'Privacy policy', url: '/privacy' },
+      { title: 'Cookie policy', url: '/cookies' },
+    ],
   },
 
   regionOverrides: {
     NON_EU_CA: {
-      defaultConsentMode: 'opt-out',
+      defaultMode: 'opt-out',
     },
     EU: {
-      defaultConsentMode: 'opt-in',
+      defaultMode: 'opt-in',
     },
     'US-CA': {
-      defaultConsentMode: 'opt-in',
+      defaultMode: 'opt-in',
     },
   },
 
-  resolveRegion: async () => {
+  regionResolver: async () => {
     try {
       const response = await fetch('https://privacyauthenticator.com/location', {
         method: 'GET',

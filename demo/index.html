@@ -10,8 +10,8 @@
 
       window.AnubisOptions = {
         version: 1,
-        defaultConsentMode: 'opt-out',
-        cookieDays: 180,
+        defaultMode: 'opt-out',
+        storageDuration: 180,
         links: {
           actions: [
             { title: 'Privacy policy', url: '#privacy' },
@@ -23,14 +23,14 @@
             en: {
               bannerTitle: 'Privacy choices',
               bannerDescription: 'Control consent categories for this demo page.',
-              acceptAll: 'Accept all',
-              rejectAll: 'Reject all',
-              manage: 'Manage',
+              buttonAccept: 'Accept all',
+              buttonReject: 'Reject all',
+              buttonManage: 'Manage',
               dialogTitle: 'Consent settings',
               dialogDescription: 'Enable categories you want to allow.',
-              save: 'Save',
-              cancel: 'Cancel',
-              policyLabel: 'Read policy',
+              buttonSave: 'Save',
+              buttonCancel: 'Cancel',
+              requiredLabel: 'Always active',
               categories: {
                 necessary: { label: 'Necessary', description: 'Always required.' },
                 marketing: { label: 'Marketing', description: 'Ads and related storage.' },
@@ -52,16 +52,16 @@
               { id: 'close', variant: 'icon', label: 'Close dialog', closeDialog: true },
             ],
             footer: [
-              { id: 'reject-all', variant: 'secondary', labelKey: 'rejectAll', closeDialog: true },
-              { id: 'accept-all', variant: 'secondary', labelKey: 'acceptAll', closeDialog: true },
-              { id: 'save', variant: 'primary', labelKey: 'save', closeDialog: true },
+              { id: 'reject', labelKey: 'buttonReject', closeDialog: true },
+              { id: 'accept', labelKey: 'buttonAccept', closeDialog: true },
+              { id: 'save', variant: 'primary', labelKey: 'buttonSave', closeDialog: true },
             ],
           },
         };
       } else if (preset === 'accept-only') {
         window.AnubisOptions.actions = {
           banner: [
-            { id: 'accept-all', variant: 'primary', label: 'Accept all' },
+            { id: 'accept', variant: 'primary', label: 'Accept all' },
             { id: 'open', variant: 'link', label: 'Customize' },
           ],
           dialog: {
@@ -69,33 +69,30 @@
               { id: 'close', variant: 'icon', label: 'Close dialog', closeDialog: true },
             ],
             footer: [
-              { id: 'reject-all', variant: 'secondary', labelKey: 'rejectAll', closeDialog: true },
-              { id: 'save', variant: 'primary', labelKey: 'save', closeDialog: true },
+              { id: 'reject', labelKey: 'buttonReject', closeDialog: true },
+              { id: 'save', variant: 'primary', labelKey: 'buttonSave', closeDialog: true },
             ],
           },
         };
       } else if (preset === 'opt-out-except-eu-ca') {
-        window.AnubisOptions.defaultConsentMode = 'opt-in';
-        window.AnubisOptions.resolveRegionTimeoutMs = 1200;
-        window.AnubisOptions.regionCache = {
-          enabled: true,
-          storage: 'localStorage',
-          key: 'anubis-region-cache',
-          ttlSeconds: 86400,
-        };
+        window.AnubisOptions.defaultMode = 'opt-in';
+        window.AnubisOptions.regionTimeout = 1200;
+        window.AnubisOptions.regionCache = true;
+        window.AnubisOptions.regionKey = 'anubis-region';
+        window.AnubisOptions.regionDuration = 1;
         window.AnubisOptions.regionOverrides = {
           NON_EU_CA: {
-            defaultConsentMode: 'opt-out',
+            defaultMode: 'opt-out',
           },
           EU: {
-            defaultConsentMode: 'opt-in',
+            defaultMode: 'opt-in',
           },
           'US-CA': {
-            defaultConsentMode: 'opt-in',
+            defaultMode: 'opt-in',
           },
         };
 
-        window.AnubisOptions.resolveRegion = async () => {
+        window.AnubisOptions.regionResolver = async () => {
           try {
             const response = await fetch('https://privacyauthenticator.com/location', {
               method: 'GET',
@@ -196,9 +193,9 @@
       <section class="mb-5 panel">
         <h2 class="panel-heading title is-5 mb-0">Tools</h2>
         <div class="panel-block buttons p-5">
-          <button class="button is-light" type="button" data-consent-trigger="open">Open Preferences</button>
-          <button class="button is-light" type="button" data-consent-trigger="accept-all">Accept All</button>
-          <button class="button is-light" type="button" data-consent-trigger="reject-all">Reject All</button>
+          <button class="button is-light" type="button" data-consent="open">Open Preferences</button>
+          <button class="button is-light" type="button" data-consent="accept">Accept All</button>
+          <button class="button is-light" type="button" data-consent="reject">Reject All</button>
           <button class="button is-light" type="button" id="showState">Log Current State</button>
           <button class="button is-light" type="button" id="resetAnubis">Reset Demo</button>
         </div>
@@ -336,20 +333,15 @@
 
         document.getElementById('resetAnubis').addEventListener('click', () => {
           const storageKey = (window.AnubisOptions && window.AnubisOptions.storageKey) || 'anubis-consent';
-          const regionCacheKey =
-            (window.AnubisOptions &&
-              window.AnubisOptions.regionCache &&
-              window.AnubisOptions.regionCache.key) ||
-            'anubis-region-cache';
+          const regionKey =
+            (window.AnubisOptions && typeof window.AnubisOptions.regionKey === 'string' && window.AnubisOptions.regionKey) ||
+            'anubis-region';
 
           try {
             localStorage.removeItem(storageKey);
             localStorage.removeItem('anibus-consent');
             localStorage.removeItem('anubis-consent');
-            localStorage.removeItem(regionCacheKey);
-            localStorage.removeItem('anubis-region-cache');
-            sessionStorage.removeItem(regionCacheKey);
-            sessionStorage.removeItem('anubis-region-cache');
+            localStorage.removeItem(regionKey);
             localStorage.removeItem('demo_preferences');
           } catch (_error) {
           }
@@ -357,6 +349,7 @@
           deleteCookie(storageKey);
           deleteCookie('anibus-consent');
           deleteCookie('anubis-consent');
+          deleteCookie(regionKey);
           deleteCookie('demo_analytics');
           deleteCookie('demo_marketing');
 
@@ -365,8 +358,7 @@
               storageKey,
               'anibus-consent',
               'anubis-consent',
-              regionCacheKey,
-              'anubis-region-cache',
+              regionKey,
               'demo_preferences',
               'demo_analytics',
               'demo_marketing',

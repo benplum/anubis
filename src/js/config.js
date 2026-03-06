@@ -1,22 +1,21 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
+const REGION_COOKIE_FALLBACK_KEY = 'anubis-region';
 
 const EN_STRINGS = {
   bannerTitle: 'Privacy Settings',
   bannerDescription: 'Choose how this site uses cookies and similar technologies.',
-  acceptAll: 'Accept All',
-  rejectAll: 'Reject All',
-  manage: 'Manage Choices',
+  buttonAccept: 'Accept All',
+  buttonReject: 'Reject All',
+  buttonManage: 'Manage Choices',
   dialogTitle: 'Privacy Settings',
   dialogDescription: 'Choose which categories to allow.',
-  alwaysActive: 'Always Active',
-  save: 'Save Choices',
-  cancel: 'Cancel',
-  policyLabel: 'Learn More',
+  requiredLabel: 'Always Active',
+  buttonSave: 'Save Choices',
+  buttonCancel: 'Cancel',
   categories: {
     necessary: {
       label: 'Necessary',
       description: 'Required for core site functionality.',
-      alwaysActive: 'Always active',
     },
     marketing: { 
       label: 'Marketing', 
@@ -33,21 +32,21 @@ const EN_STRINGS = {
   },
 };
 
-const VALID_ACTION_IDS = new Set(['open', 'accept-all', 'reject-all', 'save', 'close']);
-const VALID_ACTION_VARIANTS = new Set(['primary', 'secondary', 'link', 'icon']);
+const VALID_ACTION_IDS = new Set(['open', 'accept', 'reject', 'save', 'close']);
+const VALID_ACTION_VARIANTS = new Set(['primary', 'link', 'icon']);
 
 const DEFAULT_ACTIONS = {
   banner: [
-    { id: 'reject-all', variant: 'secondary', labelKey: 'rejectAll' },
-    { id: 'accept-all', variant: 'primary', labelKey: 'acceptAll' },
-    { id: 'open', variant: 'link', labelKey: 'manage' },
+    { id: 'reject', labelKey: 'buttonReject' },
+    { id: 'accept', variant: 'primary', labelKey: 'buttonAccept' },
+    { id: 'open', variant: 'link', labelKey: 'buttonManage' },
   ],
   dialog: {
-    header: [{ id: 'close', variant: 'icon', labelKey: 'cancel', closeDialog: true }],
+    header: [{ id: 'close', variant: 'icon', labelKey: 'buttonCancel', closeDialog: true }],
     footer: [
-      { id: 'reject-all', variant: 'secondary', labelKey: 'rejectAll', closeDialog: true },
-      { id: 'accept-all', variant: 'secondary', labelKey: 'acceptAll', closeDialog: true },
-      { id: 'save', variant: 'primary', labelKey: 'save', closeDialog: true },
+      { id: 'reject', labelKey: 'buttonReject', closeDialog: true },
+      { id: 'accept', labelKey: 'buttonAccept', closeDialog: true },
+      { id: 'save', variant: 'primary', labelKey: 'buttonSave', closeDialog: true },
     ],
   },
 };
@@ -56,23 +55,24 @@ export const DEFAULT_OPTIONS = {
 //   version: '1.0.0',
   version: 1,
   storageKey: 'anubis-consent',
-  cookieDays: 180,
-  defaultConsentMode: 'opt-out',
-  fastDefaultFromStorage: true,
-  defaultConsentOverrides: {},
-  unknownCategoryPolicy: 'block',
+  storageDuration: 180,
+  //
+  defaultMode: 'opt-out',
+  defaultConsent: {},
+  fastDefaults: true,
+  unknownPolicy: 'block',
   reloadOnRevoke: true,
-  resolveRegionTimeoutMs: 500,
-  regionCache: {
-    enabled: true,
-    storage: 'localStorage',
-    key: 'anubis-region-cache',
-    ttlSeconds: 86400,
-  },
-  activeLocale: '',
-  fallbackLocale: 'en',
+  //
+  localeActive: '',
+  localeFallback: 'en',
+  //
   region: '',
   regionOverrides: {},
+  regionTimeout: 500,
+  regionCache: true,
+  regionKey: 'anubis-region',
+  regionDuration: 1,
+  //
   categories: {
     necessary: { consent: ['security_storage'], required: true },
     marketing: { consent: ['ad_storage', 'ad_user_data', 'ad_personalization'], required: false },
@@ -86,8 +86,6 @@ export const DEFAULT_OPTIONS = {
     },
   },
   links: {
-    privacyPolicyUrl: '',
-    cookiePolicyUrl: '',
     actions: [],
   },
   actions: DEFAULT_ACTIONS,
@@ -124,12 +122,12 @@ function normalizeAction(item, fallback) {
   }
 
   const variantCandidate = typeof input.variant === 'string' ? input.variant.trim() : '';
-  const fallbackVariant = typeof fallback.variant === 'string' ? fallback.variant : 'secondary';
+  const fallbackVariant = typeof fallback.variant === 'string' ? fallback.variant : '';
   const variant = VALID_ACTION_VARIANTS.has(variantCandidate)
     ? variantCandidate
     : VALID_ACTION_VARIANTS.has(fallbackVariant)
       ? fallbackVariant
-      : 'secondary';
+      : '';
 
   const normalized = {
     id,
@@ -193,8 +191,6 @@ function normalizeActions(actions) {
 function normalizeLinks(links) {
   const source = isObject(links) ? links : {};
   const normalized = {
-    privacyPolicyUrl: typeof source.privacyPolicyUrl === 'string' ? source.privacyPolicyUrl.trim() : '',
-    cookiePolicyUrl: typeof source.cookiePolicyUrl === 'string' ? source.cookiePolicyUrl.trim() : '',
     actions: [],
   };
 
@@ -292,16 +288,16 @@ function buildConsentMapping(consentKeys, mappingInput) {
 }
 
 function buildDefaultInternalConsent(options) {
-  const modeGranted = options.defaultConsentMode === 'opt-in' ? 'granted' : 'denied';
+  const modeGranted = options.defaultMode === 'opt-in' ? 'granted' : 'denied';
   const consent = {};
 
   options.consentKeys.forEach((key) => {
     consent[key] = modeGranted;
   });
 
-  if (isObject(options.defaultConsentOverrides)) {
-    Object.keys(options.defaultConsentOverrides).forEach((key) => {
-      const value = options.defaultConsentOverrides[key];
+  if (isObject(options.defaultConsent)) {
+    Object.keys(options.defaultConsent).forEach((key) => {
+      const value = options.defaultConsent[key];
       if (value === 'granted' || value === 'denied') {
         consent[key] = value;
       }
@@ -339,13 +335,13 @@ function pickLocale(options) {
   const locales = options.i18n && isObject(options.i18n.locales) ? options.i18n.locales : {};
   const available = Object.keys(locales);
   if (!available.length) {
-    return { activeLocale: 'en', strings: EN_STRINGS };
+    return { localeActive: 'en', strings: EN_STRINGS };
   }
 
-  const explicit = options.activeLocale || options.i18n.activeLocale;
+  const explicit = options.localeActive || options.i18n.localeActive;
   if (explicit && locales[explicit]) {
     return {
-      activeLocale: explicit,
+      localeActive: explicit,
       strings: mergeDeep(EN_STRINGS, locales[explicit]),
     };
   }
@@ -355,16 +351,16 @@ function pickLocale(options) {
   const navMatch = available.find((name) => name.toLowerCase() === nav || name.toLowerCase() === navBase);
   if (navMatch) {
     return {
-      activeLocale: navMatch,
+      localeActive: navMatch,
       strings: mergeDeep(EN_STRINGS, locales[navMatch]),
     };
   }
 
-  const fallback = options.fallbackLocale || options.i18n.fallbackLocale || 'en';
-  const fallbackLocale = locales[fallback] ? fallback : available[0];
+  const fallback = options.localeFallback || options.i18n.localeFallback || 'en';
+  const resolvedLocale = locales[fallback] ? fallback : available[0];
   return {
-    activeLocale: fallbackLocale,
-    strings: mergeDeep(EN_STRINGS, locales[fallbackLocale]),
+    localeActive: resolvedLocale,
+    strings: mergeDeep(EN_STRINGS, locales[resolvedLocale]),
   };
 }
 
@@ -373,6 +369,35 @@ function normalizeRegionCode(value) {
     return '';
   }
   return value.trim().replace(/_/g, '-').toUpperCase();
+}
+
+function parseJSON(value) {
+  try {
+    return JSON.parse(value);
+  } catch (_error) {
+    return null;
+  }
+}
+
+function readCookie(name) {
+  if (typeof document === 'undefined') {
+    return '';
+  }
+  const target = `${encodeURIComponent(name)}=`;
+  const parts = document.cookie ? document.cookie.split('; ') : [];
+  for (let index = 0; index < parts.length; index += 1) {
+    if (parts[index].indexOf(target) === 0) {
+      return decodeURIComponent(parts[index].slice(target.length));
+    }
+  }
+  return '';
+}
+
+function writeCookie(name, value, maxAgeSeconds) {
+  if (typeof document === 'undefined') {
+    return;
+  }
+  document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Max-Age=${maxAgeSeconds}; Path=/; SameSite=Lax`;
 }
 
 function getRegionOverrideKeys(region) {
@@ -389,10 +414,10 @@ function getRegionOverrideKeys(region) {
   return keys;
 }
 
-async function resolveRegion(options) {
+async function resolveConfiguredRegion(options) {
   const fallbackRegion = normalizeRegionCode(options.region);
 
-  if (typeof options.resolveRegion !== 'function') {
+  if (typeof options.regionResolver !== 'function') {
     return fallbackRegion;
   }
 
@@ -401,13 +426,13 @@ async function resolveRegion(options) {
     return normalizeRegionCode(cached);
   }
 
-  const timeoutMs = Number(options.resolveRegionTimeoutMs) > 0 ? Number(options.resolveRegionTimeoutMs) : 500;
+  const timeoutMs = Number(options.regionTimeout) > 0 ? Number(options.regionTimeout) : 500;
   const timeoutPromise = new Promise((resolve) => {
     setTimeout(() => resolve(fallbackRegion), timeoutMs);
   });
 
   try {
-    const result = await Promise.race([Promise.resolve(options.resolveRegion()), timeoutPromise]);
+    const result = await Promise.race([Promise.resolve(options.regionResolver()), timeoutPromise]);
     const normalized = normalizeRegionCode(result);
     if (normalized) {
       writeRegionCache(options, normalized);
@@ -421,30 +446,13 @@ async function resolveRegion(options) {
 }
 
 function getRegionCacheConfig(options) {
-  const incoming = isObject(options.regionCache) ? options.regionCache : {};
+  const regionKeyInput = typeof options.regionKey === 'string' ? options.regionKey.trim() : '';
+  const regionDurationInput = Number(options.regionDuration);
   return {
-    enabled: incoming.enabled !== false,
-    storage: incoming.storage === 'sessionStorage' ? 'sessionStorage' : 'localStorage',
-    key: typeof incoming.key === 'string' && incoming.key.trim() ? incoming.key.trim() : 'anubis-region-cache',
-    ttlSeconds: Number(incoming.ttlSeconds) > 0 ? Number(incoming.ttlSeconds) : 86400,
+    enabled: options.regionCache !== false,
+    key: regionKeyInput || REGION_COOKIE_FALLBACK_KEY,
+    durationDays: Number.isFinite(regionDurationInput) && regionDurationInput > 0 ? regionDurationInput : 1,
   };
-}
-
-function getStorageArea(type) {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-  try {
-    if (type === 'sessionStorage' && window.sessionStorage) {
-      return window.sessionStorage;
-    }
-    if (window.localStorage) {
-      return window.localStorage;
-    }
-  } catch (_error) {
-    return null;
-  }
-  return null;
 }
 
 function readRegionCache(options) {
@@ -453,38 +461,43 @@ function readRegionCache(options) {
     return '';
   }
 
-  const storage = getStorageArea(config.storage);
-  if (!storage) {
-    return '';
-  }
-
-  try {
-    const raw = storage.getItem(config.key);
+  const readEntry = (raw) => {
     if (!raw) {
       return '';
     }
-    const parsed = JSON.parse(raw);
+    const parsed = parseJSON(raw);
     if (!parsed || typeof parsed !== 'object') {
-      storage.removeItem(config.key);
       return '';
     }
-
     const value = typeof parsed.value === 'string' ? parsed.value.trim() : '';
     const expiresAt = Number(parsed.expiresAt);
-    if (!value || !Number.isFinite(expiresAt)) {
-      storage.removeItem(config.key);
+    if (!value || !Number.isFinite(expiresAt) || Date.now() > expiresAt) {
       return '';
     }
-
-    if (Date.now() > expiresAt) {
-      storage.removeItem(config.key);
-      return '';
-    }
-
     return value;
-  } catch (_error) {
-    return '';
+  };
+
+  if (typeof localStorage !== 'undefined') {
+    const localRaw = localStorage.getItem(config.key);
+    const localValue = readEntry(localRaw);
+    if (localValue) {
+      return localValue;
+    }
+    if (localRaw) {
+      localStorage.removeItem(config.key);
+    }
   }
+
+  const cookieRaw = readCookie(config.key);
+  const cookieValue = readEntry(cookieRaw);
+  if (cookieValue) {
+    return cookieValue;
+  }
+  if (cookieRaw) {
+    writeCookie(config.key, '', 0);
+  }
+
+  return '';
 }
 
 function writeRegionCache(options, value) {
@@ -493,21 +506,21 @@ function writeRegionCache(options, value) {
     return;
   }
 
-  const storage = getStorageArea(config.storage);
-  if (!storage) {
-    return;
-  }
+  const expiresAt = Date.now() + (config.durationDays * DAY_MS);
+  const payload = JSON.stringify({
+    value,
+    expiresAt,
+  });
+  const maxAgeSeconds = Math.max(1, Math.floor((config.durationDays * DAY_MS) / 1000));
 
   try {
-    storage.setItem(
-      config.key,
-      JSON.stringify({
-        value,
-        expiresAt: Date.now() + config.ttlSeconds * 1000,
-      }),
-    );
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(config.key, payload);
+    }
   } catch (_error) {
   }
+
+  writeCookie(config.key, payload, maxAgeSeconds);
 }
 
 function freezeShallow(object) {
@@ -517,7 +530,7 @@ function freezeShallow(object) {
 export async function resolveOptions(rawOptions = {}) {
   let options = mergeDeep(DEFAULT_OPTIONS, isObject(rawOptions) ? rawOptions : {});
 
-  const region = await resolveRegion(options);
+  const region = await resolveConfiguredRegion(options);
   const regionOverrides = isObject(options.regionOverrides) ? options.regionOverrides : {};
   const regionOverrideKeys = getRegionOverrideKeys(region);
   regionOverrideKeys.forEach((overrideKey) => {
@@ -551,8 +564,8 @@ export async function resolveOptions(rawOptions = {}) {
     defaultConsentInternal,
     defaultConsentGoogle,
     strings: locale.strings,
-    activeLocale: locale.activeLocale,
-    cookieMaxAgeSeconds: Math.max(1, Math.floor((Number(options.cookieDays) || 180) * DAY_MS / 1000)),
+    localeActive: locale.localeActive,
+    cookieMaxAgeSeconds: Math.max(1, Math.floor((Number(options.storageDuration) || 180) * DAY_MS / 1000)),
   });
 }
 

@@ -27,7 +27,7 @@
 
         window.AnubisOptions = {
           version: 1,
-          defaultConsentMode: 'opt-out',
+          defaultMode: 'opt-out',
           links: {
             actions: [
               { title: 'Privacy policy', url: '#privacy' },
@@ -53,9 +53,9 @@
       <section class="mb-5 panel">
         <h2 class="panel-heading title is-5 mb-0">Triggers</h2>
         <div class="panel-block buttons p-5">
-          <button class="button is-light is-small" data-consent-trigger="open">Open Preferences</button>
-          <button class="button is-light is-small" data-consent-trigger="accept-all">Accept All</button>
-          <button class="button is-light is-small" data-consent-trigger="reject-all">Reject All</button>
+          <button class="button is-light is-small" data-consent="open">Open Preferences</button>
+          <button class="button is-light is-small" data-consent="accept">Accept All</button>
+          <button class="button is-light is-small" data-consent="reject">Reject All</button>
           <button class="button is-light is-small" id="showState">Log State</button>
           <button class="button is-light is-small" id="resetPreview">Reset</button>
         </div>
@@ -106,26 +106,22 @@
 
         document.getElementById('resetPreview').addEventListener('click', () => {
           const storageKey = (window.AnubisOptions && window.AnubisOptions.storageKey) || 'anubis-consent';
-          const regionCacheKey =
-            (window.AnubisOptions &&
-              window.AnubisOptions.regionCache &&
-              window.AnubisOptions.regionCache.key) ||
-            'anubis-region-cache';
+          const regionKey =
+            (window.AnubisOptions && typeof window.AnubisOptions.regionKey === 'string' && window.AnubisOptions.regionKey) ||
+            'anubis-region';
 
           try {
             localStorage.removeItem(storageKey);
             localStorage.removeItem('anubis-consent');
             localStorage.removeItem('anibus-consent');
-            localStorage.removeItem(regionCacheKey);
-            localStorage.removeItem('anubis-region-cache');
-            sessionStorage.removeItem(regionCacheKey);
-            sessionStorage.removeItem('anubis-region-cache');
+            localStorage.removeItem(regionKey);
           } catch (_error) {
           }
 
           deleteCookie(storageKey);
           deleteCookie('anubis-consent');
           deleteCookie('anibus-consent');
+          deleteCookie(regionKey);
           deleteCookie('demo_analytics');
           deleteCookie('demo_marketing');
 
@@ -134,8 +130,7 @@
               storageKey,
               'anubis-consent',
               'anibus-consent',
-              regionCacheKey,
-              'anubis-region-cache',
+              regionKey,
               'demo_analytics',
               'demo_marketing',
             ],

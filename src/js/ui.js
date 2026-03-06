@@ -34,7 +34,7 @@ function categoryRowsMarkup(options, ids) {
       const required = isRequiredCategory(options, name);
       const disabled = required ? 'disabled aria-disabled="true" checked' : '';
       const alwaysActiveText = required
-        ? escapeHtml(text.alwaysActive || getStringByKey(options.strings, 'alwaysActive', 'Always Active'))
+        ? escapeHtml(getStringByKey(options.strings, 'requiredLabel', 'Always Active'))
         : '';
       const describedBy = description ? ` aria-describedby="${descriptionId}"` : '';
       return `<details class="anubis-cat" data-anubis-cat="${escapeHtml(name)}" id="${rowId}">
@@ -73,11 +73,7 @@ function policyLinkMarkup(strings, links) {
     return `<div class="anubis-links">${actions.join('')}</div>`;
   }
 
-  const href = links.privacyPolicyUrl || links.cookiePolicyUrl;
-  if (!href) {
-    return '';
-  }
-  return `<div class="anubis-links"><a class="anubis-link" href="${escapeHtml(href)}" rel="noopener noreferrer">${escapeHtml(strings.policyLabel || 'Learn more')}</a></div>`;
+  return '';
 }
 
 function getStringByKey(strings, key, fallback = '') {
@@ -99,11 +95,15 @@ function resolveActionText(action, strings) {
 }
 
 function actionButtonMarkup(action, strings, useTriggerAttribute) {
-  const variant = action.variant || 'secondary';
+  const variant = action.variant || '';
   const text = resolveActionText(action, strings);
   const isIcon = variant === 'icon';
-  const className = isIcon ? 'anubis-btn anubis-btn-icon' : `anubis-btn anubis-btn-${variant}`;
-  const triggerAttribute = useTriggerAttribute ? ` data-consent-trigger="${escapeHtml(action.id)}"` : '';
+  const className = isIcon
+    ? 'anubis-btn anubis-btn-icon'
+    : (variant === 'primary' || variant === 'link')
+      ? `anubis-btn anubis-btn-${variant}`
+      : 'anubis-btn';
+  const triggerAttribute = useTriggerAttribute ? ` data-consent="${escapeHtml(action.id)}"` : '';
 
   if (isIcon) {
     return `<button type="button" class="${escapeHtml(className)}" data-anubis-action="${escapeHtml(action.id)}" data-anubis-close-dialog="${action.closeDialog ? '1' : '0'}"${triggerAttribute}><span class="anubis-sr">${escapeHtml(text)}</span></button>`;

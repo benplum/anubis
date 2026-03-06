@@ -46,8 +46,8 @@ function isValidStoredConsent(stored, version) {
 function buildConsentEventDetail(options, state) {
   return {
     state,
-    mode: options.defaultConsentMode,
-    locale: options.activeLocale,
+    mode: options.defaultMode,
+    locale: options.localeActive,
     region: options.region,
     version: options.version,
   };
@@ -55,7 +55,7 @@ function buildConsentEventDetail(options, state) {
 
 function applyFastStoredDefault(rawOptions) {
   const input = isObject(rawOptions) ? rawOptions : {};
-  const enabled = input.fastDefaultFromStorage !== false;
+  const enabled = input.fastDefaults !== false;
   if (!enabled) {
     return { applied: false, googleState: null };
   }
@@ -164,7 +164,7 @@ function isCategoryAllowed(state, options, category) {
   if (state[category]) {
     return state[category] === 'granted';
   }
-  return options.unknownCategoryPolicy === 'allow';
+  return options.unknownPolicy === 'allow';
 }
 
 export async function initAnubis(rawOptions = {}) {
@@ -203,10 +203,10 @@ export async function initAnubis(rawOptions = {}) {
       case 'close':
         ui.closeDialog();
         return;
-      case 'accept-all':
+      case 'accept':
         acceptAll();
         return;
-      case 'reject-all':
+      case 'reject':
         rejectAll();
         return;
       case 'save': {
@@ -266,11 +266,11 @@ export async function initAnubis(rawOptions = {}) {
   }
 
   function acceptAll() {
-    commitState(createAllState(options, 'granted'), 'accept-all');
+    commitState(createAllState(options, 'granted'), 'accept');
   }
 
   function rejectAll() {
-    commitState(createAllState(options, 'denied'), 'reject-all');
+    commitState(createAllState(options, 'denied'), 'reject');
   }
 
   const unbindTriggers = bindConsentTriggers((action) => {

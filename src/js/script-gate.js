@@ -28,7 +28,7 @@ export function createScriptGate(options, isCategoryAllowed) {
   function shouldAllow(script) {
     const category = getScriptCategory(script);
     if (!category) {
-      return options.unknownCategoryPolicy === 'allow';
+      return options.unknownPolicy === 'allow';
     }
     return isCategoryAllowed(category);
   }

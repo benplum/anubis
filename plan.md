@@ -12,7 +12,7 @@ Steps
 
 * Define architecture and constants in `src/index.js`: category map (marketing, analytics, preferences, locked necessary), Google key mapping, defaults (denied except necessary), storage keys, TTL.
 * Implement config parsing and normalization in `src/config.js`: read `window.AnubisOptions`, merge with defaults, validate shape, and freeze effective config.
-* Add configurable consent model in `src/config.js` and `src/consent-mode.js`: support `defaultConsentMode: 'opt-in' | 'opt-out'` plus per-key overrides.
+* Add configurable consent model in `src/config.js` and `src/consent-mode.js`: support `defaultMode: 'opt-in' | 'opt-out'` plus per-key overrides.
 * Implement persistence adapter in `src/storage.js`: read precedence, dual-write (cookie + localStorage), 180-day expiry, corruption-safe parse fallback to defaults.
 * Implement consent signaling in `src/consent-mode.js`: `applyDefaultConsent()` at bootstrap, `applyUpdatedConsent()` on save, auto-detect `window.gtag` else `dataLayer.push`, include `security_storage: 'granted'`.
 * Build UI renderer in `src/ui.js`: compact banner (accept/reject/manage), details dialog with category toggles, disabled necessary toggle, semantic labels, focus return, ESC/close handling.
@@ -21,10 +21,10 @@ Steps
 * Implement script gate in `src/script-gate.js`: scan + observe `script[data-consent-category]`, convert blocked scripts to inert form, reinsert executable clones on grant, track executed ids to avoid duplicates.
 * Preserve script attributes on reinsert (`nonce`, `integrity`, `crossorigin`, `referrerpolicy`, `async`, `defer`) for CSP/security compatibility.
 * Implement revoke behavior in `src/runtime.js`: detect granted→denied transitions, clear first-party non-HttpOnly cookies best-effort, emit revoke event, then `location.reload()` guarded by config.
-* Implement events/triggers in `src/events.js`: dispatch custom events (`consent:ready`, `consent:changed`, `consent:revoked`), bind click handlers for `[data-consent-trigger]` (`open`, `accept-all`, `reject-all`, `save`).
-* Add optional geo-based config in `src/runtime.js`: support async `resolveRegion()` with timeout + fallback to `AnubisOptions.region`, then apply region overrides before rendering.
+* Implement events/triggers in `src/events.js`: dispatch custom events (`consent:ready`, `consent:changed`, `consent:revoked`), bind click handlers for `[data-consent]` (`open`, `accept`, `reject`, `save`).
+* Add optional geo-based config in `src/runtime.js`: support async `regionResolver()` with timeout + fallback to `AnubisOptions.region`, then apply region overrides before rendering.
 * Provide outputs and packaging in `package.json` and `build.config.js`: ESM source + bundled IIFE artifact with optional style injection, small-size build settings.
-* Document integration in `README.md`: load-order requirements (first script, blocking), required attributes (`data-consent-category`, `data-consent-trigger`), GTM/Consent Mode behavior, cookie-clearing limitations.
+* Document integration in `README.md`: load-order requirements (first script, blocking), required attributes (`data-consent-category`, `data-consent`), GTM/Consent Mode behavior, cookie-clearing limitations.
 
 Verification
 
@@ -42,7 +42,7 @@ Necessary handling: internal locked category + always `security_storage: 'grante
 Persistence: cookie + localStorage, 180-day TTL.
 Script execution on grant: reinsert executable script nodes (not just type flip).
 Config entrypoint: `window.AnubisOptions`.
-Default model: `defaultConsentMode` + per-key overrides.
+Default model: `defaultMode` + per-key overrides.
 Translations: locales map with active locale override + auto-pick + fallback.
 Location support: async resolver callback with `AnubisOptions.region` fallback.
 
@@ -51,7 +51,7 @@ Start-Today Additions
 Config hardening
 
 * Add `version` to `window.AnubisOptions`; if saved version differs, reset to defaults and re-show banner.
-* Add `unknownCategoryPolicy: 'block' | 'allow'` (default `'block'`) for missing/invalid `data-consent-category` values.
+* Add `unknownPolicy: 'block' | 'allow'` (default `'block'`) for missing/invalid `data-consent-category` values.
 * Define deterministic precedence: base options → region override → persisted user choice.
 
 Security/runtime
@@ -61,7 +61,7 @@ Security/runtime
 
 Content/i18n
 
-* Add configurable legal metadata and links (`privacyPolicyUrl`, `cookiePolicyUrl`, optional `bannerDescription`).
+* Add configurable legal metadata and links (`links.actions`, optional `bannerDescription`).
 * Add missing-key fallback order: active locale → fallback locale → built-in English.
 
 Non-goals (v1)

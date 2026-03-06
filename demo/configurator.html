@@ -35,37 +35,37 @@
             <label class="label">Storage key
               <input class="input" id="storageKey" value="anubis-consent" />
             </label>
-            <label class="label">Cookie days
-              <input class="input" id="cookieDays" type="number" value="180" />
+            <label class="label">Storage duration (days)
+              <input class="input" id="storageDuration" type="number" value="180" />
             </label>
             <label class="label">Default mode
-              <select class="select" id="defaultConsentMode">
+              <select class="select" id="defaultMode">
                 <option value="opt-out">opt-out</option>
                 <option value="opt-in">opt-in</option>
               </select>
             </label>
-            <label class="label">Unknown category policy
-              <select class="select" id="unknownCategoryPolicy">
+            <label class="label">Unknown category behavior
+              <select class="select" id="unknownPolicy">
                 <option value="block">block</option>
                 <option value="allow">allow</option>
               </select>
             </label>
             <label class="label">Resolve timeout (ms)
-              <input class="input" id="resolveRegionTimeoutMs" type="number" value="800" />
+              <input class="input" id="regionTimeout" type="number" value="800" />
             </label>
 
             <label class="checkbox"><input id="autoStart" type="checkbox" checked /> autoStart</label>
             <br />
-            <label class="checkbox"><input id="fastDefaultFromStorage" type="checkbox" checked /> fastDefaultFromStorage</label>
+            <label class="checkbox"><input id="fastDefaults" type="checkbox" checked /> fastDefaults</label>
             <br />
             <label class="checkbox"><input id="reloadOnRevoke" type="checkbox" checked /> reloadOnRevoke</label>
 
             <h3 class="title is-6 mt-4">Locale</h3>
             <label class="label">Active locale
-              <input class="input" id="activeLocale" value="" placeholder="en" />
+              <input class="input" id="localeActive" value="" placeholder="en" />
             </label>
             <label class="label">Fallback locale
-              <input class="input" id="fallbackLocale" value="en" />
+              <input class="input" id="localeFallback" value="en" />
             </label>
 
             <h3 class="title is-6 mt-4">Link actions</h3>
@@ -90,7 +90,7 @@
             <label class="radio"><input type="radio" name="theme" value="none" /> none</label>
 
             <h3 class="title is-6 mt-4">Advanced JSON override (merged last)</h3>
-            <textarea class="textarea" id="advancedJson" spellcheck="false" rows="8" placeholder='{"regionOverrides":{"US-CA":{"defaultConsentMode":"opt-in"}}}'></textarea>
+            <textarea class="textarea" id="advancedJson" spellcheck="false" rows="8" placeholder='{"regionOverrides":{"US-CA":{"defaultMode":"opt-in"}}}'></textarea>
             </div>
           </article>
         </section>
@@ -210,7 +210,7 @@
           return createRepeaterItem(
             regionOverridesRepeater,
             `<label class="label">Region key<input class="input" data-role="region-key" value="${region}" placeholder="US-CA" /></label>
-             <label class="label">Override JSON<textarea class="textarea" data-role="region-json" spellcheck="false" rows="5" placeholder='{"defaultConsentMode":"opt-in"}'>${json}</textarea></label>
+             <label class="label">Override JSON<textarea class="textarea" data-role="region-json" spellcheck="false" rows="5" placeholder='{"defaultMode":"opt-in"}'>${json}</textarea></label>
              <button class="button is-light is-small" type="button" data-action="remove-row">Remove</button>`,
           );
         }
@@ -296,14 +296,14 @@
             autoStart: document.getElementById('autoStart').checked,
             version: Number(document.getElementById('version').value) || 1,
             storageKey: document.getElementById('storageKey').value.trim() || 'anubis-consent',
-            cookieDays: Number(document.getElementById('cookieDays').value) || 180,
-            defaultConsentMode: document.getElementById('defaultConsentMode').value,
-            fastDefaultFromStorage: document.getElementById('fastDefaultFromStorage').checked,
-            unknownCategoryPolicy: document.getElementById('unknownCategoryPolicy').value,
+            storageDuration: Number(document.getElementById('storageDuration').value) || 180,
+            defaultMode: document.getElementById('defaultMode').value,
+            fastDefaults: document.getElementById('fastDefaults').checked,
+            unknownPolicy: document.getElementById('unknownPolicy').value,
             reloadOnRevoke: document.getElementById('reloadOnRevoke').checked,
-            resolveRegionTimeoutMs: Number(document.getElementById('resolveRegionTimeoutMs').value) || 800,
-            activeLocale: document.getElementById('activeLocale').value.trim(),
-            fallbackLocale: document.getElementById('fallbackLocale').value.trim() || 'en',
+            regionTimeout: Number(document.getElementById('regionTimeout').value) || 800,
+            localeActive: document.getElementById('localeActive').value.trim(),
+            localeFallback: document.getElementById('localeFallback').value.trim() || 'en',
             links: {
               actions: rowsToLinkActions(),
             },
@@ -311,8 +311,8 @@
             regionOverrides,
             i18n: Object.keys(locales).length
               ? {
-                activeLocale: document.getElementById('activeLocale').value.trim(),
-                fallbackLocale: document.getElementById('fallbackLocale').value.trim() || 'en',
+                localeActive: document.getElementById('localeActive').value.trim(),
+                localeFallback: document.getElementById('localeFallback').value.trim() || 'en',
                 locales,
               }
               : undefined,
@@ -332,12 +332,12 @@
           document.getElementById('autoStart').checked = source.autoStart !== false;
           document.getElementById('version').value = Number(source.version) || 1;
           document.getElementById('storageKey').value = source.storageKey || 'anubis-consent';
-          document.getElementById('cookieDays').value = Number(source.cookieDays) || 180;
-          document.getElementById('defaultConsentMode').value = source.defaultConsentMode === 'opt-in' ? 'opt-in' : 'opt-out';
-          document.getElementById('fastDefaultFromStorage').checked = source.fastDefaultFromStorage !== false;
-          document.getElementById('unknownCategoryPolicy').value = source.unknownCategoryPolicy === 'allow' ? 'allow' : 'block';
+          document.getElementById('storageDuration').value = Number(source.storageDuration) || 180;
+          document.getElementById('defaultMode').value = source.defaultMode === 'opt-in' ? 'opt-in' : 'opt-out';
+          document.getElementById('fastDefaults').checked = source.fastDefaults !== false;
+          document.getElementById('unknownPolicy').value = source.unknownPolicy === 'allow' ? 'allow' : 'block';
           document.getElementById('reloadOnRevoke').checked = source.reloadOnRevoke !== false;
-          document.getElementById('resolveRegionTimeoutMs').value = Number(source.resolveRegionTimeoutMs) || 800;
+          document.getElementById('regionTimeout').value = Number(source.regionTimeout) || 800;
 
           const links = isObject(source.links) ? source.links : {};
 
@@ -348,17 +348,10 @@
                 addLinkActionRow(item.title || '', item.url || '');
               }
             });
-          } else {
-            if (links.privacyPolicyUrl) {
-              addLinkActionRow('Privacy policy', links.privacyPolicyUrl);
-            }
-            if (links.cookiePolicyUrl) {
-              addLinkActionRow('Cookie policy', links.cookiePolicyUrl);
-            }
           }
 
-          document.getElementById('activeLocale').value = source.activeLocale || '';
-          document.getElementById('fallbackLocale').value = source.fallbackLocale || 'en';
+          document.getElementById('localeActive').value = source.localeActive || '';
+          document.getElementById('localeFallback').value = source.localeFallback || 'en';
 
           clearRepeater(categoriesRepeater);
           const categories = isObject(source.categories) ? source.categories : {};
@@ -395,28 +388,28 @@
           delete advanced.autoStart;
           delete advanced.version;
           delete advanced.storageKey;
-          delete advanced.cookieDays;
-          delete advanced.defaultConsentMode;
-          delete advanced.fastDefaultFromStorage;
-          delete advanced.unknownCategoryPolicy;
+          delete advanced.storageDuration;
+          delete advanced.defaultMode;
+          delete advanced.fastDefaults;
+          delete advanced.unknownPolicy;
           delete advanced.reloadOnRevoke;
-          delete advanced.resolveRegionTimeoutMs;
-          delete advanced.activeLocale;
-          delete advanced.fallbackLocale;
+          delete advanced.regionTimeout;
+          delete advanced.localeActive;
+          delete advanced.localeFallback;
           delete advanced.links;
           delete advanced.categories;
           delete advanced.regionOverrides;
           delete advanced.i18n;
 
           const i18nExtras = isObject(i18n)
-            ? Object.fromEntries(Object.entries(i18n).filter(([key]) => !['activeLocale', 'fallbackLocale', 'locales'].includes(key)))
+            ? Object.fromEntries(Object.entries(i18n).filter(([key]) => !['localeActive', 'localeFallback', 'locales'].includes(key)))
             : {};
           if (Object.keys(i18nExtras).length) {
             advanced.i18n = i18nExtras;
           }
 
           const linksExtras = isObject(links)
-            ? Object.fromEntries(Object.entries(links).filter(([key]) => !['actions', 'privacyPolicyUrl', 'cookiePolicyUrl'].includes(key)))
+            ? Object.fromEntries(Object.entries(links).filter(([key]) => key !== 'actions'))
             : {};
           if (Object.keys(linksExtras).length) {
             advanced.links = linksExtras;
@@ -610,7 +603,7 @@
         addLinkActionRow('Cookie policy', '#cookies');
 
         addLocaleRow('en', '{\n  "bannerTitle": "Privacy choices",\n  "bannerDescription": "Control consent categories for this demo page."\n}');
-        addRegionOverrideRow('US-CA', '{\n  "defaultConsentMode": "opt-in"\n}');
+        addRegionOverrideRow('US-CA', '{\n  "defaultMode": "opt-in"\n}');
 
         update();
       }());

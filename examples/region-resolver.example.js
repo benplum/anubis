@@ -3,42 +3,35 @@
 
 window.AnubisOptions = {
   autoStart: true,
-  version: 2,
-  storageKey: 'anubis-consent',
-  cookieDays: 180,
-  defaultConsentMode: 'opt-out',
-  fastDefaultFromStorage: true,
-  unknownCategoryPolicy: 'block',
-  reloadOnRevoke: true,
-  resolveRegionTimeoutMs: 1200,
-  regionCache: {
-    enabled: true,
-    storage: 'localStorage',
-    key: 'anubis-region-cache',
-    ttlSeconds: 86400,
-  },
+  defaultMode: 'opt-out',
+  fastDefaults: true,
+  regionTimeout: 1200,
+  regionCache: true,
+  regionKey: 'anubis-region',
+  regionDuration: 1,
 
   categories: {
-      necessary: { consent: ['security_storage'], required: true },
-      marketing: { consent: ['ad_storage', 'ad_user_data', 'ad_personalization'], required: false },
-      analytics: { consent: ['analytics_storage'], required: false },
-      preferences: { consent: ['functionality_storage', 'personalization_storage'], required: false },
+    necessary: { consent: ['security_storage'], required: true },
+    marketing: { consent: ['ad_storage', 'ad_user_data', 'ad_personalization'], required: false },
+    analytics: { consent: ['analytics_storage'], required: false },
+    preferences: { consent: ['functionality_storage', 'personalization_storage'], required: false },
   },
 
   i18n: {
-    fallbackLocale: 'en',
+    localeActive: 'en',
+    localeFallback: 'en',
     locales: {
       en: {
         bannerTitle: 'Your privacy choices',
         bannerDescription: 'Choose how this site uses cookies and similar technologies.',
-        acceptAll: 'Accept all',
-        rejectAll: 'Reject all',
-        manage: 'Manage choices',
+        buttonAccept: 'Accept all',
+        buttonReject: 'Reject all',
+        buttonManage: 'Manage choices',
         dialogTitle: 'Manage consent preferences',
         dialogDescription: 'Choose which categories you allow. Necessary is always enabled.',
-        save: 'Save choices',
-        cancel: 'Close',
-        policyLabel: 'Learn more',
+        buttonSave: 'Save choices',
+        buttonCancel: 'Close',
+        requiredLabel: 'Always active',
         categories: {
           necessary: { label: 'Necessary', description: 'Required for core site functionality.' },
           marketing: { label: 'Marketing', description: 'Advertising and campaign-related storage.' },
@@ -49,14 +42,14 @@ window.AnubisOptions = {
       es: {
         bannerTitle: 'Tus opciones de privacidad',
         bannerDescription: 'Elige cómo este sitio usa cookies y tecnologías similares.',
-        acceptAll: 'Aceptar todo',
-        rejectAll: 'Rechazar todo',
-        manage: 'Gestionar opciones',
+        buttonAccept: 'Aceptar todo',
+        buttonReject: 'Rechazar todo',
+        buttonManage: 'Gestionar opciones',
         dialogTitle: 'Gestionar preferencias de consentimiento',
         dialogDescription: 'Elige qué categorías permites. Necesarias siempre está activada.',
-        save: 'Guardar opciones',
-        cancel: 'Cerrar',
-        policyLabel: 'Más información',
+        buttonSave: 'Guardar opciones',
+        buttonCancel: 'Cerrar',
+        requiredLabel: 'Siempre activo',
         categories: {
           necessary: { label: 'Necesarias', description: 'Requeridas para el funcionamiento básico del sitio.' },
           marketing: { label: 'Marketing', description: 'Almacenamiento relacionado con publicidad y campañas.' },
@@ -68,24 +61,20 @@ window.AnubisOptions = {
   },
 
   regionOverrides: {
-    US: { activeLocale: 'en', defaultConsentMode: 'opt-out' },
-    'US-MD': { activeLocale: 'en', defaultConsentMode: 'opt-out' },
-    ES: { activeLocale: 'es', defaultConsentMode: 'opt-out' },
+    US: { localeActive: 'en', defaultMode: 'opt-out' },
+    'US-MD': { localeActive: 'en', defaultMode: 'opt-out' },
+    ES: { localeActive: 'es', defaultMode: 'opt-out' },
     BR: {
-      activeLocale: 'en',
-      defaultConsentMode: 'opt-in',
-      defaultConsentOverrides: {
+      localeActive: 'en',
+      defaultMode: 'opt-in',
+      defaultConsent: {
         analytics_storage: 'denied',
         ad_storage: 'denied',
       },
     },
   },
 
-  resolveRegion: async () => {
-    // Endpoint requested:
-    // https://privacyauthenticator.com/location
-    // Example response:
-    // {"country":"US","region":"Maryland","city":"Reisterstown"}
+  regionResolver: async () => {
     const response = await fetch('https://privacyauthenticator.com/location', {
       method: 'GET',
       headers: { Accept: 'application/json' },
