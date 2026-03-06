@@ -35,16 +35,16 @@ export function createScriptGate(options, isCategoryAllowed) {
 
   function blockScript(script) {
     const currentType = script.getAttribute('type') || 'text/javascript';
-    if (currentType === 'text/plain' && script.getAttribute('data-anubis-managed') === '1') {
+    if (currentType === 'text/plain' && script.getAttribute('data-managed') === '1') {
       return;
     }
-    script.setAttribute('data-anubis-managed', '1');
-    script.setAttribute('data-anubis-original-type', currentType);
+    script.setAttribute('data-managed', '1');
+    script.setAttribute('data-type', currentType);
     script.setAttribute('type', 'text/plain');
   }
 
   function activateScript(script) {
-    if (script.getAttribute('type') !== 'text/plain' || script.getAttribute('data-anubis-managed') !== '1') {
+    if (script.getAttribute('type') !== 'text/plain' || script.getAttribute('data-managed') !== '1') {
       return;
     }
 
@@ -55,12 +55,12 @@ export function createScriptGate(options, isCategoryAllowed) {
 
     const replacement = document.createElement('script');
     copyAttributes(script, replacement);
-    replacement.type = script.getAttribute('data-anubis-original-type') || 'text/javascript';
+    replacement.type = script.getAttribute('data-type') || 'text/javascript';
     if (script.textContent) {
       replacement.textContent = script.textContent;
     }
-    replacement.setAttribute('data-anubis-managed', '1');
-    replacement.setAttribute('data-anubis-executed', '1');
+    replacement.setAttribute('data-managed', '1');
+    replacement.setAttribute('data-executed', '1');
 
     script.replaceWith(replacement);
     executed.add(key);

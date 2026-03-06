@@ -37,15 +37,15 @@ function categoryRowsMarkup(options, ids) {
         ? escapeHtml(getStringByKey(options.strings, 'requiredLabel', 'Always Active'))
         : '';
       const describedBy = description ? ` aria-describedby="${descriptionId}"` : '';
-      return `<details class="anubis-cat" data-anubis-cat="${escapeHtml(name)}" id="${rowId}">
+      return `<details class="anubis-cat" data-cat="${escapeHtml(name)}" id="${rowId}">
   <summary class="anubis-summary">
     <span class="anubis-summary-handle">
       <span class="anubis-summary-arrow" aria-hidden="true"></span>
       <span class="anubis-summary-title" id="${titleId}">${label}</span>
     </span>
-    <label class="anubis-switch" data-anubis-toggle-wrap="${escapeHtml(name)}">
+    <label class="anubis-switch" data-wrap="${escapeHtml(name)}">
       ${alwaysActiveText ? `<span class="anubis-switch-note">${alwaysActiveText}</span>` : ''}
-      <input class="anubis-toggle" type="checkbox" data-anubis-cat="${escapeHtml(name)}" aria-labelledby="${titleId}"${describedBy} ${disabled}>
+      <input class="anubis-toggle" type="checkbox" data-cat="${escapeHtml(name)}" aria-labelledby="${titleId}"${describedBy} ${disabled}>
     </label>
   </summary>
   ${description ? `<p class="anubis-desc" id="${descriptionId}">${description}</p>` : ''}
@@ -106,10 +106,10 @@ function actionButtonMarkup(action, strings, useTriggerAttribute) {
   const triggerAttribute = useTriggerAttribute ? ` data-consent="${escapeHtml(action.id)}"` : '';
 
   if (isIcon) {
-    return `<button type="button" class="${escapeHtml(className)}" data-anubis-action="${escapeHtml(action.id)}" data-anubis-close-dialog="${action.closeDialog ? '1' : '0'}"${triggerAttribute}><span class="anubis-sr">${escapeHtml(text)}</span></button>`;
+    return `<button type="button" class="${escapeHtml(className)}" data-action="${escapeHtml(action.id)}" data-close="${action.closeDialog ? '1' : '0'}"${triggerAttribute}><span class="anubis-sr">${escapeHtml(text)}</span></button>`;
   }
 
-  return `<button type="button" class="${escapeHtml(className)}" data-anubis-action="${escapeHtml(action.id)}" data-anubis-close-dialog="${action.closeDialog ? '1' : '0'}"${triggerAttribute}>${escapeHtml(text)}</button>`;
+  return `<button type="button" class="${escapeHtml(className)}" data-action="${escapeHtml(action.id)}" data-close="${action.closeDialog ? '1' : '0'}"${triggerAttribute}>${escapeHtml(text)}</button>`;
 }
 
 function bannerActionsMarkup(options, strings) {
@@ -195,7 +195,7 @@ function cloneAnubisStylesIntoShadow(shadowRoot) {
 
   [...baseNodes, ...themeNodes].forEach((node) => {
     const clone = node.cloneNode(true);
-    clone.setAttribute('data-anubis-shadow-style', '1');
+    clone.setAttribute('data-shadow', '1');
     shadowRoot.appendChild(clone);
   });
 }
@@ -205,7 +205,7 @@ function refreshAnubisShadowStyles(shadowRoot) {
     return;
   }
 
-  shadowRoot.querySelectorAll('[data-anubis-shadow-style="1"]').forEach((node) => {
+  shadowRoot.querySelectorAll('[data-shadow="1"]').forEach((node) => {
     node.remove();
   });
 
@@ -280,7 +280,7 @@ export function renderConsentUI(options, hooks) {
   const form = container.querySelector('.anubis-form');
   const toggleMap = {};
   Object.keys(options.categories).forEach((name) => {
-    toggleMap[name] = container.querySelector(`input[data-anubis-cat="${name}"]`);
+    toggleMap[name] = container.querySelector(`input[data-cat="${name}"]`);
   });
 
   container.querySelectorAll('.anubis-switch, .anubis-toggle').forEach((node) => {
@@ -336,17 +336,17 @@ export function renderConsentUI(options, hooks) {
   }
 
   container.addEventListener('click', (event) => {
-    const actionButton = event.target && event.target.closest ? event.target.closest('[data-anubis-action]') : null;
+    const actionButton = event.target && event.target.closest ? event.target.closest('[data-action]') : null;
     if (!actionButton || !container.contains(actionButton)) {
       return;
     }
 
-    const action = (actionButton.getAttribute('data-anubis-action') || '').trim();
+    const action = (actionButton.getAttribute('data-action') || '').trim();
     if (!action) {
       return;
     }
 
-    const closeAfter = actionButton.getAttribute('data-anubis-close-dialog') === '1';
+    const closeAfter = actionButton.getAttribute('data-close') === '1';
     const source = actionButton.closest('.anubis-dialog') ? 'dialog' : 'banner';
 
     if (typeof hooks.onAction === 'function') {
