@@ -30,11 +30,11 @@ function pushDataLayer(command, consent, options) {
     return;
   }
   dataLayer.push({
-    event: command === 'default' ? 'cmp_consent_default' : 'cmp_consent_update',
-    cmpCommand: command,
-    cmpConsent: { ...consent },
-    cmpRegion: options.region || '',
-    cmpVersion: options.version,
+    event: command === 'default' ? 'consent_default' : 'consent_update',
+    consentCommand: command,
+    consentState: { ...consent },
+    consentRegion: options.region || '',
+    consentVersion: options.version,
     ...consent,
   });
 }

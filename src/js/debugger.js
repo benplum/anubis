@@ -296,7 +296,7 @@
       return () => document.removeEventListener(name, handler);
     }
 
-    ['consent:ready', 'consent:changed', 'consent:revoked'].forEach((eventName) => {
+    ['consent:ready', 'consent:updated', 'consent:revoked'].forEach((eventName) => {
       consentEventUnsubscribers.push(bindConsentLogEvent(eventName));
     });
 
@@ -311,7 +311,7 @@
     dataLayer.push = function anubisDebugDataLayerPush(...items) {
       const first = items[0];
       const eventName = first && typeof first === 'object' && first.event ? String(first.event) : 'dataLayer.push';
-      const command = first && typeof first === 'object' ? first.cmpCommand || first.event || '' : '';
+      const command = first && typeof first === 'object' ? first.consentCommand || first.event || '' : '';
 
       pushDataLayerLog(eventName, {
         command,

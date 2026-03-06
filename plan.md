@@ -21,7 +21,7 @@ Steps
 * Implement script gate in `src/script-gate.js`: scan + observe `script[data-consent-category]`, convert blocked scripts to inert form, reinsert executable clones on grant, track executed ids to avoid duplicates.
 * Preserve script attributes on reinsert (`nonce`, `integrity`, `crossorigin`, `referrerpolicy`, `async`, `defer`) for CSP/security compatibility.
 * Implement revoke behavior in `src/runtime.js`: detect granted→denied transitions, clear first-party non-HttpOnly cookies best-effort, emit revoke event, then `location.reload()` guarded by config.
-* Implement events/triggers in `src/events.js`: dispatch custom events (`consent:ready`, `consent:changed`, `consent:revoked`), bind click handlers for `[data-consent]` (`open`, `accept`, `reject`, `save`).
+* Implement events/triggers in `src/events.js`: dispatch custom events (`consent:ready`, `consent:updated`, `consent:revoked`), bind click handlers for `[data-consent]` (`open`, `accept`, `reject`, `save`).
 * Add optional geo-based config in `src/runtime.js`: support async `regionResolver()` with timeout + fallback to `ConsentOptions.region`, then apply region overrides before rendering.
 * Provide outputs and packaging in `package.json` and `build.config.js`: ESM source + bundled IIFE artifact with optional style injection, small-size build settings.
 * Document integration in `README.md`: load-order requirements (first script, blocking), required attributes (`data-consent-category`, `data-consent`), GTM/Consent Mode behavior, cookie-clearing limitations.

@@ -78,7 +78,7 @@
         };
 
         document.addEventListener('consent:ready', (e) => pushLog('ready', e.detail));
-        document.addEventListener('consent:changed', (e) => pushLog('changed', e.detail));
+        document.addEventListener('consent:updated', (e) => pushLog('changed', e.detail));
         document.addEventListener('consent:revoked', (e) => pushLog('revoked', e.detail));
 
         document.getElementById('showState').addEventListener('click', () => {

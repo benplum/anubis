@@ -248,7 +248,7 @@ export async function initAnubis(rawOptions = {}) {
     ui.updateFromState(state);
     ui.showBanner(false);
 
-    emitConsentEvent('consent:changed', {
+    emitConsentEvent('consent:updated', {
       source,
       googleState,
       ...buildConsentEventDetail(options, state),

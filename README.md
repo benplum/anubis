@@ -50,7 +50,7 @@ Load the library first on page, before tag scripts that should be consent-gated.
 <script data-consent-category="analytics" src="https://example.com/analytics.js"></script>
 ```
 
-Use `dist/js/consent.bundled.js` for auto-injected structural CSS (previous default behavior). Use `dist/js/consent.js` when you want a lean runtime and explicitly load `dist/css/consent.css` yourself.
+Use `dist/js/consent.bundled.js` for auto-injected structural CSS. Use `dist/js/consent.js` when you want a lean runtime and explicitly load `dist/css/consent.css` yourself.
 
 Anubis mounts its UI in a Shadow Root by default to isolate consent UI styles from host frameworks (for example Bulma/Tailwind). It mirrors Anubis style nodes (`consent.css` and theme stylesheets) into that shadow root.
 
@@ -182,11 +182,11 @@ Use attributes on custom UI elements:
 ## Events
 
 - `consent:ready`
-- `consent:changed`
+- `consent:updated`
 - `consent:revoked`
 
 ```js
-document.addEventListener('consent:changed', (event) => {
+document.addEventListener('consent:updated', (event) => {
   console.log(event.detail.state, event.detail.googleState);
 });
 ```
@@ -211,16 +211,16 @@ Then consent commands still execute through `gtag('consent', ...)` and land in `
 
 On default:
 
-- `event: 'cmp_consent_default'`
-- `cmpCommand: 'default'`
-- `cmpConsent` object with consent keys
+- `event: 'consent_default'`
+- `consentCommand: 'default'`
+- `consentState` object with consent keys
 - flattened consent keys at top-level (for GTM variable access)
-- `cmpRegion`, `cmpVersion`
+- `consentRegion`, `consentVersion`
 
 On update:
 
-- `event: 'cmp_consent_update'`
-- `cmpCommand: 'update'`
+- `event: 'consent_update'`
+- `consentCommand: 'update'`
 - same payload fields as above
 
 ### Recommended GTM pattern (primary)
@@ -241,8 +241,8 @@ This is the preferred approach for consent gating in GTM.
 If you need custom logic, use Anubis `dataLayer` events:
 
 1. Create GTM Event Triggers:
-  - `cmp_consent_default`
-  - `cmp_consent_update`
+  - `consent_default`
+  - `consent_update`
 2. Create Data Layer Variables for keys you care about (for example `analytics_storage`, `ad_storage`).
 3. Add trigger conditions such as:
   - fire only when `analytics_storage` equals `granted`
