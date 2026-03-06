@@ -12,6 +12,7 @@
         if (theme !== 'none') {
           const link = document.createElement('link');
           link.rel = 'stylesheet';
+          link.setAttribute('data-anubis-theme', '1');
           link.href = `../dist/css/theme-${theme}.css`;
           document.head.appendChild(link);
         }

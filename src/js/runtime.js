@@ -311,6 +311,9 @@ export async function initAnubis(rawOptions = {}) {
     destroy: () => {
       unbindTriggers();
       scriptGate.disconnect();
+      if (ui && typeof ui.destroy === 'function') {
+        ui.destroy();
+      }
     },
   };
 }

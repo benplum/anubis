@@ -140,70 +140,113 @@
         };
       }
     </script>
-    <link id="anubisTheme" rel="stylesheet" href="../dist/css/theme-light.css" />
+    <script>
+      (function () {
+        const params = new URLSearchParams(window.location.search);
+        const allowedThemes = new Set(['none', 'light', 'dark']);
+        const nextTheme = params.get('theme');
+        const theme = allowedThemes.has(nextTheme) ? nextTheme : 'light';
+        const link = document.createElement('link');
+        link.id = 'anubisTheme';
+        link.setAttribute('data-anubis-theme', '1');
+        link.rel = 'stylesheet';
+        if (theme !== 'none') {
+          link.href = `../dist/css/theme-${theme}.css`;
+        }
+        document.head.appendChild(link);
+      }());
+    </script>
     <script src="../dist/js/anubis.js"></script>
     <script src="../dist/js/anubis-debug.js"></script>
   </head>
   <body>
-    <main class="container mt-5 mb-6">
-      <h1>Consent Demo</h1>
+    <main class="container is-max-desktop mt-5 mb-6 px-3">
+      <div class="navbar mb-5">
+        <div class="navbar-start">
+          <div class="navbar-item">
+            <h1 class="title is-3">Anubis</h1>
+          </div>
+        </div>
+        <div class="navbar-end">
+          <div class="navbar-item">
+            <a href="./configurator.html" class="button is-link">Open Configurator</a>
+          </div>
+        </div>
+      </div>
 
-      <section class="mb-5">
-        <h2>Preset Layouts</h2>
-        <p>
-          <a href="?preset=default">Default preset</a>
-          ·
-          <a href="?preset=dialog-first">Dialog-first preset</a>
-          ·
-          <a href="?preset=accept-only">Accept-only preset</a>
-          ·
-          <a href="?preset=opt-out-except-eu-ca">Opt-out except EU/CA</a>
-          ·
-          <a href="./configurator.html">Open Configurator</a>
-        </p>
+      <section class="mb-5 panel">
+        <h2 class="panel-heading title is-5 mb-0">Preset Layouts</h2>
+        <div class="panel-block buttons p-5">
+          <a href="?preset=default" class="button is-light">Default preset</a>
+          <a href="?preset=dialog-first" class="button is-light">Dialog-first preset</a>
+          <a href="?preset=accept-only" class="button is-light">Accept-only preset</a>
+          <a href="?preset=opt-out-except-eu-ca" class="button is-light">Opt-out except EU/CA</a>
+        </div>
       </section>
 
-      <section class="mb-5">
-        <h2>Theme</h2>
-        <p>
-          <button class="button is-small" type="button" data-theme="none">None</button>
-          <button class="button is-small" type="button" data-theme="light">Light</button>
-          <button class="button is-small" type="button" data-theme="dark">Dark</button>
-        </p>
+      <section class="mb-5 panel">
+        <h2 class="panel-heading title is-5 mb-0">Theme</h2>
+        <div class="panel-block buttons p-5">
+          <button class="button is-light" type="button" data-theme="none">None</button>
+          <button class="button is-light" type="button" data-theme="light">Light</button>
+          <button class="button is-light" type="button" data-theme="dark">Dark</button>
+        </div>
       </section>
 
-      <section class="mb-5">
-        <h2>Developer Triggers</h2>
-        <p>
-          <button class="button is-small" data-consent-trigger="open">Open Preferences</button>
-          <button class="button is-small" data-consent-trigger="accept-all">Accept All</button>
-          <button class="button is-small" data-consent-trigger="reject-all">Reject All</button>
-          <button class="button is-small" id="showState">Log Current State</button>
-          <button class="button is-small" id="resetAnubis">Reset Demo</button>
-        </p>
+      <section class="mb-5 panel">
+        <h2 class="panel-heading title is-5 mb-0">Tools</h2>
+        <div class="panel-block buttons p-5">
+          <button class="button is-light" type="button" data-consent-trigger="open">Open Preferences</button>
+          <button class="button is-light" type="button" data-consent-trigger="accept-all">Accept All</button>
+          <button class="button is-light" type="button" data-consent-trigger="reject-all">Reject All</button>
+          <button class="button is-light" type="button" id="showState">Log Current State</button>
+          <button class="button is-light" type="button" id="resetAnubis">Reset Demo</button>
+        </div>
       </section>
 
-      <section>
-        <h2>Console Events</h2>
-        <pre id="log"></pre>
+      <section class="mb-5 panel">
+        <h2 class="panel-heading title is-5 mb-0">Log</h2>
+        <div class="panel-block p-0">
+          <pre id="log"></pre>
+        </div>
       </section>
     </main>
 
     <script>
       (function () {
-        const active = document.querySelector(`[href*="preset=${preset}"]`);
-        if (active) {
-          active.setAttribute('aria-current', 'page');
-        }
-
         const params = new URLSearchParams(window.location.search);
+        const presetButtons = Array.from(document.querySelectorAll('a[href*="preset="]'));
+        const configuratorLink = document.querySelector('a[href*="configurator.html"]');
+
+        const syncDemoLinks = () => {
+          presetButtons.forEach((button) => {
+            const href = button.getAttribute('href') || '';
+            const hrefParams = new URLSearchParams(href.split('?')[1] || '');
+            const buttonPreset = hrefParams.get('preset') || 'default';
+            const nextParams = new URLSearchParams(params.toString());
+            nextParams.set('preset', buttonPreset);
+            button.setAttribute('href', `?${nextParams.toString()}`);
+
+            const isActive = buttonPreset === preset;
+            button.setAttribute('aria-current', isActive ? 'page' : 'false');
+            button.classList.toggle('is-link', isActive);
+            button.classList.toggle('is-light', !isActive);
+          });
+
+          if (configuratorLink) {
+            configuratorLink.setAttribute('href', `./configurator.html?${params.toString()}`);
+          }
+        };
+
+        syncDemoLinks();
+
         const allowedThemes = new Set(['none', 'light', 'dark']);
         const initialTheme = params.get('theme');
         let theme = allowedThemes.has(initialTheme) ? initialTheme : 'light';
         const themeLink = document.getElementById('anubisTheme');
         const themeButtons = Array.from(document.querySelectorAll('[data-theme]'));
 
-        const applyTheme = (nextTheme) => {
+        const applyTheme = (nextTheme, shouldReload = false) => {
           if (!allowedThemes.has(nextTheme)) {
             return;
           }
@@ -215,6 +258,13 @@
           }
           params.set('theme', theme);
           history.replaceState(null, '', `${location.pathname}?${params.toString()}`);
+          syncDemoLinks();
+
+          if (shouldReload) {
+            location.assign(`${location.pathname}?${params.toString()}`);
+            return;
+          }
+
           themeButtons.forEach((button) => {
             const isActive = button.getAttribute('data-theme') === theme;
             button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
@@ -225,7 +275,7 @@
 
         themeButtons.forEach((button) => {
           button.addEventListener('click', () => {
-            applyTheme(button.getAttribute('data-theme'));
+            applyTheme(button.getAttribute('data-theme'), true);
           });
         });
 

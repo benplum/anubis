@@ -118,6 +118,58 @@ function dialogFooterActionsMarkup(options, strings) {
   return actions.map((action) => actionButtonMarkup(action, strings, false)).join('');
 }
 
+function isAnubisStylesheetLink(node) {
+  if (!node || node.tagName !== 'LINK') {
+    return false;
+  }
+  if ((node.getAttribute('rel') || '').toLowerCase() !== 'stylesheet') {
+    return false;
+  }
+
+  if (node.id === 'anubisTheme' || node.hasAttribute('data-anubis-theme')) {
+    return true;
+  }
+
+  const href = (node.getAttribute('href') || '').toLowerCase();
+  return href.includes('anubis.css')
+    || href.includes('theme-light.css')
+    || href.includes('theme-dark.css')
+    || href.includes('/anubis/');
+}
+
+function cloneAnubisStylesIntoShadow(shadowRoot) {
+  if (!shadowRoot || typeof shadowRoot.appendChild !== 'function') {
+    return;
+  }
+
+  const seen = new Set();
+  const styleNodes = [];
+  const inlineBase = document.getElementById('anubis-styles');
+  if (inlineBase && inlineBase.tagName === 'STYLE') {
+    styleNodes.push(inlineBase);
+  }
+
+  document.querySelectorAll('style[data-anubis-theme]').forEach((node) => {
+    styleNodes.push(node);
+  });
+
+  document.querySelectorAll('link[rel="stylesheet"]').forEach((node) => {
+    if (!isAnubisStylesheetLink(node)) {
+      return;
+    }
+    const href = node.getAttribute('href') || '';
+    if (seen.has(href)) {
+      return;
+    }
+    seen.add(href);
+    styleNodes.push(node);
+  });
+
+  styleNodes.forEach((node) => {
+    shadowRoot.appendChild(node.cloneNode(true));
+  });
+}
+
 export function renderConsentUI(options, hooks) {
   if (typeof document === 'undefined') {
     return {
@@ -126,10 +178,16 @@ export function renderConsentUI(options, hooks) {
       closeDialog: () => {},
       updateFromState: () => {},
       readCategoryChoices: () => ({}),
+      destroy: () => {},
     };
   }
 
   const strings = options.strings;
+  const host = document.createElement('div');
+  host.className = 'anubis-shadow-host';
+  const shadowRoot = host.attachShadow({ mode: 'open' });
+  cloneAnubisStylesIntoShadow(shadowRoot);
+
   const container = document.createElement('div');
   container.className = 'anubis-root';
   const idSeed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -171,7 +229,8 @@ export function renderConsentUI(options, hooks) {
   </form>
 </dialog>`;
 
-  document.body.prepend(container);
+  shadowRoot.appendChild(container);
+  document.body.prepend(host);
 
   const banner = container.querySelector('.anubis-banner');
   const dialog = container.querySelector('.anubis-dialog');
@@ -280,5 +339,10 @@ export function renderConsentUI(options, hooks) {
     closeDialog,
     updateFromState,
     readCategoryChoices,
+    destroy: () => {
+      if (host.parentNode) {
+        host.parentNode.removeChild(host);
+      }
+    },
   };
 }

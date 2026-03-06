@@ -15,14 +15,7 @@
     }
   }
 
-  function ensureStyles() {
-    if (document.getElementById('anubis-debug-styles')) {
-      return;
-    }
-
-    const style = document.createElement('style');
-    style.id = 'anubis-debug-styles';
-    style.textContent = `
+  const DEBUG_STYLES = `
       .anubis-debug {
         position: fixed;
         right: 12px;
@@ -159,14 +152,19 @@
       }
     `;
 
-    document.head.appendChild(style);
-  }
-
   function nowLabel() {
     return new Date().toLocaleTimeString();
   }
 
   function buildPanel() {
+    const host = document.createElement('div');
+    host.className = 'anubis-debug-host';
+    const shadowRoot = host.attachShadow({ mode: 'open' });
+
+    const style = document.createElement('style');
+    style.textContent = DEBUG_STYLES;
+    shadowRoot.appendChild(style);
+
     const panel = document.createElement('aside');
     panel.className = 'anubis-debug';
     panel.setAttribute('aria-live', 'polite');
@@ -189,8 +187,9 @@
       <section class="anubis-debug-body" data-anubis-debug="consent-log" hidden></section>
       <section class="anubis-debug-body" data-anubis-debug="datalayer-log" hidden></section>
     `;
-    document.body.appendChild(panel);
-    return panel;
+    shadowRoot.appendChild(panel);
+    document.body.appendChild(host);
+    return { panel, host };
   }
 
   function ensureDataLayer() {
@@ -201,8 +200,7 @@
   }
 
   function init() {
-    ensureStyles();
-    const panel = buildPanel();
+    const { panel, host } = buildPanel();
     const tokensNode = panel.querySelector('[data-anubis-debug="tokens"]');
     const consentLogNode = panel.querySelector('[data-anubis-debug="consent-log"]');
     const dataLayerLogNode = panel.querySelector('[data-anubis-debug="datalayer-log"]');
@@ -419,7 +417,7 @@
         consentEventUnsubscribers.forEach((unsubscribe) => unsubscribe());
         dataLayer.push = originalPush;
         cleanupGtagLogger();
-        panel.remove();
+        host.remove();
         delete window.AnubisDebugPanel;
       },
     };

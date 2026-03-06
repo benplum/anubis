@@ -48,6 +48,10 @@ Load the library first on page, before tag scripts that should be consent-gated.
 
 `dist/js/anubis.js` always injects structural CSS. Theme paint is optional and controlled by whichever stylesheet you include (`theme-light`, `theme-dark`, or your own custom theme).
 
+Anubis mounts its UI in a Shadow Root by default to isolate consent UI styles from host frameworks (for example Bulma/Tailwind). It mirrors Anubis style nodes (`anubis.css` and theme stylesheets) into that shadow root.
+
+The base stylesheet (`src/css/base.css`) also applies safe typography/control defaults inside the Anubis root (color, font-size, font-weight, line-height, form control inheritance, box sizing) to reduce inherited host-style drift. For visual customization, prefer editing theme files (`theme-light` / `theme-dark`) or overriding Anubis CSS variables instead of relying on host-page framework styles.
+
 ## Source layout
 
 - `src/js/*` → runtime, UI, storage, consent-mode, debug helper

@@ -2,7 +2,7 @@ export function emitConsentEvent(name, detail = {}) {
   if (typeof document === 'undefined') {
     return;
   }
-  document.dispatchEvent(new CustomEvent(name, { detail, bubbles: true }));
+  document.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
 }
 
 export function bindConsentTriggers(handler) {
