@@ -6,11 +6,22 @@
 }
 
 .anubis-root {
-  color: var(--anubis-fg, #000);
-  font-family: var(--anubis-font-family, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif);
-  font-size: 14px;
+  --anubis-bg: #fff;
+  --anubis-fg: #000;
+  --anubis-font-family: sans-serif;
+  --anubis-font-size: 16px;
+  --anubis-space: 12px;
+  --anubis-space-sm: calc(var(--anubis-space) * .5);
+  --anubis-space-lg: calc(var(--anubis-space) * 1.5);
+  --anubis-z: 99999;
+}
+
+.anubis-root {
+  color: var(--anubis-fg);
+  font-family: var(--anubis-font-family);
+  font-size: var(--anubis-font-size);
   font-weight: 400;
-  line-height: 1.45;
+  line-height: 1.3;
   font-style: normal;
   letter-spacing: normal;
   text-transform: none;
@@ -25,56 +36,54 @@
 .anubis-root input,
 .anubis-root select,
 .anubis-root textarea {
-  color: inherit;
-  font: inherit;
+  font-size: inherit;
   letter-spacing: inherit;
   line-height: inherit;
+  /* color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit; */
 }
 
 .anubis-banner {
   position: fixed;
   inset: auto 16px 16px;
   max-width: 460px;
-  padding: calc(var(--anubis-space, 12px) + 2px);
-  background: var(--anubis-bg, #fff);
-  border-width: 1px;
-  border-style: solid;
-  box-sizing: border-box;
-  z-index: var(--anubis-z, 99999);
+  padding: var(--anubis-space-lg);
+  background: var(--anubis-bg);
+  border: 1px solid;
+  z-index: var(--anubis-z);
 }
 
 .anubis-title {
-  margin: 0 0 6px;
-  font-size: 1rem;
+  margin: 0 0 var(--anubis-space-sm);
 }
 
 .anubis-content {
-  margin: 0 0 10px;
+  margin: 0 0 var(--anubis-space);
 }
 
-.anubis-description,
-.anubis-dialog-description,
-.anubis-category-description {
-  margin: 0 0 8px;
-  font-size: 0.9rem;
+.anubis-desc {
+  margin: 0 0 var(--anubis-space);
 }
 
-.anubis-actions,
-.anubis-dialog-actions {
+.anubis-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--anubis-space);
   flex-wrap: wrap;
 }
 
 .anubis-btn {
-  border-width: 1px;
-  border-style: solid;
-  border-radius: 8px;
-  padding: 8px 12px;
+  background: var(--anubis-bg);
+  border: 1px solid;
+  color: inherit;
+  padding: var(--anubis-space) var(--anubis-space-lg);
   cursor: pointer;
 }
 
 .anubis-btn-primary {
+  background: var(--anubis-fg);
+  color: var(--anubis-bg);
 }
 
 .anubis-btn-link {
@@ -85,6 +94,7 @@
 }
 
 .anubis-link {
+  color: inherit;
   display: inline-block;
   margin: 0;
 }
@@ -92,59 +102,62 @@
 .anubis-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 10px;
+  gap: var(--anubis-space-sm);
+  margin: 0 0 var(--anubis-space);
 }
 
 .anubis-dialog {
-  background: var(--anubis-bg, #fff);
-  border-width: 1px;
-  border-style: solid;
-  border-radius: var(--anubis-radius, 10px);
-  width: min(560px, calc(100vw - 24px));
+  background: var(--anubis-bg);
+  border: 1px solid;
+  width: min(560px, calc(100vw - var(--anubis-space-lg)));
   padding: 16px;
+}
+
+.anubis-dialog .anubis-desc {
+  margin-bottom: var(--anubis-space-lg);
 }
 
 .anubis-form {
   margin: 0;
 }
 
-.anubis-dialog-head {
+.anubis-dialog-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--anubis-space-sm);
 }
 
-.anubis-dialog-head-actions {
-  display: inline-flex;
+.anubis-dialog .anubis-actions {
+  /* display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--anubis-space-sm); */
 }
 
-.anubis-dialog-title {
-  margin: 0 0 8px;
+.anubis-dialog .anubis-title {
+  margin: 0;
 }
 
 .anubis-btn-icon {
-  border-width: 1px;
-  border-style: solid;
-  border-radius: 8px;
-  width: 30px;
-  height: 30px;
+  border: 1px solid;
+  width: 40px;
+  height: 40px;
   line-height: 1;
-  font-size: 18px;
   padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
+button.anubis-btn-icon {
+  font-size: 1.75rem;
+}
+
 .anubis-btn-icon::before {
   content: '×';
 }
 
-.anubis-visually-hidden {
+.anubis-sr {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -156,70 +169,70 @@
   border: 0;
 }
 
-.anubis-categories {
+.anubis-cats {
   display: grid;
-  gap: 8px;
-  margin: 0 0 12px;
+  gap: var(--anubis-space-sm);
+  margin: 0 0 var(--anubis-space);
 }
 
-.anubis-category-row {
-  border-width: 1px;
-  border-style: solid;
-  border-radius: 8px;
-  padding: 8px;
+.anubis-cat {
+  border: 1px solid;
+  padding: var(--anubis-space);
 }
 
-.anubis-category-summary {
+.anubis-summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--anubis-space);
   list-style: none;
   cursor: pointer;
   user-select: none;
 }
 
-.anubis-category-summary::-webkit-details-marker {
+.anubis-summary::-webkit-details-marker {
   display: none;
 }
 
-.anubis-category-summary-left {
+.anubis-summary-handle {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--anubis-space);
   font-weight: 600;
 }
 
-.anubis-category-arrow {
+.anubis-summary-arrow {
   width: 0;
   height: 0;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 6px solid currentColor;
+  border: var(--anubis-space-sm) solid transparent;
+  border-right-width: 0;
+  border-left-color: currentColor;
   transition: transform 0.15s ease;
 }
 
-.anubis-category-row[open] .anubis-category-arrow {
+.anubis-cat[open] .anubis-summary-arrow {
   transform: rotate(90deg);
 }
 
-.anubis-category-switch {
+.anubis-switch {
   display: inline-flex;
   align-items: center;
 }
 
-.anubis-category-description {
-  margin: 8px 0 0;
+.anubis-cat .anubis-desc {
+  margin: var(--anubis-space) 0 0;
 }
 
 .anubis-toggle {
+  height: var(--anubis-space-lg);
+  width: var(--anubis-space-lg);
   margin: 0;
 }
 
 .anubis-btn:focus-visible,
 .anubis-link:focus-visible,
 .anubis-toggle:focus-visible,
-.anubis-category-summary:focus-visible {
-  outline: 2px solid currentColor;
+.anubis-summary:focus-visible {
+  outline: 2px solid var(--anubis-fg);
   outline-offset: 2px;
 }

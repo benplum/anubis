@@ -305,6 +305,11 @@ export async function initAnubis(rawOptions = {}) {
     getState: () => ({ ...state }),
     getOptions: () => options,
     open: () => ui.openDialog(),
+    refreshStyles: () => {
+      if (ui && typeof ui.refreshStyles === 'function') {
+        ui.refreshStyles();
+      }
+    },
     acceptAll,
     rejectAll,
     saveChoices: (choices) => commitState(applyCategoryChoices(state, choices || {}, options), 'api'),

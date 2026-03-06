@@ -52,6 +52,8 @@ Anubis mounts its UI in a Shadow Root by default to isolate consent UI styles fr
 
 The base stylesheet (`src/css/base.css`) also applies safe typography/control defaults inside the Anubis root (color, font-size, font-weight, line-height, form control inheritance, box sizing) to reduce inherited host-style drift. For visual customization, prefer editing theme files (`theme-light` / `theme-dark`) or overriding Anubis CSS variables instead of relying on host-page framework styles.
 
+If you swap or disable theme stylesheets after initialization, call `window.Anubis.refreshStyles()` (or `api.refreshStyles()` in ESM mode) to re-sync shadow-root styles from current page styles.
+
 ## Source layout
 
 - `src/js/*` → runtime, UI, storage, consent-mode, debug helper
