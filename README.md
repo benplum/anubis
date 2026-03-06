@@ -297,6 +297,10 @@ Demo includes:
 - Developer triggers and live event/state logging
 - In-browser configurator at `demo/configurator.html` (left-side options, right-side preview + JSON)
 
+Demo pages (`index`, `preview`, `configurator`) use Bulma CSS from CDN for baseline styling:
+
+- `https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css`
+
 ## Notes / limits
 
 - On revoke, cookie clearing is best effort for first-party readable cookies only.

@@ -4,217 +4,98 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Anubis Configurator</title>
-    <style>
-      * { box-sizing: border-box; }
-      body {
-        margin: 0;
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-        background: #f8fafc;
-        color: #0f172a;
-      }
-      .layout {
-        display: grid;
-        grid-template-columns: minmax(340px, 42%) 1fr;
-        gap: 12px;
-        min-height: 100vh;
-        padding: 12px;
-      }
-      .panel {
-        background: #fff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        overflow: hidden;
-        min-width: 0;
-      }
-      .panel-head {
-        padding: 12px;
-        border-bottom: 1px solid #e2e8f0;
-      }
-      .panel-body {
-        padding: 12px;
-      }
-      h1 { margin: 0; font-size: 18px; }
-      h2 { margin: 0 0 8px; font-size: 14px; }
-      .section {
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 10px;
-        margin-bottom: 10px;
-      }
-      .grid {
-        display: grid;
-        gap: 8px;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .field {
-        display: grid;
-        gap: 4px;
-      }
-      .field-full { grid-column: 1 / -1; }
-      label { font-size: 12px; color: #475569; }
-      input, select, textarea, button {
-        font: inherit;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        padding: 7px 8px;
-        background: #fff;
-        color: #0f172a;
-      }
-      textarea { min-height: 82px; resize: vertical; }
-      .inline {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 13px;
-      }
-      .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-      .space-between { justify-content: space-between; }
-      .muted { color: #64748b; font-size: 12px; }
-      .repeater {
-        display: grid;
-        gap: 8px;
-      }
-      .repeater-item {
-        border: 1px dashed #cbd5e1;
-        border-radius: 10px;
-        padding: 8px;
-        display: grid;
-        gap: 8px;
-      }
-      .repeater-actions {
-        display: flex;
-        justify-content: flex-end;
-      }
-      .error {
-        color: #991b1b;
-        background: #fee2e2;
-        border: 1px solid #fecaca;
-        border-radius: 8px;
-        padding: 8px;
-        font-size: 12px;
-        margin-bottom: 8px;
-        display: none;
-      }
-      iframe {
-        width: 100%;
-        min-height: 56vh;
-        border: 1px solid #cbd5e1;
-        border-radius: 10px;
-        background: #fff;
-      }
-      #jsonOutput {
-        width: 100%;
-        min-height: 32vh;
-        background: #0b1020;
-        color: #e2e8f0;
-      }
-      @media (max-width: 1100px) {
-        .layout { grid-template-columns: 1fr; }
-      }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css" />
   </head>
   <body>
-    <div class="layout">
-      <section class="panel">
-        <div class="panel-head">
-          <h1>Configuration</h1>
-        </div>
-        <div class="panel-body">
-          <div id="error" class="error"></div>
+    <main class="container is-fluid mt-5 mb-6">
+      <h1>Anubis Configurator</h1>
+      <p>Left: options. Right: live preview and generated JSON.</p>
 
-          <div class="section">
-            <h2>Core</h2>
-            <div class="grid">
-              <div class="field"><label>Version</label><input id="version" type="number" value="1" /></div>
-              <div class="field"><label>Storage key</label><input id="storageKey" value="anubis-consent" /></div>
-              <div class="field"><label>Cookie days</label><input id="cookieDays" type="number" value="180" /></div>
-              <div class="field"><label>Default mode</label><select id="defaultConsentMode"><option value="opt-out">opt-out</option><option value="opt-in">opt-in</option></select></div>
-              <div class="field"><label>Unknown category policy</label><select id="unknownCategoryPolicy"><option value="block">block</option><option value="allow">allow</option></select></div>
-              <div class="field"><label>Resolve timeout (ms)</label><input id="resolveRegionTimeoutMs" type="number" value="800" /></div>
-            </div>
-            <div class="row" style="margin-top:8px;">
-              <label class="inline"><input id="autoStart" type="checkbox" checked /> autoStart</label>
-              <label class="inline"><input id="fastDefaultFromStorage" type="checkbox" checked /> fastDefaultFromStorage</label>
-              <label class="inline"><input id="reloadOnRevoke" type="checkbox" checked /> reloadOnRevoke</label>
-            </div>
-          </div>
+      <div class="columns is-variable is-4">
+        <section class="column is-6">
+          <article>
+            <header><strong>Configuration</strong></header>
+            <p id="error" class="notification is-danger is-light" hidden></p>
 
-          <div class="section">
-            <h2>Links + Locale</h2>
-            <div class="grid">
-              <div class="field"><label>Active locale</label><input id="activeLocale" value="" placeholder="en" /></div>
-              <div class="field"><label>Fallback locale</label><input id="fallbackLocale" value="en" /></div>
-            </div>
-          </div>
+            <h3>Core</h3>
+            <label>Version
+              <input id="version" type="number" value="1" />
+            </label>
+            <label>Storage key
+              <input id="storageKey" value="anubis-consent" />
+            </label>
+            <label>Cookie days
+              <input id="cookieDays" type="number" value="180" />
+            </label>
+            <label>Default mode
+              <select id="defaultConsentMode">
+                <option value="opt-out">opt-out</option>
+                <option value="opt-in">opt-in</option>
+              </select>
+            </label>
+            <label>Unknown category policy
+              <select id="unknownCategoryPolicy">
+                <option value="block">block</option>
+                <option value="allow">allow</option>
+              </select>
+            </label>
+            <label>Resolve timeout (ms)
+              <input id="resolveRegionTimeoutMs" type="number" value="800" />
+            </label>
 
-          <div class="section">
-            <div class="row space-between">
-              <h2>Link actions</h2>
-              <button id="addLinkAction" type="button">Add link</button>
-            </div>
-            <p class="muted">Configurable links shown in the banner (`title` + `url`).</p>
-            <div id="linksRepeater" class="repeater"></div>
-          </div>
+            <label><input id="autoStart" type="checkbox" checked /> autoStart</label>
+            <label><input id="fastDefaultFromStorage" type="checkbox" checked /> fastDefaultFromStorage</label>
+            <label><input id="reloadOnRevoke" type="checkbox" checked /> reloadOnRevoke</label>
 
-          <div class="section">
-            <div class="row space-between">
-              <h2>Categories</h2>
-              <button id="addCategory" type="button">Add category</button>
-            </div>
-            <p class="muted">Category key + consent keys (comma separated).</p>
-            <div id="categoriesRepeater" class="repeater"></div>
-          </div>
+            <h3>Locale</h3>
+            <label>Active locale
+              <input id="activeLocale" value="" placeholder="en" />
+            </label>
+            <label>Fallback locale
+              <input id="fallbackLocale" value="en" />
+            </label>
 
-          <div class="section">
-            <div class="row space-between">
-              <h2>Locales</h2>
-              <button id="addLocale" type="button">Add locale</button>
-            </div>
-            <p class="muted">Locale code + JSON payload for localized strings.</p>
-            <div id="localesRepeater" class="repeater"></div>
-          </div>
+            <h3>Link actions</h3>
+            <p><button class="button is-small" id="addLinkAction" type="button">Add link</button></p>
+            <div id="linksRepeater"></div>
 
-          <div class="section">
-            <div class="row space-between">
-              <h2>Region overrides</h2>
-              <button id="addRegionOverride" type="button">Add override</button>
-            </div>
-            <p class="muted">Region key (e.g. `US-CA`, `EU`) + JSON partial options.</p>
-            <div id="regionOverridesRepeater" class="repeater"></div>
-          </div>
+            <h3>Categories</h3>
+            <p><button class="button is-small" id="addCategory" type="button">Add category</button></p>
+            <div id="categoriesRepeater"></div>
 
-          <div class="section">
-            <h2>Preview Theme</h2>
-            <div class="row">
-              <label class="inline"><input type="radio" name="theme" value="light" checked /> light</label>
-              <label class="inline"><input type="radio" name="theme" value="dark" /> dark</label>
-              <label class="inline"><input type="radio" name="theme" value="none" /> none</label>
-            </div>
-          </div>
+            <h3>Locales</h3>
+            <p><button class="button is-small" id="addLocale" type="button">Add locale</button></p>
+            <div id="localesRepeater"></div>
 
-          <div class="section">
-            <h2>Advanced JSON override (merged last)</h2>
-            <textarea id="advancedJson" class="field-full" spellcheck="false" placeholder='{"regionOverrides":{"US-CA":{"defaultConsentMode":"opt-in"}}}'></textarea>
-          </div>
-        </div>
-      </section>
+            <h3>Region overrides</h3>
+            <p><button class="button is-small" id="addRegionOverride" type="button">Add override</button></p>
+            <div id="regionOverridesRepeater"></div>
 
-      <section class="panel">
-        <div class="panel-head">
-          <h1>Preview + JSON Output</h1>
-        </div>
-        <div class="panel-body">
-          <iframe id="previewFrame" title="Anubis Preview"></iframe>
-          <div class="row" style="margin:10px 0 8px;">
-            <button id="importJson" type="button">Import JSON</button>
-            <button id="copyJson" type="button">Copy JSON</button>
-            <button id="downloadJson" type="button">Download JSON</button>
-          </div>
-          <input id="importJsonFile" type="file" accept="application/json,.json" style="display:none;" />
-          <textarea id="jsonOutput" readonly spellcheck="false"></textarea>
-        </div>
-      </section>
-    </div>
+            <h3>Preview Theme</h3>
+            <label><input type="radio" name="theme" value="light" checked /> light</label>
+            <label><input type="radio" name="theme" value="dark" /> dark</label>
+            <label><input type="radio" name="theme" value="none" /> none</label>
+
+            <h3>Advanced JSON override (merged last)</h3>
+            <textarea id="advancedJson" spellcheck="false" rows="8" placeholder='{"regionOverrides":{"US-CA":{"defaultConsentMode":"opt-in"}}}'></textarea>
+          </article>
+        </section>
+
+        <section class="column is-6">
+          <article>
+            <header><strong>Preview + JSON Output</strong></header>
+            <iframe id="previewFrame" title="Anubis Preview" height="560" style="width: 100%;"></iframe>
+            <p>
+              <button class="button is-small" id="importJson" type="button">Import JSON</button>
+              <button class="button is-small" id="copyJson" type="button">Copy JSON</button>
+              <button class="button is-small" id="downloadJson" type="button">Download JSON</button>
+            </p>
+            <input id="importJsonFile" type="file" accept="application/json,.json" hidden />
+            <textarea id="jsonOutput" readonly spellcheck="false" rows="16"></textarea>
+          </article>
+        </section>
+      </div>
+    </main>
 
     <script>
       (function () {
@@ -272,8 +153,8 @@
         }
 
         function createRepeaterItem(container, template) {
-          const wrapper = document.createElement('div');
-          wrapper.className = 'repeater-item';
+          const wrapper = document.createElement('article');
+          wrapper.setAttribute('data-repeater-item', '1');
           wrapper.innerHTML = template;
           container.appendChild(wrapper);
           return wrapper;
@@ -282,52 +163,36 @@
         function addCategoryRow(name = '', keys = '') {
           return createRepeaterItem(
             categoriesRepeater,
-            `<div class="grid">
-              <div class="field"><label>Category name</label><input data-role="cat-name" value="${name}" /></div>
-              <div class="field"><label>Consent keys (csv)</label><input data-role="cat-keys" value="${keys}" /></div>
-            </div>
-            <div class="repeater-actions">
-              <button type="button" data-action="remove-row">Remove</button>
-            </div>`,
+            `<label>Category name<input data-role="cat-name" value="${name}" /></label>
+             <label>Consent keys (csv)<input data-role="cat-keys" value="${keys}" /></label>
+             <button class="button is-small" type="button" data-action="remove-row">Remove</button>`,
           );
         }
 
         function addLinkActionRow(title = '', url = '') {
           return createRepeaterItem(
             linksRepeater,
-            `<div class="grid">
-              <div class="field"><label>Link title</label><input data-role="link-title" value="${title}" placeholder="Privacy policy" /></div>
-              <div class="field"><label>Link URL</label><input data-role="link-url" value="${url}" placeholder="/privacy" /></div>
-            </div>
-            <div class="repeater-actions">
-              <button type="button" data-action="remove-row">Remove</button>
-            </div>`,
+            `<label>Link title<input data-role="link-title" value="${title}" placeholder="Privacy policy" /></label>
+             <label>Link URL<input data-role="link-url" value="${url}" placeholder="/privacy" /></label>
+             <button class="button is-small" type="button" data-action="remove-row">Remove</button>`,
           );
         }
 
         function addLocaleRow(code = '', json = '') {
           return createRepeaterItem(
             localesRepeater,
-            `<div class="grid">
-              <div class="field"><label>Locale code</label><input data-role="locale-code" value="${code}" placeholder="en" /></div>
-              <div class="field field-full"><label>Locale JSON</label><textarea data-role="locale-json" spellcheck="false" placeholder='{"bannerTitle":"Privacy choices"}'>${json}</textarea></div>
-            </div>
-            <div class="repeater-actions">
-              <button type="button" data-action="remove-row">Remove</button>
-            </div>`,
+            `<label>Locale code<input data-role="locale-code" value="${code}" placeholder="en" /></label>
+             <label>Locale JSON<textarea data-role="locale-json" spellcheck="false" rows="5" placeholder='{"bannerTitle":"Privacy choices"}'>${json}</textarea></label>
+             <button class="button is-small" type="button" data-action="remove-row">Remove</button>`,
           );
         }
 
         function addRegionOverrideRow(region = '', json = '') {
           return createRepeaterItem(
             regionOverridesRepeater,
-            `<div class="grid">
-              <div class="field"><label>Region key</label><input data-role="region-key" value="${region}" placeholder="US-CA" /></div>
-              <div class="field field-full"><label>Override JSON</label><textarea data-role="region-json" spellcheck="false" placeholder='{"defaultConsentMode":"opt-in"}'>${json}</textarea></div>
-            </div>
-            <div class="repeater-actions">
-              <button type="button" data-action="remove-row">Remove</button>
-            </div>`,
+            `<label>Region key<input data-role="region-key" value="${region}" placeholder="US-CA" /></label>
+             <label>Override JSON<textarea data-role="region-json" spellcheck="false" rows="5" placeholder='{"defaultConsentMode":"opt-in"}'>${json}</textarea></label>
+             <button class="button is-small" type="button" data-action="remove-row">Remove</button>`,
           );
         }
 
@@ -344,7 +209,7 @@
 
         function rowsToCategoryObject() {
           const out = {};
-          categoriesRepeater.querySelectorAll('.repeater-item').forEach((item) => {
+          categoriesRepeater.querySelectorAll('[data-repeater-item]').forEach((item) => {
             const name = item.querySelector('[data-role="cat-name"]').value.trim();
             const keys = parseCsv(item.querySelector('[data-role="cat-keys"]').value);
             if (name && keys.length) {
@@ -356,7 +221,7 @@
 
         function rowsToLinkActions() {
           const out = [];
-          linksRepeater.querySelectorAll('.repeater-item').forEach((item) => {
+          linksRepeater.querySelectorAll('[data-repeater-item]').forEach((item) => {
             const title = item.querySelector('[data-role="link-title"]').value.trim();
             const url = item.querySelector('[data-role="link-url"]').value.trim();
             if (title && url) {
@@ -368,7 +233,7 @@
 
         function rowsToLocalesObject() {
           const locales = {};
-          localesRepeater.querySelectorAll('.repeater-item').forEach((item) => {
+          localesRepeater.querySelectorAll('[data-repeater-item]').forEach((item) => {
             const code = item.querySelector('[data-role="locale-code"]').value.trim();
             const jsonText = item.querySelector('[data-role="locale-json"]').value;
             if (!code || !jsonText.trim()) {
@@ -385,7 +250,7 @@
 
         function rowsToRegionOverrides() {
           const overrides = {};
-          regionOverridesRepeater.querySelectorAll('.repeater-item').forEach((item) => {
+          regionOverridesRepeater.querySelectorAll('[data-repeater-item]').forEach((item) => {
             const key = item.querySelector('[data-role="region-key"]').value.trim();
             const jsonText = item.querySelector('[data-role="region-json"]').value;
             if (!key || !jsonText.trim()) {
@@ -550,10 +415,10 @@
             });
             frame.src = `./preview.html?${params.toString()}`;
 
-            errorNode.style.display = 'none';
+            errorNode.hidden = true;
             errorNode.textContent = '';
           } catch (error) {
-            errorNode.style.display = 'block';
+            errorNode.hidden = false;
             errorNode.textContent = error && error.message ? error.message : String(error);
           }
         }
@@ -620,7 +485,7 @@
           if (!button) {
             return;
           }
-          const row = button.closest('.repeater-item');
+          const row = button.closest('[data-repeater-item]');
           if (row) {
             row.remove();
             scheduleUpdate();
@@ -678,7 +543,7 @@
               importJson.textContent = 'Import JSON';
             }, 900);
           } catch (error) {
-            errorNode.style.display = 'block';
+            errorNode.hidden = false;
             errorNode.textContent = error && error.message ? error.message : String(error);
             importJson.textContent = 'Import failed';
             setTimeout(() => {
