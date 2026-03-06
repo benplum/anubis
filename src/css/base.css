@@ -121,6 +121,13 @@
   margin: 0;
 }
 
+.anubis-dialog .anubis-actions {
+  /* display: inline-flex;
+  align-items: center;
+  gap: var(--anubis-space-sm); */
+  margin-top: var(--anubis-space-lg);
+}
+
 .anubis-dialog-header {
   display: flex;
   align-items: center;
@@ -128,11 +135,8 @@
   gap: var(--anubis-space-sm);
 }
 
-.anubis-dialog .anubis-actions {
-  /* display: inline-flex;
-  align-items: center;
-  gap: var(--anubis-space-sm); */
-  margin-top: var(--anubis-space-lg);
+.anubis-dialog-header .anubis-actions {
+  margin: 0;
 }
 
 .anubis-dialog .anubis-title {

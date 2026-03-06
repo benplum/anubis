@@ -53,6 +53,17 @@
             <label class="label">Resolve timeout (ms)
               <input class="input" id="regionTimeout" type="number" value="800" />
             </label>
+            <label class="label">Region fallback
+              <input class="input" id="region" value="" placeholder="US-CA" />
+            </label>
+            <label class="checkbox"><input id="regionCache" type="checkbox" checked /> regionCache</label>
+            <br />
+            <label class="label">Region cache key
+              <input class="input" id="regionKey" value="anubis-region" />
+            </label>
+            <label class="label">Region cache duration (days)
+              <input class="input" id="regionDuration" type="number" value="1" />
+            </label>
 
             <label class="checkbox"><input id="autoStart" type="checkbox" checked /> autoStart</label>
             <br />
@@ -301,7 +312,11 @@
             fastDefaults: document.getElementById('fastDefaults').checked,
             unknownPolicy: document.getElementById('unknownPolicy').value,
             reloadOnRevoke: document.getElementById('reloadOnRevoke').checked,
+            region: document.getElementById('region').value.trim(),
             regionTimeout: Number(document.getElementById('regionTimeout').value) || 800,
+            regionCache: document.getElementById('regionCache').checked,
+            regionKey: document.getElementById('regionKey').value.trim() || 'anubis-region',
+            regionDuration: Number(document.getElementById('regionDuration').value) || 1,
             localeActive: document.getElementById('localeActive').value.trim(),
             localeFallback: document.getElementById('localeFallback').value.trim() || 'en',
             links: {
@@ -337,7 +352,11 @@
           document.getElementById('fastDefaults').checked = source.fastDefaults !== false;
           document.getElementById('unknownPolicy').value = source.unknownPolicy === 'allow' ? 'allow' : 'block';
           document.getElementById('reloadOnRevoke').checked = source.reloadOnRevoke !== false;
+          document.getElementById('region').value = source.region || '';
           document.getElementById('regionTimeout').value = Number(source.regionTimeout) || 800;
+          document.getElementById('regionCache').checked = source.regionCache !== false;
+          document.getElementById('regionKey').value = source.regionKey || 'anubis-region';
+          document.getElementById('regionDuration').value = Number(source.regionDuration) || 1;
 
           const links = isObject(source.links) ? source.links : {};
 
@@ -393,7 +412,11 @@
           delete advanced.fastDefaults;
           delete advanced.unknownPolicy;
           delete advanced.reloadOnRevoke;
+          delete advanced.region;
           delete advanced.regionTimeout;
+          delete advanced.regionCache;
+          delete advanced.regionKey;
+          delete advanced.regionDuration;
           delete advanced.localeActive;
           delete advanced.localeFallback;
           delete advanced.links;

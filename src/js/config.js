@@ -1,3 +1,5 @@
+import { readMirroredObject, writeMirroredObject } from './storage.js';
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 const REGION_COOKIE_FALLBACK_KEY = 'anubis-region';
 
@@ -371,35 +373,6 @@ function normalizeRegionCode(value) {
   return value.trim().replace(/_/g, '-').toUpperCase();
 }
 
-function parseJSON(value) {
-  try {
-    return JSON.parse(value);
-  } catch (_error) {
-    return null;
-  }
-}
-
-function readCookie(name) {
-  if (typeof document === 'undefined') {
-    return '';
-  }
-  const target = `${encodeURIComponent(name)}=`;
-  const parts = document.cookie ? document.cookie.split('; ') : [];
-  for (let index = 0; index < parts.length; index += 1) {
-    if (parts[index].indexOf(target) === 0) {
-      return decodeURIComponent(parts[index].slice(target.length));
-    }
-  }
-  return '';
-}
-
-function writeCookie(name, value, maxAgeSeconds) {
-  if (typeof document === 'undefined') {
-    return;
-  }
-  document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Max-Age=${maxAgeSeconds}; Path=/; SameSite=Lax`;
-}
-
 function getRegionOverrideKeys(region) {
   const normalized = normalizeRegionCode(region);
   if (!normalized) {
@@ -461,43 +434,26 @@ function readRegionCache(options) {
     return '';
   }
 
-  const readEntry = (raw) => {
-    if (!raw) {
-      return '';
-    }
-    const parsed = parseJSON(raw);
+  const entry = readMirroredObject(config.key, (parsed) => {
     if (!parsed || typeof parsed !== 'object') {
-      return '';
+      return { valid: false, expired: false };
     }
     const value = typeof parsed.value === 'string' ? parsed.value.trim() : '';
     const expiresAt = Number(parsed.expiresAt);
-    if (!value || !Number.isFinite(expiresAt) || Date.now() > expiresAt) {
-      return '';
+    if (!value) {
+      return { valid: false, expired: false };
     }
-    return value;
-  };
+    if (!Number.isFinite(expiresAt) || Date.now() > expiresAt) {
+      return { valid: false, expired: true };
+    }
+    return { valid: true, expired: false };
+  });
 
-  if (typeof localStorage !== 'undefined') {
-    const localRaw = localStorage.getItem(config.key);
-    const localValue = readEntry(localRaw);
-    if (localValue) {
-      return localValue;
-    }
-    if (localRaw) {
-      localStorage.removeItem(config.key);
-    }
+  if (!entry || typeof entry !== 'object') {
+    return '';
   }
 
-  const cookieRaw = readCookie(config.key);
-  const cookieValue = readEntry(cookieRaw);
-  if (cookieValue) {
-    return cookieValue;
-  }
-  if (cookieRaw) {
-    writeCookie(config.key, '', 0);
-  }
-
-  return '';
+  return typeof entry.value === 'string' ? entry.value.trim() : '';
 }
 
 function writeRegionCache(options, value) {
@@ -506,21 +462,16 @@ function writeRegionCache(options, value) {
     return;
   }
 
-  const expiresAt = Date.now() + (config.durationDays * DAY_MS);
-  const payload = JSON.stringify({
+  const updatedAt = Date.now();
+  const expiresAt = updatedAt + (config.durationDays * DAY_MS);
+  const payload = {
     value,
+    updatedAt,
     expiresAt,
-  });
+  };
   const maxAgeSeconds = Math.max(1, Math.floor((config.durationDays * DAY_MS) / 1000));
 
-  try {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(config.key, payload);
-    }
-  } catch (_error) {
-  }
-
-  writeCookie(config.key, payload, maxAgeSeconds);
+  writeMirroredObject(config.key, payload, maxAgeSeconds);
 }
 
 function freezeShallow(object) {

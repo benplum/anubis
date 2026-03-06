@@ -9,37 +9,37 @@
       const preset = new URLSearchParams(window.location.search).get('preset') || 'default';
 
       window.AnubisOptions = {
-        version: 1,
-        defaultMode: 'opt-out',
-        storageDuration: 180,
-        links: {
-          actions: [
-            { title: 'Privacy policy', url: '#privacy' },
-            { title: 'Cookie policy', url: '#cookies' },
-          ],
-        },
-        i18n: {
-          locales: {
-            en: {
-              bannerTitle: 'Privacy choices',
-              bannerDescription: 'Control consent categories for this demo page.',
-              buttonAccept: 'Accept all',
-              buttonReject: 'Reject all',
-              buttonManage: 'Manage',
-              dialogTitle: 'Consent settings',
-              dialogDescription: 'Enable categories you want to allow.',
-              buttonSave: 'Save',
-              buttonCancel: 'Cancel',
-              requiredLabel: 'Always active',
-              categories: {
-                necessary: { label: 'Necessary', description: 'Always required.' },
-                marketing: { label: 'Marketing', description: 'Ads and related storage.' },
-                analytics: { label: 'Analytics', description: 'Measurement scripts.' },
-                preferences: { label: 'Preferences', description: 'Personalization settings.' },
-              },
-            },
-          },
-        },
+        // version: 1,
+        // defaultMode: 'opt-out',
+        // storageDuration: 180,
+        // links: {
+        //   actions: [
+        //     { title: 'Privacy policy', url: '#privacy' },
+        //     { title: 'Cookie policy', url: '#cookies' },
+        //   ],
+        // },
+        // i18n: {
+        //   locales: {
+        //     en: {
+        //       bannerTitle: 'Privacy choices',
+        //       bannerDescription: 'Control consent categories for this demo page.',
+        //       buttonAccept: 'Accept all',
+        //       buttonReject: 'Reject all',
+        //       buttonManage: 'Manage',
+        //       dialogTitle: 'Consent settings',
+        //       dialogDescription: 'Enable categories you want to allow.',
+        //       buttonSave: 'Save',
+        //       buttonCancel: 'Cancel',
+        //       requiredLabel: 'Always active',
+        //       categories: {
+        //         necessary: { label: 'Necessary', description: 'Always required.' },
+        //         marketing: { label: 'Marketing', description: 'Ads and related storage.' },
+        //         analytics: { label: 'Analytics', description: 'Measurement scripts.' },
+        //         preferences: { label: 'Preferences', description: 'Personalization settings.' },
+        //       },
+        //     },
+        //   },
+        // },
       };
 
       if (preset === 'dialog-first') {
@@ -174,10 +174,10 @@
       <section class="mb-5 panel">
         <h2 class="panel-heading title is-5 mb-0">Preset Layouts</h2>
         <div class="panel-block buttons p-5">
-          <a href="?preset=default" class="button is-light">Default preset</a>
-          <a href="?preset=dialog-first" class="button is-light">Dialog-first preset</a>
-          <a href="?preset=accept-only" class="button is-light">Accept-only preset</a>
-          <a href="?preset=opt-out-except-eu-ca" class="button is-light">Opt-out except EU/CA</a>
+          <a href="?preset=default" class="button is-light">Defaults</a>
+          <a href="?preset=dialog-first" class="button is-light">Dialog First</a>
+          <a href="?preset=accept-only" class="button is-light">Accept Only</a>
+          <a href="?preset=opt-out-except-eu-ca" class="button is-light">Opt-Out (Except EU/CA)</a>
         </div>
       </section>
 

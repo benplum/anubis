@@ -1,4 +1,4 @@
-function parseJSON(value) {
+export function parseJSON(value) {
   try {
     return JSON.parse(value);
   } catch (_error) {
@@ -6,7 +6,42 @@ function parseJSON(value) {
   }
 }
 
-function readCookie(name) {
+function getLocalStorageArea() {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      return localStorage;
+    }
+  } catch (_error) {
+    return null;
+  }
+  return null;
+}
+
+function readLocalStorageValue(key) {
+  const storage = getLocalStorageArea();
+  if (!storage) {
+    return null;
+  }
+  return storage.getItem(key);
+}
+
+function writeLocalStorageValue(key, value) {
+  const storage = getLocalStorageArea();
+  if (!storage) {
+    return;
+  }
+  storage.setItem(key, value);
+}
+
+function removeLocalStorageValue(key) {
+  const storage = getLocalStorageArea();
+  if (!storage) {
+    return;
+  }
+  storage.removeItem(key);
+}
+
+export function readCookie(name) {
   if (typeof document === 'undefined') {
     return '';
   }
@@ -20,50 +55,102 @@ function readCookie(name) {
   return '';
 }
 
-function writeCookie(name, value, maxAgeSeconds) {
+export function writeCookie(name, value, maxAgeSeconds) {
   if (typeof document === 'undefined') {
     return;
   }
   document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Max-Age=${maxAgeSeconds}; Path=/; SameSite=Lax`;
 }
 
-export function readStoredConsent(options) {
-  const key = options.storageKey;
+export function clearMirroredObject(key) {
+  removeLocalStorageValue(key);
+  writeCookie(key, '', 0);
+}
 
-  if (typeof localStorage !== 'undefined') {
-    const raw = localStorage.getItem(key);
+export function writeMirroredObject(key, payload, maxAgeSeconds) {
+  const serialized = JSON.stringify(payload);
+  try {
+    writeLocalStorageValue(key, serialized);
+  } catch (_error) {
+  }
+  writeCookie(key, serialized, maxAgeSeconds);
+}
+
+export function readMirroredObject(key, validator) {
+  const validate = typeof validator === 'function'
+    ? validator
+    : () => ({ valid: true, expired: false });
+
+  const evaluate = (raw) => {
     const parsed = raw ? parseJSON(raw) : null;
-    if (parsed && typeof parsed === 'object') {
-      return parsed;
+    const result = validate(parsed);
+    const valid = result && result.valid === true;
+    const expired = result && result.expired === true;
+    return {
+      parsed,
+      valid,
+      expired,
+    };
+  };
+
+  const localRaw = readLocalStorageValue(key);
+  if (localRaw) {
+    const localResult = evaluate(localRaw);
+    if (localResult.valid) {
+      return localResult.parsed;
+    }
+    removeLocalStorageValue(key);
+    if (localResult.expired) {
+      writeCookie(key, '', 0);
+      return null;
     }
   }
 
   const cookieRaw = readCookie(key);
-  if (!cookieRaw) {
-    return null;
+  if (cookieRaw) {
+    const cookieResult = evaluate(cookieRaw);
+    if (cookieResult.valid) {
+      return cookieResult.parsed;
+    }
+    writeCookie(key, '', 0);
+    if (cookieResult.expired) {
+      return null;
+    }
   }
 
-  const parsed = parseJSON(cookieRaw);
-  return parsed && typeof parsed === 'object' ? parsed : null;
+  return null;
+}
+
+export function readStoredConsent(options) {
+  const key = options.storageKey;
+  return readMirroredObject(key, (parsed) => {
+    if (!parsed || typeof parsed !== 'object') {
+      return { valid: false, expired: false };
+    }
+    const expiresAt = Number(parsed.expiresAt);
+    if (Number.isFinite(expiresAt) && Date.now() > expiresAt) {
+      return { valid: false, expired: true };
+    }
+    return { valid: true, expired: false };
+  });
 }
 
 export function saveStoredConsent(payload, options) {
   const key = options.storageKey;
-  const serialized = JSON.stringify(payload);
+  const now = Number(payload && payload.updatedAt) > 0 ? Number(payload.updatedAt) : Date.now();
+  const ttlSeconds = Math.max(1, Number(options.cookieMaxAgeSeconds) || 1);
+  const entry = {
+    ...(payload && typeof payload === 'object' ? payload : {}),
+    updatedAt: now,
+    expiresAt: now + (ttlSeconds * 1000),
+  };
 
-  if (typeof localStorage !== 'undefined') {
-    localStorage.setItem(key, serialized);
-  }
-
-  writeCookie(key, serialized, options.cookieMaxAgeSeconds);
+  writeMirroredObject(key, entry, ttlSeconds);
 }
 
 export function clearStoredConsent(options) {
   const key = options.storageKey;
-  if (typeof localStorage !== 'undefined') {
-    localStorage.removeItem(key);
-  }
-  writeCookie(key, '', 0);
+  clearMirroredObject(key);
 }
 
 export function clearClientCookies() {
