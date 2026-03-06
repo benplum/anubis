@@ -109,7 +109,7 @@
 .anubis-dialog {
   background: var(--anubis-bg);
   border: 1px solid;
-  width: min(560px, calc(100vw - var(--anubis-space-lg)));
+  width: min(740px, calc(100vw - var(--anubis-space-lg)));
   padding: 16px;
 }
 
@@ -132,6 +132,7 @@
   /* display: inline-flex;
   align-items: center;
   gap: var(--anubis-space-sm); */
+  margin-top: var(--anubis-space-lg);
 }
 
 .anubis-dialog .anubis-title {
@@ -217,6 +218,13 @@ button.anubis-btn-icon {
 .anubis-switch {
   display: inline-flex;
   align-items: center;
+  gap: var(--anubis-space-sm);
+}
+
+.anubis-switch-note {
+  font-size: 0.85em;
+  opacity: 0.75;
+  white-space: nowrap;
 }
 
 .anubis-cat .anubis-desc {

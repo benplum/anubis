@@ -1,4 +1,4 @@
-import { resolveOptions, toGoogleConsent, categoryGranted, DEFAULT_OPTIONS } from './config.js';
+import { resolveOptions, toGoogleConsent, categoryGranted, DEFAULT_OPTIONS, normalizeCategoriesDefinition } from './config.js';
 import { readStoredConsent, saveStoredConsent, clearClientCookies } from './storage.js';
 import { applyDefaultConsent, applyUpdatedConsent } from './consent-mode.js';
 import { emitConsentEvent, bindConsentTriggers } from './events.js';
@@ -7,30 +7,6 @@ import { renderConsentUI } from './ui.js';
 
 function isObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function coerceCategories(categories) {
-  const input = isObject(categories) ? categories : {};
-  const normalized = {};
-
-  Object.keys(input).forEach((name) => {
-    if (!Array.isArray(input[name])) {
-      return;
-    }
-    const keys = input[name].filter((key) => typeof key === 'string' && key.trim()).map((key) => key.trim());
-    if (keys.length) {
-      normalized[name.trim()] = Array.from(new Set(keys));
-    }
-  });
-
-  if (!normalized.necessary && normalized.nessecary) {
-    normalized.necessary = normalized.nessecary.slice();
-  }
-  if (!normalized.necessary || !normalized.necessary.length) {
-    normalized.necessary = ['security_storage'];
-  }
-
-  return normalized;
 }
 
 function statesEqual(a, b) {
@@ -43,12 +19,18 @@ function statesEqual(a, b) {
   return true;
 }
 
-function enforceNecessaryGranted(state, categories) {
+function enforceRequiredGranted(state, categories, requiredCategories) {
   const next = { ...state };
-  (categories.necessary || []).forEach((key) => {
-    next[key] = 'granted';
+  (requiredCategories || []).forEach((categoryName) => {
+    (categories[categoryName] || []).forEach((key) => {
+      next[key] = 'granted';
+    });
   });
   return next;
+}
+
+function isRequiredCategory(categoryName, requiredCategories) {
+  return Array.isArray(requiredCategories) && requiredCategories.includes(categoryName);
 }
 
 function isValidStoredConsent(stored, version) {
@@ -90,8 +72,10 @@ function applyFastStoredDefault(rawOptions) {
     return { applied: false, googleState: null };
   }
 
-  const categories = coerceCategories(input.categories || DEFAULT_OPTIONS.categories);
-  const internalState = enforceNecessaryGranted(stored.grants, categories);
+  const normalizedCategories = normalizeCategoriesDefinition(input.categories || DEFAULT_OPTIONS.categories);
+  const categories = normalizedCategories.categoryMap;
+  const requiredCategories = normalizedCategories.requiredCategories;
+  const internalState = enforceRequiredGranted(stored.grants, categories, requiredCategories);
 
   const mappingInput = isObject(input.consentMapping) ? input.consentMapping : {};
   const consentMapping = {};
@@ -153,14 +137,14 @@ function createAllState(options, value) {
   options.consentKeys.forEach((key) => {
     state[key] = value;
   });
-  return enforceNecessaryGranted(state, options.categories);
+  return enforceRequiredGranted(state, options.categories, options.requiredCategories);
 }
 
 function applyCategoryChoices(currentState, categoryChoices, options) {
   const next = { ...currentState };
 
   Object.keys(categoryChoices).forEach((category) => {
-    if (category === 'necessary') {
+    if (isRequiredCategory(category, options.requiredCategories)) {
       return;
     }
     const enabled = Boolean(categoryChoices[category]);
@@ -170,7 +154,7 @@ function applyCategoryChoices(currentState, categoryChoices, options) {
     });
   });
 
-  return enforceNecessaryGranted(next, options.categories);
+  return enforceRequiredGranted(next, options.categories, options.requiredCategories);
 }
 
 function isCategoryAllowed(state, options, category) {
@@ -196,7 +180,7 @@ export async function initAnubis(rawOptions = {}) {
       ...state,
       ...stored.grants,
     };
-    state = enforceNecessaryGranted(state, options.categories);
+    state = enforceRequiredGranted(state, options.categories, options.requiredCategories);
   }
 
   if (!fastDefault.applied) {
@@ -247,7 +231,7 @@ export async function initAnubis(rawOptions = {}) {
     const previous = state;
     const revoked = hasGrantedToDeniedChange(previous, nextState);
 
-    state = enforceNecessaryGranted(nextState, options.categories);
+    state = enforceRequiredGranted(nextState, options.categories, options.requiredCategories);
 
     saveStoredConsent(
       {

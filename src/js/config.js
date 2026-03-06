@@ -1,21 +1,35 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const EN_STRINGS = {
-  bannerTitle: 'Your privacy choices',
+  bannerTitle: 'Privacy Settings',
   bannerDescription: 'Choose how this site uses cookies and similar technologies.',
-  acceptAll: 'Accept all',
-  rejectAll: 'Reject all',
-  manage: 'Manage choices',
-  dialogTitle: 'Manage consent preferences',
-  dialogDescription: 'Choose which categories you allow. Necessary is always enabled.',
-  save: 'Save choices',
+  acceptAll: 'Accept All',
+  rejectAll: 'Reject All',
+  manage: 'Manage Choices',
+  dialogTitle: 'Privacy Settings',
+  dialogDescription: 'Choose which categories to allow.',
+  alwaysActive: 'Always Active',
+  save: 'Save Choices',
   cancel: 'Cancel',
-  policyLabel: 'Learn more',
+  policyLabel: 'Learn More',
   categories: {
-    necessary: { label: 'Necessary', description: 'Required for core site functionality.' },
-    marketing: { label: 'Marketing', description: 'Advertising and campaign-related storage.' },
-    analytics: { label: 'Analytics', description: 'Measurement and analytics storage.' },
-    preferences: { label: 'Preferences', description: 'Remembering settings and personalization.' },
+    necessary: {
+      label: 'Necessary',
+      description: 'Required for core site functionality.',
+      alwaysActive: 'Always active',
+    },
+    marketing: { 
+      label: 'Marketing', 
+      description: 'Advertising and campaign-related storage.' 
+    },
+    analytics: { 
+      label: 'Analytics', 
+      description: 'Measurement and analytics storage.' 
+    },
+    preferences: { 
+      label: 'Preferences', 
+      description: 'Remembering settings and personalization.' 
+    },
   },
 };
 
@@ -60,10 +74,10 @@ export const DEFAULT_OPTIONS = {
   region: '',
   regionOverrides: {},
   categories: {
-    necessary: ['security_storage'],
-    marketing: ['ad_storage', 'ad_user_data', 'ad_personalization'],
-    analytics: ['analytics_storage'],
-    preferences: ['functionality_storage', 'personalization_storage'],
+    necessary: { consent: ['security_storage'], required: true },
+    marketing: { consent: ['ad_storage', 'ad_user_data', 'ad_personalization'], required: false },
+    analytics: { consent: ['analytics_storage'], required: false },
+    preferences: { consent: ['functionality_storage', 'personalization_storage'], required: false },
   },
   consentMapping: {},
   i18n: {
@@ -203,29 +217,61 @@ function normalizeLinks(links) {
   return normalized;
 }
 
-function coerceCategoryMap(categories) {
-  const input = isObject(categories) ? categories : {};
-  const normalized = {};
+function normalizedConsentKeys(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return Array.from(
+    new Set(
+      value
+        .filter((key) => typeof key === 'string' && key.trim())
+        .map((key) => key.trim()),
+    ),
+  );
+}
 
-  Object.keys(input).forEach((name) => {
-    if (!Array.isArray(input[name])) {
+export function normalizeCategoriesDefinition(categoriesInput) {
+  const FALLBACK_CATEGORIES = {
+    necessary: { consent: ['security_storage'], required: true },
+  };
+
+  const input = isObject(categoriesInput) ? categoriesInput : FALLBACK_CATEGORIES;
+  const categoryMap = {};
+  const requiredSet = new Set();
+
+  Object.keys(input).forEach((rawName) => {
+    const name = typeof rawName === 'string' ? rawName.trim() : '';
+    if (!name) {
       return;
     }
-    const keys = input[name].filter((key) => typeof key === 'string' && key.trim()).map((key) => key.trim());
-    if (keys.length) {
-      normalized[name.trim()] = Array.from(new Set(keys));
+
+    const definition = input[rawName];
+    if (!isObject(definition)) {
+      return;
+    }
+
+    const keys = normalizedConsentKeys(definition.consent);
+    if (!keys.length) {
+      return;
+    }
+
+    categoryMap[name] = keys;
+    if (definition.required === true) {
+      requiredSet.add(name);
     }
   });
 
-  if (!normalized.necessary && normalized.nessecary) {
-    normalized.necessary = normalized.nessecary.slice();
+  if (!Object.keys(categoryMap).length) {
+    categoryMap.necessary = ['security_storage'];
+    requiredSet.add('necessary');
   }
 
-  if (!normalized.necessary || normalized.necessary.length === 0) {
-    normalized.necessary = ['security_storage'];
-  }
+  const requiredCategories = Array.from(requiredSet).filter((name) => Array.isArray(categoryMap[name]) && categoryMap[name].length);
 
-  return normalized;
+  return {
+    categoryMap,
+    requiredCategories,
+  };
 }
 
 function uniqueConsentKeys(categories) {
@@ -262,8 +308,11 @@ function buildDefaultInternalConsent(options) {
     });
   }
 
-  options.categories.necessary.forEach((key) => {
-    consent[key] = 'granted';
+  (options.requiredCategories || []).forEach((categoryName) => {
+    const keys = options.categories[categoryName] || [];
+    keys.forEach((key) => {
+      consent[key] = 'granted';
+    });
   });
 
   return consent;
@@ -481,7 +530,9 @@ export async function resolveOptions(rawOptions = {}) {
     options = mergeDeep(options, regionOverrides.default);
   }
 
-  options.categories = coerceCategoryMap(options.categories);
+  const normalizedCategories = normalizeCategoriesDefinition(options.categories);
+  options.categories = normalizedCategories.categoryMap;
+  options.requiredCategories = normalizedCategories.requiredCategories;
   options.links = normalizeLinks(options.links);
 
   options.actions = normalizeActions(options.actions);

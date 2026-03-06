@@ -7,91 +7,107 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css" />
   </head>
   <body>
-    <main class="container is-fluid mt-5 mb-6">
-      <h1>Anubis Configurator</h1>
-      <p>Left: options. Right: live preview and generated JSON.</p>
+    <main class="mt-5 mb-6 px-3">
+      <div class="navbar mb-5">
+        <div class="navbar-start">
+          <div class="navbar-item">
+            <h1 class="title is-3">Configurator</h1>
+          </div>
+        </div>
+        <div class="navbar-end">
+          <div class="navbar-item">
+            <a href="./index.html" class="button is-link">Open Demo</a>
+          </div>
+        </div>
+      </div>
 
-      <div class="columns is-variable is-4">
-        <section class="column is-6">
-          <article>
-            <header><strong>Configuration</strong></header>
+      <div class="columns is-variable is-2">
+        <section class="column is-4">
+          <article class="panel">
+            <header class="panel-heading title is-5 mb-0">Configuration</header>
+            <div class="panel-block is-block">
             <p id="error" class="notification is-danger is-light" hidden></p>
 
-            <h3>Core</h3>
-            <label>Version
-              <input id="version" type="number" value="1" />
+            <h3 class="title is-6">Core</h3>
+            <label class="label">Version
+              <input class="input" id="version" type="number" value="1" />
             </label>
-            <label>Storage key
-              <input id="storageKey" value="anubis-consent" />
+            <label class="label">Storage key
+              <input class="input" id="storageKey" value="anubis-consent" />
             </label>
-            <label>Cookie days
-              <input id="cookieDays" type="number" value="180" />
+            <label class="label">Cookie days
+              <input class="input" id="cookieDays" type="number" value="180" />
             </label>
-            <label>Default mode
-              <select id="defaultConsentMode">
+            <label class="label">Default mode
+              <select class="select" id="defaultConsentMode">
                 <option value="opt-out">opt-out</option>
                 <option value="opt-in">opt-in</option>
               </select>
             </label>
-            <label>Unknown category policy
-              <select id="unknownCategoryPolicy">
+            <label class="label">Unknown category policy
+              <select class="select" id="unknownCategoryPolicy">
                 <option value="block">block</option>
                 <option value="allow">allow</option>
               </select>
             </label>
-            <label>Resolve timeout (ms)
-              <input id="resolveRegionTimeoutMs" type="number" value="800" />
+            <label class="label">Resolve timeout (ms)
+              <input class="input" id="resolveRegionTimeoutMs" type="number" value="800" />
             </label>
 
-            <label><input id="autoStart" type="checkbox" checked /> autoStart</label>
-            <label><input id="fastDefaultFromStorage" type="checkbox" checked /> fastDefaultFromStorage</label>
-            <label><input id="reloadOnRevoke" type="checkbox" checked /> reloadOnRevoke</label>
+            <label class="checkbox"><input id="autoStart" type="checkbox" checked /> autoStart</label>
+            <br />
+            <label class="checkbox"><input id="fastDefaultFromStorage" type="checkbox" checked /> fastDefaultFromStorage</label>
+            <br />
+            <label class="checkbox"><input id="reloadOnRevoke" type="checkbox" checked /> reloadOnRevoke</label>
 
-            <h3>Locale</h3>
-            <label>Active locale
-              <input id="activeLocale" value="" placeholder="en" />
+            <h3 class="title is-6 mt-4">Locale</h3>
+            <label class="label">Active locale
+              <input class="input" id="activeLocale" value="" placeholder="en" />
             </label>
-            <label>Fallback locale
-              <input id="fallbackLocale" value="en" />
+            <label class="label">Fallback locale
+              <input class="input" id="fallbackLocale" value="en" />
             </label>
 
-            <h3>Link actions</h3>
-            <p><button class="button is-small" id="addLinkAction" type="button">Add link</button></p>
+            <h3 class="title is-6 mt-4">Link actions</h3>
+            <p><button class="button is-light is-small" id="addLinkAction" type="button">Add link</button></p>
             <div id="linksRepeater"></div>
 
-            <h3>Categories</h3>
-            <p><button class="button is-small" id="addCategory" type="button">Add category</button></p>
+            <h3 class="title is-6 mt-4">Categories</h3>
+            <p><button class="button is-light is-small" id="addCategory" type="button">Add category</button></p>
             <div id="categoriesRepeater"></div>
 
-            <h3>Locales</h3>
-            <p><button class="button is-small" id="addLocale" type="button">Add locale</button></p>
+            <h3 class="title is-6 mt-4">Locales</h3>
+            <p><button class="button is-light is-small" id="addLocale" type="button">Add locale</button></p>
             <div id="localesRepeater"></div>
 
-            <h3>Region overrides</h3>
-            <p><button class="button is-small" id="addRegionOverride" type="button">Add override</button></p>
+            <h3 class="title is-6 mt-4">Region overrides</h3>
+            <p><button class="button is-light is-small" id="addRegionOverride" type="button">Add override</button></p>
             <div id="regionOverridesRepeater"></div>
 
-            <h3>Preview Theme</h3>
-            <label><input type="radio" name="theme" value="light" checked /> light</label>
-            <label><input type="radio" name="theme" value="dark" /> dark</label>
-            <label><input type="radio" name="theme" value="none" /> none</label>
+            <h3 class="title is-6 mt-4">Preview Theme</h3>
+            <label class="radio"><input type="radio" name="theme" value="light" checked /> light</label>
+            <label class="radio"><input type="radio" name="theme" value="dark" /> dark</label>
+            <label class="radio"><input type="radio" name="theme" value="none" /> none</label>
 
-            <h3>Advanced JSON override (merged last)</h3>
-            <textarea id="advancedJson" spellcheck="false" rows="8" placeholder='{"regionOverrides":{"US-CA":{"defaultConsentMode":"opt-in"}}}'></textarea>
+            <h3 class="title is-6 mt-4">Advanced JSON override (merged last)</h3>
+            <textarea class="textarea" id="advancedJson" spellcheck="false" rows="8" placeholder='{"regionOverrides":{"US-CA":{"defaultConsentMode":"opt-in"}}}'></textarea>
+            </div>
           </article>
         </section>
 
-        <section class="column is-6">
-          <article>
-            <header><strong>Preview + JSON Output</strong></header>
+        <section class="column is-8">
+          <article class="panel">
+            <header class="panel-heading title is-5 mb-0">Preview + JSON Output</header>
+            <div class="panel-block is-block">
             <iframe id="previewFrame" title="Anubis Preview" height="560" style="width: 100%;"></iframe>
-            <p>
-              <button class="button is-small" id="importJson" type="button">Import JSON</button>
-              <button class="button is-small" id="copyJson" type="button">Copy JSON</button>
-              <button class="button is-small" id="downloadJson" type="button">Download JSON</button>
+            <p class="buttons mt-3">
+              <button class="button is-light is-small" id="importJson" type="button">Import JSON</button>
+              <button class="button is-light is-small" id="copyJson" type="button">Copy JSON</button>
+              <button class="button is-light is-small" id="downloadJson" type="button">Download JSON</button>
             </p>
             <input id="importJsonFile" type="file" accept="application/json,.json" hidden />
-            <textarea id="jsonOutput" readonly spellcheck="false" rows="16"></textarea>
+            <textarea class="textarea" id="jsonOutput" readonly spellcheck="false" rows="16"></textarea>
+            </div>
           </article>
         </section>
       </div>
@@ -154,45 +170,48 @@
 
         function createRepeaterItem(container, template) {
           const wrapper = document.createElement('article');
+          wrapper.className = 'box mb-3';
           wrapper.setAttribute('data-repeater-item', '1');
           wrapper.innerHTML = template;
           container.appendChild(wrapper);
           return wrapper;
         }
 
-        function addCategoryRow(name = '', keys = '') {
+        function addCategoryRow(name = '', keys = '', required = false) {
           return createRepeaterItem(
             categoriesRepeater,
-            `<label>Category name<input data-role="cat-name" value="${name}" /></label>
-             <label>Consent keys (csv)<input data-role="cat-keys" value="${keys}" /></label>
-             <button class="button is-small" type="button" data-action="remove-row">Remove</button>`,
+            `<label class="label">Category name<input class="input" data-role="cat-name" value="${name}" /></label>
+             <label class="label">Consent keys (csv)<input class="input" data-role="cat-keys" value="${keys}" /></label>
+             <label class="checkbox"><input type="checkbox" data-role="cat-required" ${required ? 'checked' : ''} /> required</label>
+             <br />
+             <button class="button is-light is-small" type="button" data-action="remove-row">Remove</button>`,
           );
         }
 
         function addLinkActionRow(title = '', url = '') {
           return createRepeaterItem(
             linksRepeater,
-            `<label>Link title<input data-role="link-title" value="${title}" placeholder="Privacy policy" /></label>
-             <label>Link URL<input data-role="link-url" value="${url}" placeholder="/privacy" /></label>
-             <button class="button is-small" type="button" data-action="remove-row">Remove</button>`,
+            `<label class="label">Link title<input class="input" data-role="link-title" value="${title}" placeholder="Privacy policy" /></label>
+             <label class="label">Link URL<input class="input" data-role="link-url" value="${url}" placeholder="/privacy" /></label>
+             <button class="button is-light is-small" type="button" data-action="remove-row">Remove</button>`,
           );
         }
 
         function addLocaleRow(code = '', json = '') {
           return createRepeaterItem(
             localesRepeater,
-            `<label>Locale code<input data-role="locale-code" value="${code}" placeholder="en" /></label>
-             <label>Locale JSON<textarea data-role="locale-json" spellcheck="false" rows="5" placeholder='{"bannerTitle":"Privacy choices"}'>${json}</textarea></label>
-             <button class="button is-small" type="button" data-action="remove-row">Remove</button>`,
+            `<label class="label">Locale code<input class="input" data-role="locale-code" value="${code}" placeholder="en" /></label>
+             <label class="label">Locale JSON<textarea class="textarea" data-role="locale-json" spellcheck="false" rows="5" placeholder='{"bannerTitle":"Privacy choices"}'>${json}</textarea></label>
+             <button class="button is-light is-small" type="button" data-action="remove-row">Remove</button>`,
           );
         }
 
         function addRegionOverrideRow(region = '', json = '') {
           return createRepeaterItem(
             regionOverridesRepeater,
-            `<label>Region key<input data-role="region-key" value="${region}" placeholder="US-CA" /></label>
-             <label>Override JSON<textarea data-role="region-json" spellcheck="false" rows="5" placeholder='{"defaultConsentMode":"opt-in"}'>${json}</textarea></label>
-             <button class="button is-small" type="button" data-action="remove-row">Remove</button>`,
+            `<label class="label">Region key<input class="input" data-role="region-key" value="${region}" placeholder="US-CA" /></label>
+             <label class="label">Override JSON<textarea class="textarea" data-role="region-json" spellcheck="false" rows="5" placeholder='{"defaultConsentMode":"opt-in"}'>${json}</textarea></label>
+             <button class="button is-light is-small" type="button" data-action="remove-row">Remove</button>`,
           );
         }
 
@@ -212,8 +231,12 @@
           categoriesRepeater.querySelectorAll('[data-repeater-item]').forEach((item) => {
             const name = item.querySelector('[data-role="cat-name"]').value.trim();
             const keys = parseCsv(item.querySelector('[data-role="cat-keys"]').value);
+            const required = Boolean(item.querySelector('[data-role="cat-required"]') && item.querySelector('[data-role="cat-required"]').checked);
             if (name && keys.length) {
-              out[name] = keys;
+              out[name] = {
+                consent: keys,
+                required,
+              };
             }
           });
           return out;
@@ -341,12 +364,13 @@
           const categories = isObject(source.categories) ? source.categories : {};
           const categoryEntries = Object.entries(categories);
           if (categoryEntries.length) {
-            categoryEntries.forEach(([name, keys]) => {
-              const csv = Array.isArray(keys) ? keys.join(',') : '';
-              addCategoryRow(name, csv);
+            categoryEntries.forEach(([name, definition]) => {
+              const parsed = isObject(definition) ? definition : {};
+              const csv = Array.isArray(parsed.consent) ? parsed.consent.join(',') : '';
+              addCategoryRow(name, csv, parsed.required === true);
             });
           } else {
-            addCategoryRow('necessary', 'security_storage');
+            addCategoryRow('necessary', 'security_storage', true);
           }
 
           clearRepeater(localesRepeater);
@@ -577,10 +601,10 @@
           }
         });
 
-        addCategoryRow('necessary', 'security_storage');
-        addCategoryRow('marketing', 'ad_storage,ad_user_data,ad_personalization');
-        addCategoryRow('analytics', 'analytics_storage');
-        addCategoryRow('preferences', 'functionality_storage,personalization_storage');
+        addCategoryRow('necessary', 'security_storage', true);
+        addCategoryRow('marketing', 'ad_storage,ad_user_data,ad_personalization', false);
+        addCategoryRow('analytics', 'analytics_storage', false);
+        addCategoryRow('preferences', 'functionality_storage,personalization_storage', false);
 
         addLinkActionRow('Privacy policy', '#privacy');
         addLinkActionRow('Cookie policy', '#cookies');

@@ -41,23 +41,31 @@
     <script src="../dist/js/anubis.js"></script>
   </head>
   <body>
-    <main class="container mt-5 mb-6">
-      <h1>Preview</h1>
+    <main class="container is-max-desktop mt-5 mb-6 px-3">
+      <div class="navbar mb-5">
+        <div class="navbar-start">
+          <div class="navbar-item">
+            <h1 class="title is-3">Preview</h1>
+          </div>
+        </div>
+      </div>
 
-      <section class="mb-5">
-        <h2>Triggers</h2>
-        <p>
-          <button class="button is-small" data-consent-trigger="open">Open Preferences</button>
-          <button class="button is-small" data-consent-trigger="accept-all">Accept All</button>
-          <button class="button is-small" data-consent-trigger="reject-all">Reject All</button>
-          <button class="button is-small" id="showState">Log State</button>
-          <button class="button is-small" id="resetPreview">Reset</button>
-        </p>
+      <section class="mb-5 panel">
+        <h2 class="panel-heading title is-5 mb-0">Triggers</h2>
+        <div class="panel-block buttons p-5">
+          <button class="button is-light is-small" data-consent-trigger="open">Open Preferences</button>
+          <button class="button is-light is-small" data-consent-trigger="accept-all">Accept All</button>
+          <button class="button is-light is-small" data-consent-trigger="reject-all">Reject All</button>
+          <button class="button is-light is-small" id="showState">Log State</button>
+          <button class="button is-light is-small" id="resetPreview">Reset</button>
+        </div>
       </section>
 
-      <section>
-        <h2>Events</h2>
-        <pre id="log"></pre>
+      <section class="mb-5 panel">
+        <h2 class="panel-heading title is-5 mb-0">Events</h2>
+        <div class="panel-block p-0">
+          <pre id="log"></pre>
+        </div>
       </section>
     </main>
 

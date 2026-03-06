@@ -19,10 +19,10 @@ window.AnubisOptions = {
   },
 
   categories: {
-    necessary: ['security_storage'],
-    marketing: ['ad_storage', 'ad_user_data', 'ad_personalization'],
-    analytics: ['analytics_storage'],
-    preferences: ['functionality_storage', 'personalization_storage'],
+      necessary: { consent: ['security_storage'], required: true },
+      marketing: { consent: ['ad_storage', 'ad_user_data', 'ad_personalization'], required: false },
+      analytics: { consent: ['analytics_storage'], required: false },
+      preferences: { consent: ['functionality_storage', 'personalization_storage'], required: false },
   },
 
   i18n: {

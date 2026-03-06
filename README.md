@@ -6,7 +6,7 @@ Small, script-first consent mode library for Google/GTM aligned consent controls
 
 - Shows a compact popup with quick `Accept all` and `Reject all`.
 - Provides a `dialog`-based preferences UI with category toggles.
-- Keeps `necessary` category always on.
+- Keeps any category marked `required: true` always on.
 - Defaults to opt-out unless configured otherwise.
 - Pushes consent defaults/updates to `dataLayer`, and uses `gtag('consent', ...)` when available.
 - Gates scripts with `data-consent-category` via `MutationObserver`.
@@ -17,13 +17,15 @@ Small, script-first consent mode library for Google/GTM aligned consent controls
 ```js
 window.AnubisOptions = {
   categories: {
-    necessary: ['security_storage'],
-    marketing: ['ad_storage', 'ad_user_data', 'ad_personalization'],
-    analytics: ['analytics_storage'],
-    preferences: ['functionality_storage', 'personalization_storage']
+    necessary: { consent: ['security_storage'], required: true },
+    marketing: { consent: ['ad_storage', 'ad_user_data', 'ad_personalization'], required: false },
+    analytics: { consent: ['analytics_storage'], required: false },
+    preferences: { consent: ['functionality_storage', 'personalization_storage'], required: false },
   }
 };
 ```
+
+`required: true` locks that category on and shows the always-active label in the UI. Multiple categories can be marked required.
 
 ## Quick start
 
@@ -82,15 +84,15 @@ window.AnubisOptions = {
   },
 
   categories: {
-
-`links.actions` supports any number of banner links (`title` + `url`). If not provided, Anubis falls back to `privacyPolicyUrl` / `cookiePolicyUrl`.
-    necessary: ['security_storage'],
-    marketing: ['ad_storage', 'ad_user_data', 'ad_personalization'],
-    analytics: ['analytics_storage'],
-    preferences: ['functionality_storage', 'personalization_storage'],
+    necessary: { consent: ['security_storage'], required: true },
+    marketing: { consent: ['ad_storage', 'ad_user_data', 'ad_personalization'], required: false },
+    analytics: { consent: ['analytics_storage'], required: false },
+    preferences: { consent: ['functionality_storage', 'personalization_storage'], required: false },
   },
 };
 ```
+
+`links.actions` supports any number of banner links (`title` + `url`). If not provided, Anubis falls back to `privacyPolicyUrl` / `cookiePolicyUrl`.
 
 Common options:
 
@@ -99,6 +101,10 @@ Common options:
 - Categories/mapping: `categories`, `consentMapping`
 - UI/i18n: `links`, `actions`, `activeLocale`, `fallbackLocale`, `i18n.locales`
 - Region: `region`, `resolveRegion`, `resolveRegionTimeoutMs`, `regionCache`, `regionOverrides`
+
+For the necessary-category helper label, you can localize either `alwaysActive` (global UI key) or `categories.necessary.alwaysActive` (category-specific key).
+
+`consentMapping` is optional and only needed when your internal consent keys differ from Google Consent Mode keys. If your category `consent` lists already use Google keys (for example `analytics_storage`, `ad_storage`), you can omit `consentMapping`.
 
 ## ESM (advanced)
 

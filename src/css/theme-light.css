@@ -54,6 +54,10 @@
   border-radius: var(--anubis-radius-sm);
 }
 
+.anubis-summary-arrow {
+  border-left-color: var(--anubis-border);
+}
+
 .anubis-toggle {
   -webkit-appearance: none;
   appearance: none;

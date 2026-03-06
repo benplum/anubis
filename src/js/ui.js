@@ -16,6 +16,10 @@ function toIdFragment(value) {
     .replace(/^-+|-+$/g, '') || 'item';
 }
 
+function isRequiredCategory(options, name) {
+  return Array.isArray(options.requiredCategories) && options.requiredCategories.includes(name);
+}
+
 function categoryRowsMarkup(options, ids) {
   const categoryNames = Object.keys(options.categories);
   return categoryNames
@@ -27,7 +31,11 @@ function categoryRowsMarkup(options, ids) {
       const text = (options.strings.categories && options.strings.categories[name]) || {};
       const label = escapeHtml(text.label || name);
       const description = escapeHtml(text.description || '');
-      const disabled = name === 'necessary' ? 'disabled aria-disabled="true" checked' : '';
+      const required = isRequiredCategory(options, name);
+      const disabled = required ? 'disabled aria-disabled="true" checked' : '';
+      const alwaysActiveText = required
+        ? escapeHtml(text.alwaysActive || getStringByKey(options.strings, 'alwaysActive', 'Always Active'))
+        : '';
       const describedBy = description ? ` aria-describedby="${descriptionId}"` : '';
       return `<details class="anubis-cat" data-anubis-cat="${escapeHtml(name)}" id="${rowId}">
   <summary class="anubis-summary">
@@ -36,6 +44,7 @@ function categoryRowsMarkup(options, ids) {
       <span class="anubis-summary-title" id="${titleId}">${label}</span>
     </span>
     <label class="anubis-switch" data-anubis-toggle-wrap="${escapeHtml(name)}">
+      ${alwaysActiveText ? `<span class="anubis-switch-note">${alwaysActiveText}</span>` : ''}
       <input class="anubis-toggle" type="checkbox" data-anubis-cat="${escapeHtml(name)}" aria-labelledby="${titleId}"${describedBy} ${disabled}>
     </label>
   </summary>
@@ -307,14 +316,14 @@ export function renderConsentUI(options, hooks) {
   function readCategoryChoices() {
     const choices = {};
     Object.keys(toggleMap).forEach((name) => {
-      choices[name] = name === 'necessary' ? true : Boolean(toggleMap[name] && toggleMap[name].checked);
+      choices[name] = isRequiredCategory(options, name) ? true : Boolean(toggleMap[name] && toggleMap[name].checked);
     });
     return choices;
   }
 
   function updateFromState(state) {
     Object.keys(toggleMap).forEach((name) => {
-      if (name === 'necessary') {
+      if (isRequiredCategory(options, name)) {
         toggleMap[name].checked = true;
         return;
       }
