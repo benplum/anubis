@@ -6,7 +6,7 @@ export function startAnubis(options) {
   if (bootPromise) {
     return bootPromise;
   }
-  const resolvedOptions = options || (typeof window !== 'undefined' ? window.AnubisOptions || {} : {});
+  const resolvedOptions = options || (typeof window !== 'undefined' ? window.ConsentOptions || {} : {});
   bootPromise = initAnubis(resolvedOptions).then((api) => {
     if (typeof window !== 'undefined') {
       window.Anubis = api;
@@ -19,9 +19,9 @@ export function startAnubis(options) {
 export default startAnubis;
 
 if (typeof window !== 'undefined') {
-  const shouldAutostart = !window.AnubisOptions || window.AnubisOptions.autoStart !== false;
+  const shouldAutostart = !window.ConsentOptions || window.ConsentOptions.autoStart !== false;
   if (shouldAutostart) {
-    startAnubis(window.AnubisOptions || {}).catch((error) => {
+    startAnubis(window.ConsentOptions || {}).catch((error) => {
       console.error('[Anubis] Failed to initialize', error);
     });
   }

@@ -1,7 +1,7 @@
 {
   "autoStart": true,
   "version": 2,
-  "storageKey": "anubis-consent",
+  "storageKey": "consent-options",
   "storageDuration": 180,
   "defaultMode": "opt-out",
   "fastDefaults": true,
@@ -14,7 +14,7 @@
   "regionTimeout": 800,
   "regionResolver": null,
   "regionCache": true,
-  "regionKey": "anubis-region",
+  "regionKey": "consent-region",
   "regionDuration": 1,
   "localeActive": "en",
   "localeFallback": "en",

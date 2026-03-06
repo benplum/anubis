@@ -15,7 +15,7 @@ Small, script-first consent mode library for Google/GTM aligned consent controls
 ## Category defaults
 
 ```js
-window.AnubisOptions = {
+window.ConsentOptions = {
   categories: {
     necessary: { consent: ['security_storage'], required: true },
     marketing: { consent: ['ad_storage', 'ad_user_data', 'ad_personalization'], required: false },
@@ -33,7 +33,7 @@ Load the library first on page, before tag scripts that should be consent-gated.
 
 ```html
 <script>
-  window.AnubisOptions = {
+  window.ConsentOptions = {
     defaultMode: 'opt-out',
     version: 1,
     links: {
@@ -45,14 +45,14 @@ Load the library first on page, before tag scripts that should be consent-gated.
   };
 </script>
 <link rel="stylesheet" href="/dist/css/theme-light.css" />
-<script src="/dist/js/anubis.bundled.js"></script>
+<script src="/dist/js/consent.bundled.js"></script>
 
 <script data-consent-category="analytics" src="https://example.com/analytics.js"></script>
 ```
 
-Use `dist/js/anubis.bundled.js` for auto-injected structural CSS (previous default behavior). Use `dist/js/anubis.js` when you want a lean runtime and explicitly load `dist/css/anubis.css` yourself.
+Use `dist/js/consent.bundled.js` for auto-injected structural CSS (previous default behavior). Use `dist/js/consent.js` when you want a lean runtime and explicitly load `dist/css/consent.css` yourself.
 
-Anubis mounts its UI in a Shadow Root by default to isolate consent UI styles from host frameworks (for example Bulma/Tailwind). It mirrors Anubis style nodes (`anubis.css` and theme stylesheets) into that shadow root.
+Anubis mounts its UI in a Shadow Root by default to isolate consent UI styles from host frameworks (for example Bulma/Tailwind). It mirrors Anubis style nodes (`consent.css` and theme stylesheets) into that shadow root.
 
 The base stylesheet (`src/css/base.css`) also applies safe typography/control defaults inside the Anubis root (color, font-size, font-weight, line-height, form control inheritance, box sizing) to reduce inherited host-style drift. For visual customization, prefer editing theme files (`theme-light` / `theme-dark`) or overriding Anubis CSS variables instead of relying on host-page framework styles.
 
@@ -64,17 +64,17 @@ If you swap or disable theme stylesheets after initialization, call `window.Anub
 - `src/css/base.css` → structural-only CSS
 - `src/css/theme-light.css` / `src/css/theme-dark.css` → paint/theme layers
 
-## `window.AnubisOptions` (IIFE-first)
+## `window.ConsentOptions` (IIFE-first)
 
-Most teams use the global options object before loading `dist/js/anubis.bundled.js`.
+Most teams use the global options object before loading `dist/js/consent.bundled.js`.
 
 ```js
-window.AnubisOptions = {
+window.ConsentOptions = {
   autoStart: true,
   version: 1,
   defaultMode: 'opt-out', // or 'opt-in'
   storageDuration: 180,
-  storageKey: 'anubis-consent',
+  storageKey: 'consent-options',
 
   links: {
     actions: [
@@ -111,7 +111,7 @@ For the required-category helper label, localize the global `requiredLabel` UI k
 If you are bundling with Vite/Webpack/Rollup, use ESM:
 
 ```js
-import startAnubis from '/dist/js/anubis.esm.js';
+import startAnubis from '/dist/js/consent.esm.js';
 
 startAnubis({
   defaultMode: 'opt-out',
@@ -135,7 +135,7 @@ Region values are normalized to uppercase with `-` separators (so `us_ca`, `us-c
 Example (CCPA / CPRA style):
 
 ```js
-window.AnubisOptions = {
+window.ConsentOptions = {
   regionResolver: async () => 'US-CA',
   regionOverrides: {
     US: {
@@ -264,11 +264,11 @@ npm run build
 
 Outputs:
 
-- `dist/js/anubis.esm.js`
-- `dist/js/anubis.js` (lean IIFE runtime, no structural CSS injection)
-- `dist/js/anubis.bundled.js` (IIFE runtime + structural style injection)
+- `dist/js/consent.esm.js`
+- `dist/js/consent.js` (lean IIFE runtime, no structural CSS injection)
+- `dist/js/consent.bundled.js` (IIFE runtime + structural style injection)
 - `dist/js/debugger.js` (debug panel helper)
-- `dist/css/anubis.css` (structural CSS only)
+- `dist/css/consent.css` (structural CSS only)
 - `dist/css/theme-light.css` (default paint/theme layer)
 - `dist/css/theme-dark.css` (dark paint/theme layer)
 
@@ -278,7 +278,7 @@ Include this only in development/debug sessions:
 
 ```html
 <link rel="stylesheet" href="/dist/css/theme-light.css" />
-<script src="/dist/js/anubis.bundled.js"></script>
+<script src="/dist/js/consent.bundled.js"></script>
 <script src="/dist/js/debugger.js"></script>
 ```
 

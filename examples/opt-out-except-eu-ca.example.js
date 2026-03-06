@@ -4,10 +4,10 @@
 // Example payload:
 //   {"country":"US","region":"Maryland","city":"Reisterstown"}
 
-window.AnubisOptions = {
+window.ConsentOptions = {
   autoStart: true,
   version: 2,
-  storageKey: 'anubis-consent',
+  storageKey: 'consent-options',
   storageDuration: 180,
   defaultMode: 'opt-in',
   fastDefaults: true,
@@ -15,7 +15,7 @@ window.AnubisOptions = {
   reloadOnRevoke: true,
   regionTimeout: 1200,
   regionCache: true,
-  regionKey: 'anubis-region',
+  regionKey: 'consent-region',
   regionDuration: 1,
 
   categories: {
@@ -90,4 +90,4 @@ window.AnubisOptions = {
 };
 
 // Load Anubis after assigning options
-// <script src="/dist/js/anubis.bundled.js"></script>
+// <script src="/dist/js/consent.bundled.js"></script>

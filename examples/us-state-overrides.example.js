@@ -1,6 +1,6 @@
 // Example: US state-level region overrides (e.g., CCPA/CPRA for California)
 
-window.AnubisOptions = {
+window.ConsentOptions = {
   version: 2,
   defaultMode: 'opt-out',
 
@@ -91,4 +91,4 @@ window.AnubisOptions = {
 };
 
 // Load Anubis after assigning options
-// <script src="/dist/js/anubis.bundled.js"></script>
+// <script src="/dist/js/consent.bundled.js"></script>

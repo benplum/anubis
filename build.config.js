@@ -9,16 +9,16 @@ await build({
   bundle: true,
   format: 'esm',
   minify: true,
-  outfile: 'dist/js/anubis.esm.js',
+  outfile: 'dist/js/consent.esm.js',
 });
 
 await build({
   entryPoints: ['src/js/index.js'],
   bundle: true,
   format: 'iife',
-  globalName: 'AnubisConsent',
+  globalName: 'Anubis',
   minify: true,
-  outfile: 'dist/js/anubis.js',
+  outfile: 'dist/js/consent.js',
 });
 
 await build({
@@ -29,15 +29,15 @@ await build({
   outfile: 'dist/js/debugger.js',
 });
 
-const baseCss = await readFile('src/css/base.css', 'utf8');
+const baseCss = await readFile('src/css/consent.css', 'utf8');
 const themeLight = await readFile('src/css/theme-light.css', 'utf8');
 const themeDark = await readFile('src/css/theme-dark.css', 'utf8');
-const js = await readFile('dist/js/anubis.js', 'utf8');
+const js = await readFile('dist/js/consent.js', 'utf8');
 
 const escapedBaseCss = JSON.stringify(baseCss);
-const injected = `(function(){if(typeof document==='undefined'){return;}if(document.getElementById('anubis-styles')){return;}var s=document.createElement('style');s.id='anubis-styles';s.textContent=${escapedBaseCss};document.head.appendChild(s);}());\n${js}`;
+const injected = `(function(){if(typeof document==='undefined'){return;}if(document.getElementById('consent-styles')){return;}var s=document.createElement('style');s.id='consent-styles';s.textContent=${escapedBaseCss};document.head.appendChild(s);}());\n${js}`;
 
-await writeFile('dist/js/anubis.bundled.js', injected, 'utf8');
-await writeFile('dist/css/anubis.css', baseCss, 'utf8');
+await writeFile('dist/js/consent.bundled.js', injected, 'utf8');
+await writeFile('dist/css/consent.css', baseCss, 'utf8');
 await writeFile('dist/css/theme-light.css', themeLight, 'utf8');
 await writeFile('dist/css/theme-dark.css', themeDark, 'utf8');

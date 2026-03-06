@@ -6,12 +6,12 @@ The implementation aligns to Consent Mode v2 by auto-detecting `gtag` and fallin
 
 Preferences persist in both cookie and localStorage for 180 days, and stay in sync as preferences change. Script gating uses `data-consent-category` plus a `MutationObserver`, with blocked scripts reinserted as executable nodes on grant; on revoke, clear accessible cookies and reload.
 
-All consent categories, consent-mode mappings, consent defaults, default opt-in/out mode, and UI text are configurable through `window.AnubisOptions`.
+All consent categories, consent-mode mappings, consent defaults, default opt-in/out mode, and UI text are configurable through `window.ConsentOptions`.
 
 Steps
 
 * Define architecture and constants in `src/index.js`: category map (marketing, analytics, preferences, locked necessary), Google key mapping, defaults (denied except necessary), storage keys, TTL.
-* Implement config parsing and normalization in `src/config.js`: read `window.AnubisOptions`, merge with defaults, validate shape, and freeze effective config.
+* Implement config parsing and normalization in `src/config.js`: read `window.ConsentOptions`, merge with defaults, validate shape, and freeze effective config.
 * Add configurable consent model in `src/config.js` and `src/consent-mode.js`: support `defaultMode: 'opt-in' | 'opt-out'` plus per-key overrides.
 * Implement persistence adapter in `src/storage.js`: read precedence, dual-write (cookie + localStorage), 180-day expiry, corruption-safe parse fallback to defaults.
 * Implement consent signaling in `src/consent-mode.js`: `applyDefaultConsent()` at bootstrap, `applyUpdatedConsent()` on save, auto-detect `window.gtag` else `dataLayer.push`, include `security_storage: 'granted'`.
@@ -22,7 +22,7 @@ Steps
 * Preserve script attributes on reinsert (`nonce`, `integrity`, `crossorigin`, `referrerpolicy`, `async`, `defer`) for CSP/security compatibility.
 * Implement revoke behavior in `src/runtime.js`: detect granted→denied transitions, clear first-party non-HttpOnly cookies best-effort, emit revoke event, then `location.reload()` guarded by config.
 * Implement events/triggers in `src/events.js`: dispatch custom events (`consent:ready`, `consent:changed`, `consent:revoked`), bind click handlers for `[data-consent]` (`open`, `accept`, `reject`, `save`).
-* Add optional geo-based config in `src/runtime.js`: support async `regionResolver()` with timeout + fallback to `AnubisOptions.region`, then apply region overrides before rendering.
+* Add optional geo-based config in `src/runtime.js`: support async `regionResolver()` with timeout + fallback to `ConsentOptions.region`, then apply region overrides before rendering.
 * Provide outputs and packaging in `package.json` and `build.config.js`: ESM source + bundled IIFE artifact with optional style injection, small-size build settings.
 * Document integration in `README.md`: load-order requirements (first script, blocking), required attributes (`data-consent-category`, `data-consent`), GTM/Consent Mode behavior, cookie-clearing limitations.
 
@@ -41,16 +41,16 @@ Google signaling: auto-detect gtag, fallback to dataLayer.
 Necessary handling: internal locked category + always `security_storage: 'granted'`.
 Persistence: cookie + localStorage, 180-day TTL.
 Script execution on grant: reinsert executable script nodes (not just type flip).
-Config entrypoint: `window.AnubisOptions`.
+Config entrypoint: `window.ConsentOptions`.
 Default model: `defaultMode` + per-key overrides.
 Translations: locales map with active locale override + auto-pick + fallback.
-Location support: async resolver callback with `AnubisOptions.region` fallback.
+Location support: async resolver callback with `ConsentOptions.region` fallback.
 
 Start-Today Additions
 
 Config hardening
 
-* Add `version` to `window.AnubisOptions`; if saved version differs, reset to defaults and re-show banner.
+* Add `version` to `window.ConsentOptions`; if saved version differs, reset to defaults and re-show banner.
 * Add `unknownPolicy: 'block' | 'allow'` (default `'block'`) for missing/invalid `data-consent-category` values.
 * Define deterministic precedence: base options → region override → persisted user choice.
 

@@ -1,7 +1,7 @@
 import { readMirroredObject, writeMirroredObject } from './storage.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const REGION_COOKIE_FALLBACK_KEY = 'anubis-region';
+const REGION_COOKIE_FALLBACK_KEY = 'consent-region';
 
 const EN_STRINGS = {
   bannerTitle: 'Privacy Settings',
@@ -56,7 +56,7 @@ const DEFAULT_ACTIONS = {
 export const DEFAULT_OPTIONS = {
 //   version: '1.0.0',
   version: 1,
-  storageKey: 'anubis-consent',
+  storageKey: 'consent-options',
   storageDuration: 180,
   //
   defaultMode: 'opt-out',
@@ -72,7 +72,7 @@ export const DEFAULT_OPTIONS = {
   regionOverrides: {},
   regionTimeout: 500,
   regionCache: true,
-  regionKey: 'anubis-region',
+  regionKey: 'consent-region',
   regionDuration: 1,
   //
   categories: {

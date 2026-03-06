@@ -12,7 +12,7 @@
         if (theme !== 'none') {
           const link = document.createElement('link');
           link.rel = 'stylesheet';
-          link.setAttribute('data-anubis-theme', '1');
+          link.setAttribute('data-consent-theme', '1');
           link.href = `../dist/css/theme-${theme}.css`;
           document.head.appendChild(link);
         }
@@ -25,7 +25,7 @@
           parsed = {};
         }
 
-        window.AnubisOptions = {
+        window.ConsentOptions = {
           version: 1,
           defaultMode: 'opt-out',
           links: {
@@ -38,7 +38,7 @@
         };
       }());
     </script>
-    <script src="../dist/js/anubis.bundled.js"></script>
+    <script src="../dist/js/consent.bundled.js"></script>
   </head>
   <body>
     <main class="container is-max-desktop mt-5 mb-6 px-3">
@@ -105,22 +105,20 @@
         };
 
         document.getElementById('resetPreview').addEventListener('click', () => {
-          const storageKey = (window.AnubisOptions && window.AnubisOptions.storageKey) || 'anubis-consent';
+          const storageKey = (window.ConsentOptions && window.ConsentOptions.storageKey) || 'consent-options';
           const regionKey =
-            (window.AnubisOptions && typeof window.AnubisOptions.regionKey === 'string' && window.AnubisOptions.regionKey) ||
-            'anubis-region';
+            (window.ConsentOptions && typeof window.ConsentOptions.regionKey === 'string' && window.ConsentOptions.regionKey) ||
+            'consent-region';
 
           try {
             localStorage.removeItem(storageKey);
-            localStorage.removeItem('anubis-consent');
-            localStorage.removeItem('anibus-consent');
+            localStorage.removeItem('consent-options');
             localStorage.removeItem(regionKey);
           } catch (_error) {
           }
 
           deleteCookie(storageKey);
-          deleteCookie('anubis-consent');
-          deleteCookie('anibus-consent');
+          deleteCookie('consent-options');
           deleteCookie(regionKey);
           deleteCookie('demo_analytics');
           deleteCookie('demo_marketing');
@@ -128,8 +126,7 @@
           pushLog('reset', {
             cleared: [
               storageKey,
-              'anubis-consent',
-              'anibus-consent',
+              'consent-options',
               regionKey,
               'demo_analytics',
               'demo_marketing',

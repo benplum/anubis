@@ -135,7 +135,7 @@ function classifyStylesheetLink(node) {
     return null;
   }
 
-  if (node.hasAttribute('data-anubis-theme')) {
+  if (node.hasAttribute('data-consent-theme')) {
     return 'theme';
   }
 
@@ -149,11 +149,11 @@ function classifyStylesheetLink(node) {
   const hrefWithoutQuery = hrefWithoutHash.split('?')[0];
   const fileName = hrefWithoutQuery.split('/').pop() || '';
 
-  if (node.id === 'anubisTheme' || fileName === 'theme-light.css' || fileName === 'theme-dark.css') {
+  if (node.id === 'consent-theme' || fileName === 'theme-light.css' || fileName === 'theme-dark.css') {
     return 'theme';
   }
 
-  return fileName === 'anubis.css' ? 'base' : null;
+  return fileName === 'consent.css' ? 'base' : null;
 }
 
 function cloneStylesIntoShadow(shadowRoot) {
@@ -178,12 +178,12 @@ function cloneStylesIntoShadow(shadowRoot) {
     baseNodes.push(node);
   }
 
-  const inlineBase = document.getElementById('anubis-styles');
+  const inlineBase = document.getElementById('consent-styles');
   if (inlineBase && inlineBase.tagName === 'STYLE') {
-    pushNode('base', inlineBase, '#anubis-styles');
+    pushNode('base', inlineBase, '#consent-styles');
   }
 
-  document.querySelectorAll('style[data-anubis-theme]').forEach((node) => {
+  document.querySelectorAll('style[data-consent-theme]').forEach((node) => {
     const text = node.textContent || '';
     pushNode('theme', node, `inline-theme:${text.length}`);
   });
@@ -239,11 +239,11 @@ export function renderConsentUI(options, hooks) {
   container.className = 'root';
   const idSeed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const ids = {
-    prefix: `anubis-${idSeed}`,
-    bannerTitle: `anubis-banner-title-${idSeed}`,
-    bannerDescription: `anubis-banner-description-${idSeed}`,
-    dialogTitle: `anubis-title-${idSeed}`,
-    dialogDescription: `anubis-desc-${idSeed}`,
+    prefix: `consent-${idSeed}`,
+    bannerTitle: `consent-banner-title-${idSeed}`,
+    bannerDescription: `consent-banner-description-${idSeed}`,
+    dialogTitle: `consent-title-${idSeed}`,
+    dialogDescription: `consent-desc-${idSeed}`,
   };
   const bannerDescribedBy = strings.bannerDescription ? ` aria-describedby="${ids.bannerDescription}"` : '';
   const dialogDescribedBy = strings.dialogDescription ? ` aria-describedby="${ids.dialogDescription}"` : '';

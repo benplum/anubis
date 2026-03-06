@@ -1,13 +1,13 @@
 // Example: Anubis options with async region resolver
 // This complements examples/anubis-options.example.json
 
-window.AnubisOptions = {
+window.ConsentOptions = {
   autoStart: true,
   defaultMode: 'opt-out',
   fastDefaults: true,
   regionTimeout: 1200,
   regionCache: true,
-  regionKey: 'anubis-region',
+  regionKey: 'consent-region',
   regionDuration: 1,
 
   categories: {
@@ -128,4 +128,4 @@ window.AnubisOptions = {
 };
 
 // Load Anubis after assigning options
-// <script src="/dist/js/anubis.bundled.js"></script>
+// <script src="/dist/js/consent.bundled.js"></script>

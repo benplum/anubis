@@ -33,7 +33,7 @@
               <input class="input" id="version" type="number" value="1" />
             </label>
             <label class="label">Storage key
-              <input class="input" id="storageKey" value="anubis-consent" />
+              <input class="input" id="storageKey" value="consent-options" />
             </label>
             <label class="label">Storage duration (days)
               <input class="input" id="storageDuration" type="number" value="180" />
@@ -59,7 +59,7 @@
             <label class="checkbox"><input id="regionCache" type="checkbox" checked /> regionCache</label>
             <br />
             <label class="label">Region cache key
-              <input class="input" id="regionKey" value="anubis-region" />
+              <input class="input" id="regionKey" value="consent-region" />
             </label>
             <label class="label">Region cache duration (days)
               <input class="input" id="regionDuration" type="number" value="1" />
@@ -306,7 +306,7 @@
           const base = {
             autoStart: document.getElementById('autoStart').checked,
             version: Number(document.getElementById('version').value) || 1,
-            storageKey: document.getElementById('storageKey').value.trim() || 'anubis-consent',
+            storageKey: document.getElementById('storageKey').value.trim() || 'consent-options',
             storageDuration: Number(document.getElementById('storageDuration').value) || 180,
             defaultMode: document.getElementById('defaultMode').value,
             fastDefaults: document.getElementById('fastDefaults').checked,
@@ -315,7 +315,7 @@
             region: document.getElementById('region').value.trim(),
             regionTimeout: Number(document.getElementById('regionTimeout').value) || 800,
             regionCache: document.getElementById('regionCache').checked,
-            regionKey: document.getElementById('regionKey').value.trim() || 'anubis-region',
+            regionKey: document.getElementById('regionKey').value.trim() || 'consent-region',
             regionDuration: Number(document.getElementById('regionDuration').value) || 1,
             localeActive: document.getElementById('localeActive').value.trim(),
             localeFallback: document.getElementById('localeFallback').value.trim() || 'en',
@@ -346,7 +346,7 @@
 
           document.getElementById('autoStart').checked = source.autoStart !== false;
           document.getElementById('version').value = Number(source.version) || 1;
-          document.getElementById('storageKey').value = source.storageKey || 'anubis-consent';
+          document.getElementById('storageKey').value = source.storageKey || 'consent-options';
           document.getElementById('storageDuration').value = Number(source.storageDuration) || 180;
           document.getElementById('defaultMode').value = source.defaultMode === 'opt-in' ? 'opt-in' : 'opt-out';
           document.getElementById('fastDefaults').checked = source.fastDefaults !== false;
@@ -355,7 +355,7 @@
           document.getElementById('region').value = source.region || '';
           document.getElementById('regionTimeout').value = Number(source.regionTimeout) || 800;
           document.getElementById('regionCache').checked = source.regionCache !== false;
-          document.getElementById('regionKey').value = source.regionKey || 'anubis-region';
+          document.getElementById('regionKey').value = source.regionKey || 'consent-region';
           document.getElementById('regionDuration').value = Number(source.regionDuration) || 1;
 
           const links = isObject(source.links) ? source.links : {};
