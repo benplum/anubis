@@ -45,12 +45,12 @@ Load the library first on page, before tag scripts that should be consent-gated.
   };
 </script>
 <link rel="stylesheet" href="/dist/css/theme-light.css" />
-<script src="/dist/js/anubis.js"></script>
+<script src="/dist/js/anubis.bundled.js"></script>
 
 <script data-consent-category="analytics" src="https://example.com/analytics.js"></script>
 ```
 
-`dist/js/anubis.js` always injects structural CSS. Theme paint is optional and controlled by whichever stylesheet you include (`theme-light`, `theme-dark`, or your own custom theme).
+Use `dist/js/anubis.bundled.js` for auto-injected structural CSS (previous default behavior). Use `dist/js/anubis.js` when you want a lean runtime and explicitly load `dist/css/anubis.css` yourself.
 
 Anubis mounts its UI in a Shadow Root by default to isolate consent UI styles from host frameworks (for example Bulma/Tailwind). It mirrors Anubis style nodes (`anubis.css` and theme stylesheets) into that shadow root.
 
@@ -66,7 +66,7 @@ If you swap or disable theme stylesheets after initialization, call `window.Anub
 
 ## `window.AnubisOptions` (IIFE-first)
 
-Most teams use the global options object before loading `dist/js/anubis.js`.
+Most teams use the global options object before loading `dist/js/anubis.bundled.js`.
 
 ```js
 window.AnubisOptions = {
@@ -265,8 +265,9 @@ npm run build
 Outputs:
 
 - `dist/js/anubis.esm.js`
-- `dist/js/anubis.js` (includes structural style injection only)
-- `dist/js/anubis-debug.js` (debug panel helper)
+- `dist/js/anubis.js` (lean IIFE runtime, no structural CSS injection)
+- `dist/js/anubis.bundled.js` (IIFE runtime + structural style injection)
+- `dist/js/debugger.js` (debug panel helper)
 - `dist/css/anubis.css` (structural CSS only)
 - `dist/css/theme-light.css` (default paint/theme layer)
 - `dist/css/theme-dark.css` (dark paint/theme layer)
@@ -277,8 +278,8 @@ Include this only in development/debug sessions:
 
 ```html
 <link rel="stylesheet" href="/dist/css/theme-light.css" />
-<script src="/dist/js/anubis.js"></script>
-<script src="/dist/js/anubis-debug.js"></script>
+<script src="/dist/js/anubis.bundled.js"></script>
+<script src="/dist/js/debugger.js"></script>
 ```
 
 The helper shows a floating bottom-right panel with:

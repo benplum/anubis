@@ -22,11 +22,11 @@ await build({
 });
 
 await build({
-  entryPoints: ['src/js/debug-helper.js'],
+  entryPoints: ['src/js/debugger.js'],
   bundle: true,
   format: 'iife',
   minify: true,
-  outfile: 'dist/js/anubis-debug.js',
+  outfile: 'dist/js/debugger.js',
 });
 
 const baseCss = await readFile('src/css/base.css', 'utf8');
@@ -37,7 +37,7 @@ const js = await readFile('dist/js/anubis.js', 'utf8');
 const escapedBaseCss = JSON.stringify(baseCss);
 const injected = `(function(){if(typeof document==='undefined'){return;}if(document.getElementById('anubis-styles')){return;}var s=document.createElement('style');s.id='anubis-styles';s.textContent=${escapedBaseCss};document.head.appendChild(s);}());\n${js}`;
 
-await writeFile('dist/js/anubis.js', injected, 'utf8');
+await writeFile('dist/js/anubis.bundled.js', injected, 'utf8');
 await writeFile('dist/css/anubis.css', baseCss, 'utf8');
 await writeFile('dist/css/theme-light.css', themeLight, 'utf8');
 await writeFile('dist/css/theme-dark.css', themeDark, 'utf8');
