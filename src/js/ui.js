@@ -37,18 +37,18 @@ function categoryRowsMarkup(options, ids) {
         ? escapeHtml(getStringByKey(options.strings, 'requiredLabel', 'Always Active'))
         : '';
       const describedBy = description ? ` aria-describedby="${descriptionId}"` : '';
-      return `<details class="anubis-cat" data-cat="${escapeHtml(name)}" id="${rowId}">
-  <summary class="anubis-summary">
-    <span class="anubis-summary-handle">
-      <span class="anubis-summary-arrow" aria-hidden="true"></span>
-      <span class="anubis-summary-title" id="${titleId}">${label}</span>
+      return `<details class="cat" data-cat="${escapeHtml(name)}" id="${rowId}">
+  <summary class="summary">
+    <span class="summary-handle">
+      <span class="summary-arrow" aria-hidden="true"></span>
+      <span class="summary-title" id="${titleId}">${label}</span>
     </span>
-    <label class="anubis-switch" data-wrap="${escapeHtml(name)}">
-      ${alwaysActiveText ? `<span class="anubis-switch-note">${alwaysActiveText}</span>` : ''}
-      <input class="anubis-toggle" type="checkbox" data-cat="${escapeHtml(name)}" aria-labelledby="${titleId}"${describedBy} ${disabled}>
+    <label class="switch" data-wrap="${escapeHtml(name)}">
+      ${alwaysActiveText ? `<span class="switch-note">${alwaysActiveText}</span>` : ''}
+      <input class="toggle" type="checkbox" data-cat="${escapeHtml(name)}" aria-labelledby="${titleId}"${describedBy} ${disabled}>
     </label>
   </summary>
-  ${description ? `<p class="anubis-desc" id="${descriptionId}">${description}</p>` : ''}
+  ${description ? `<p class="desc" id="${descriptionId}">${description}</p>` : ''}
 </details>`;
     })
     .join('');
@@ -64,13 +64,13 @@ function policyLinkMarkup(strings, links) {
         if (!title || !url) {
           return '';
         }
-        return `<a class="anubis-link" href="${escapeHtml(url)}" rel="noopener noreferrer">${escapeHtml(title)}</a>`;
+        return `<a class="link" href="${escapeHtml(url)}" rel="noopener noreferrer">${escapeHtml(title)}</a>`;
       })
       .filter(Boolean)
     : [];
 
   if (actions.length) {
-    return `<div class="anubis-links">${actions.join('')}</div>`;
+    return `<div class="links">${actions.join('')}</div>`;
   }
 
   return '';
@@ -99,14 +99,14 @@ function actionButtonMarkup(action, strings, useTriggerAttribute) {
   const text = resolveActionText(action, strings);
   const isIcon = variant === 'icon';
   const className = isIcon
-    ? 'anubis-btn anubis-btn-icon'
+    ? 'btn btn-icon'
     : (variant === 'primary' || variant === 'link')
-      ? `anubis-btn anubis-btn-${variant}`
-      : 'anubis-btn';
+      ? `btn btn-${variant}`
+      : 'btn';
   const triggerAttribute = useTriggerAttribute ? ` data-consent="${escapeHtml(action.id)}"` : '';
 
   if (isIcon) {
-    return `<button type="button" class="${escapeHtml(className)}" data-action="${escapeHtml(action.id)}" data-close="${action.closeDialog ? '1' : '0'}"${triggerAttribute}><span class="anubis-sr">${escapeHtml(text)}</span></button>`;
+    return `<button type="button" class="${escapeHtml(className)}" data-action="${escapeHtml(action.id)}" data-close="${action.closeDialog ? '1' : '0'}"${triggerAttribute}><span class="sr">${escapeHtml(text)}</span></button>`;
   }
 
   return `<button type="button" class="${escapeHtml(className)}" data-action="${escapeHtml(action.id)}" data-close="${action.closeDialog ? '1' : '0'}"${triggerAttribute}>${escapeHtml(text)}</button>`;
@@ -127,7 +127,7 @@ function dialogFooterActionsMarkup(options, strings) {
   return actions.map((action) => actionButtonMarkup(action, strings, false)).join('');
 }
 
-function classifyAnubisStylesheetLink(node) {
+function classifyStylesheetLink(node) {
   if (!node || node.tagName !== 'LINK') {
     return null;
   }
@@ -135,24 +135,28 @@ function classifyAnubisStylesheetLink(node) {
     return null;
   }
 
-  const href = (node.getAttribute('href') || '').trim();
-  const hrefLower = href.toLowerCase();
-
-  const isTheme = node.id === 'anubisTheme'
-    || node.hasAttribute('data-anubis-theme')
-    || hrefLower.includes('theme-light.css')
-    || hrefLower.includes('theme-dark.css')
-    || hrefLower.includes('theme-');
-
-  if (isTheme) {
-    return href ? 'theme' : null;
+  if (node.hasAttribute('data-anubis-theme')) {
+    return 'theme';
   }
 
-  const isBase = hrefLower.includes('anubis.css') || hrefLower.includes('/anubis/');
-  return isBase ? 'base' : null;
+  const href = (node.getAttribute('href') || '').trim();
+  if (!href) {
+    return null;
+  }
+
+  const hrefLower = href.toLowerCase();
+  const hrefWithoutHash = hrefLower.split('#')[0];
+  const hrefWithoutQuery = hrefWithoutHash.split('?')[0];
+  const fileName = hrefWithoutQuery.split('/').pop() || '';
+
+  if (node.id === 'anubisTheme' || fileName === 'theme-light.css' || fileName === 'theme-dark.css') {
+    return 'theme';
+  }
+
+  return fileName === 'anubis.css' ? 'base' : null;
 }
 
-function cloneAnubisStylesIntoShadow(shadowRoot) {
+function cloneStylesIntoShadow(shadowRoot) {
   if (!shadowRoot || typeof shadowRoot.appendChild !== 'function') {
     return;
   }
@@ -185,7 +189,7 @@ function cloneAnubisStylesIntoShadow(shadowRoot) {
   });
 
   document.querySelectorAll('link[rel="stylesheet"]').forEach((node) => {
-    const role = classifyAnubisStylesheetLink(node);
+    const role = classifyStylesheetLink(node);
     if (!role) {
       return;
     }
@@ -200,7 +204,7 @@ function cloneAnubisStylesIntoShadow(shadowRoot) {
   });
 }
 
-function refreshAnubisShadowStyles(shadowRoot) {
+function refreshShadowStyles(shadowRoot) {
   if (!shadowRoot) {
     return;
   }
@@ -209,7 +213,7 @@ function refreshAnubisShadowStyles(shadowRoot) {
     node.remove();
   });
 
-  cloneAnubisStylesIntoShadow(shadowRoot);
+  cloneStylesIntoShadow(shadowRoot);
 }
 
 export function renderConsentUI(options, hooks) {
@@ -227,12 +231,12 @@ export function renderConsentUI(options, hooks) {
 
   const strings = options.strings;
   const host = document.createElement('div');
-  host.className = 'anubis-shadow-host';
+  host.className = 'shadow-host';
   const shadowRoot = host.attachShadow({ mode: 'open' });
-  refreshAnubisShadowStyles(shadowRoot);
+  refreshShadowStyles(shadowRoot);
 
   const container = document.createElement('div');
-  container.className = 'anubis-root';
+  container.className = 'root';
   const idSeed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const ids = {
     prefix: `anubis-${idSeed}`,
@@ -244,29 +248,29 @@ export function renderConsentUI(options, hooks) {
   const bannerDescribedBy = strings.bannerDescription ? ` aria-describedby="${ids.bannerDescription}"` : '';
   const dialogDescribedBy = strings.dialogDescription ? ` aria-describedby="${ids.dialogDescription}"` : '';
 
-  container.innerHTML = `<section class="anubis-banner" role="region" aria-labelledby="${ids.bannerTitle}"${bannerDescribedBy}>
-  <div class="anubis-content">
-    <h2 class="anubis-title" id="${ids.bannerTitle}">${escapeHtml(strings.bannerTitle || 'Privacy choices')}</h2>
-    ${strings.bannerDescription ? `<p class="anubis-desc" id="${ids.bannerDescription}">${escapeHtml(strings.bannerDescription)}</p>` : ''}
+  container.innerHTML = `<section class="banner" role="region" aria-labelledby="${ids.bannerTitle}"${bannerDescribedBy}>
+  <div class="content">
+    <h2 class="title" id="${ids.bannerTitle}">${escapeHtml(strings.bannerTitle || 'Privacy choices')}</h2>
+    ${strings.bannerDescription ? `<p class="desc" id="${ids.bannerDescription}">${escapeHtml(strings.bannerDescription)}</p>` : ''}
     ${policyLinkMarkup(strings, options.links || {})}
   </div>
-  <div class="anubis-actions">
+  <div class="actions">
     ${bannerActionsMarkup(options, strings)}
   </div>
 </section>
-<dialog class="anubis-dialog" aria-labelledby="${ids.dialogTitle}"${dialogDescribedBy} aria-modal="true">
-  <form class="anubis-form" method="dialog">
-    <div class="anubis-dialog-header">
-      <h2 class="anubis-title" id="${ids.dialogTitle}" tabindex="-1">${escapeHtml(strings.dialogTitle || 'Consent preferences')}</h2>
-      <div class="anubis-actions">
+<dialog class="dialog" aria-labelledby="${ids.dialogTitle}"${dialogDescribedBy} aria-modal="true">
+  <form class="form" method="dialog">
+    <div class="dialog-header">
+      <h2 class="title" id="${ids.dialogTitle}" tabindex="-1">${escapeHtml(strings.dialogTitle || 'Consent preferences')}</h2>
+      <div class="actions">
         ${dialogHeaderActionsMarkup(options, strings)}
       </div>
     </div>
-    ${strings.dialogDescription ? `<p class="anubis-desc" id="${ids.dialogDescription}">${escapeHtml(strings.dialogDescription)}</p>` : ''}
-    <div class="anubis-cats">
+    ${strings.dialogDescription ? `<p class="desc" id="${ids.dialogDescription}">${escapeHtml(strings.dialogDescription)}</p>` : ''}
+    <div class="cats">
       ${categoryRowsMarkup(options, ids)}
     </div>
-    <div class="anubis-actions">
+    <div class="actions">
       ${dialogFooterActionsMarkup(options, strings)}
     </div>
   </form>
@@ -275,15 +279,15 @@ export function renderConsentUI(options, hooks) {
   shadowRoot.appendChild(container);
   document.body.prepend(host);
 
-  const banner = container.querySelector('.anubis-banner');
-  const dialog = container.querySelector('.anubis-dialog');
-  const form = container.querySelector('.anubis-form');
+  const banner = container.querySelector('.banner');
+  const dialog = container.querySelector('.dialog');
+  const form = container.querySelector('.form');
   const toggleMap = {};
   Object.keys(options.categories).forEach((name) => {
     toggleMap[name] = container.querySelector(`input[data-cat="${name}"]`);
   });
 
-  container.querySelectorAll('.anubis-switch, .anubis-toggle').forEach((node) => {
+  container.querySelectorAll('.switch, .toggle').forEach((node) => {
     node.addEventListener('click', (event) => {
       event.stopPropagation();
     });
@@ -297,7 +301,7 @@ export function renderConsentUI(options, hooks) {
     }
     lastFocus = document.activeElement;
     dialog.showModal();
-    const titleNode = dialog.querySelector('.anubis-title');
+    const titleNode = dialog.querySelector('.title');
     if (titleNode && typeof titleNode.focus === 'function') {
       titleNode.focus();
     }
@@ -347,7 +351,7 @@ export function renderConsentUI(options, hooks) {
     }
 
     const closeAfter = actionButton.getAttribute('data-close') === '1';
-    const source = actionButton.closest('.anubis-dialog') ? 'dialog' : 'banner';
+    const source = actionButton.closest('.dialog') ? 'dialog' : 'banner';
 
     if (typeof hooks.onAction === 'function') {
       hooks.onAction(action, {
@@ -383,7 +387,7 @@ export function renderConsentUI(options, hooks) {
     updateFromState,
     readCategoryChoices,
     refreshStyles: () => {
-      refreshAnubisShadowStyles(shadowRoot);
+      refreshShadowStyles(shadowRoot);
     },
     destroy: () => {
       if (host.parentNode) {

@@ -16,7 +16,7 @@
   }
 
   const DEBUG_STYLES = `
-      .anubis-debug {
+      .debug {
         position: fixed;
         right: 12px;
         bottom: 12px;
@@ -32,7 +32,7 @@
         grid-template-rows: auto auto auto 1fr;
         overflow: hidden;
       }
-      .anubis-debug-header {
+      .debug-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -41,10 +41,10 @@
         border-bottom: 1px solid #334155;
         font-size: 12px;
       }
-      .anubis-debug-title {
+      .debug-title {
         font-weight: 700;
       }
-      .anubis-debug-btn {
+      .debug-btn {
         border: 1px solid #475569;
         background: #111827;
         color: #e2e8f0;
@@ -53,13 +53,13 @@
         cursor: pointer;
         font-size: 11px;
       }
-      .anubis-debug-tabs {
+      .debug-tabs {
         display: flex;
         gap: 6px;
         padding: 6px 10px;
         border-bottom: 1px solid #334155;
       }
-      .anubis-debug-tab {
+      .debug-tab {
         border: 1px solid #475569;
         background: #111827;
         color: #e2e8f0;
@@ -68,86 +68,86 @@
         cursor: pointer;
         font-size: 11px;
       }
-      .anubis-debug-tab[aria-selected='true'] {
+      .debug-tab[aria-selected='true'] {
         background: #1d4ed8;
         border-color: #1d4ed8;
         color: #ffffff;
       }
-      .anubis-debug-section {
+      .debug-section {
         padding: 8px 10px;
         border-bottom: 1px solid #334155;
       }
-      .anubis-debug-tokens {
+      .debug-tokens {
         display: grid;
         gap: 6px;
       }
-      .anubis-debug-state-row {
+      .debug-state-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 8px;
         padding: 6px 0;
       }
-      .anubis-debug-state-row + .anubis-debug-state-row {
+      .debug-state-row + .debug-state-row {
         border-top: 1px solid #334155;
       }
-      .anubis-debug-state-key {
+      .debug-state-key {
         font-size: 11px;
         color: #e2e8f0;
         word-break: break-word;
       }
-      .anubis-debug-token {
+      .debug-token {
         font-size: 11px;
         border-radius: 999px;
         padding: 3px 8px;
         border: 1px solid transparent;
         white-space: nowrap;
       }
-      .anubis-debug-token--granted {
+      .debug-token--granted {
         background: #052e16;
         border-color: #166534;
         color: #bbf7d0;
       }
-      .anubis-debug-token--denied {
+      .debug-token--denied {
         background: #450a0a;
         border-color: #7f1d1d;
         color: #fecaca;
       }
-      .anubis-debug-body {
+      .debug-body {
         min-height: 140px;
         overflow: auto;
         padding: 8px 10px;
         font-size: 11px;
       }
-      .anubis-debug-body[hidden] {
+      .debug-body[hidden] {
         display: none;
       }
-      .anubis-debug-log-item {
+      .debug-log-item {
         padding: 6px 0;
         border-bottom: 1px dashed #334155;
       }
-      .anubis-debug-log-item:last-child {
+      .debug-log-item:last-child {
         border-bottom: 0;
       }
-      .anubis-debug-log-time {
+      .debug-log-time {
         opacity: 0.75;
       }
-      .anubis-debug-log-name {
+      .debug-log-name {
         color: #93c5fd;
         font-weight: 700;
       }
-      .anubis-debug-log-data {
+      .debug-log-data {
         margin: 4px 0 0;
         white-space: pre-wrap;
         word-break: break-word;
       }
-      .anubis-debug--collapsed {
+      .debug--collapsed {
         grid-template-rows: auto;
         max-height: none;
       }
-      .anubis-debug--collapsed .anubis-debug-tabs,
-      .anubis-debug--collapsed .anubis-debug-section,
-      .anubis-debug--collapsed .anubis-debug-body {
+      .debug--collapsed .debug-tabs,
+      .debug--collapsed .debug-section,
+      .debug--collapsed .debug-body {
         display: none;
       }
     `;
@@ -158,7 +158,7 @@
 
   function buildPanel() {
     const host = document.createElement('div');
-    host.className = 'anubis-debug-host';
+    host.className = 'debug-host';
     const shadowRoot = host.attachShadow({ mode: 'open' });
 
     const style = document.createElement('style');
@@ -166,26 +166,26 @@
     shadowRoot.appendChild(style);
 
     const panel = document.createElement('aside');
-    panel.className = 'anubis-debug';
+    panel.className = 'debug';
     panel.setAttribute('aria-live', 'polite');
     panel.innerHTML = `
-      <div class="anubis-debug-header">
-        <span class="anubis-debug-title">Anubis</span>
+      <div class="debug-header">
+        <span class="debug-title">Anubis</span>
         <div>
-          <button type="button" class="anubis-debug-btn" data-anubis-debug="toggle">Collapse</button>
-          <button type="button" class="anubis-debug-btn" data-anubis-debug="clear">Clear log</button>
+          <button type="button" class="debug-btn" data-anubis-debug="toggle">Collapse</button>
+          <button type="button" class="debug-btn" data-anubis-debug="clear">Clear log</button>
         </div>
       </div>
-      <div class="anubis-debug-tabs" role="tablist" aria-label="Anubis debug tabs">
-        <button type="button" class="anubis-debug-tab" role="tab" aria-selected="true" data-anubis-debug-tab="state">State</button>
-        <button type="button" class="anubis-debug-tab" role="tab" aria-selected="false" data-anubis-debug-tab="internal">Log</button>
-        <button type="button" class="anubis-debug-tab" role="tab" aria-selected="false" data-anubis-debug-tab="datalayer">DataLayer</button>
+      <div class="debug-tabs" role="tablist" aria-label="Anubis debug tabs">
+        <button type="button" class="debug-tab" role="tab" aria-selected="true" data-anubis-debug-tab="state">State</button>
+        <button type="button" class="debug-tab" role="tab" aria-selected="false" data-anubis-debug-tab="internal">Log</button>
+        <button type="button" class="debug-tab" role="tab" aria-selected="false" data-anubis-debug-tab="datalayer">DataLayer</button>
       </div>
-      <section class="anubis-debug-section" data-anubis-debug="state-wrap">
-        <div class="anubis-debug-tokens" data-anubis-debug="tokens"></div>
+      <section class="debug-section" data-anubis-debug="state-wrap">
+        <div class="debug-tokens" data-anubis-debug="tokens"></div>
       </section>
-      <section class="anubis-debug-body" data-anubis-debug="consent-log" hidden></section>
-      <section class="anubis-debug-body" data-anubis-debug="datalayer-log" hidden></section>
+      <section class="debug-body" data-anubis-debug="consent-log" hidden></section>
+      <section class="debug-body" data-anubis-debug="datalayer-log" hidden></section>
     `;
     shadowRoot.appendChild(panel);
     document.body.appendChild(host);
@@ -215,15 +215,15 @@
     function renderTokens(state) {
       const entries = Object.entries(state || {});
       if (!entries.length) {
-        tokensNode.innerHTML = '<div class="anubis-debug-state-row"><span class="anubis-debug-state-key">No consent state yet</span></div>';
+        tokensNode.innerHTML = '<div class="debug-state-row"><span class="debug-state-key">No consent state yet</span></div>';
         return;
       }
 
       tokensNode.innerHTML = entries
         .map(([key, value]) => {
           const granted = value === 'granted';
-          const klass = granted ? 'anubis-debug-token--granted' : 'anubis-debug-token--denied';
-          return `<div class="anubis-debug-state-row"><span class="anubis-debug-state-key">${key}</span><span class="anubis-debug-token ${klass}">${granted ? 'granted' : 'denied'}</span></div>`;
+          const klass = granted ? 'debug-token--granted' : 'debug-token--denied';
+          return `<div class="debug-state-row"><span class="debug-state-key">${key}</span><span class="debug-token ${klass}">${granted ? 'granted' : 'denied'}</span></div>`;
         })
         .join('');
     }
@@ -231,9 +231,9 @@
     function renderLog(targetNode, entries) {
       targetNode.innerHTML = entries
         .map((entry) => {
-          return `<article class="anubis-debug-log-item">
-            <div><span class="anubis-debug-log-time">${entry.time}</span> <span class="anubis-debug-log-name">${entry.name}</span></div>
-            <pre class="anubis-debug-log-data">${entry.data}</pre>
+          return `<article class="debug-log-item">
+            <div><span class="debug-log-time">${entry.time}</span> <span class="debug-log-name">${entry.name}</span></div>
+            <pre class="debug-log-data">${entry.data}</pre>
           </article>`;
         })
         .join('');
@@ -401,8 +401,8 @@
     setTab('state');
 
     toggleBtn.addEventListener('click', () => {
-      panel.classList.toggle('anubis-debug--collapsed');
-      toggleBtn.textContent = panel.classList.contains('anubis-debug--collapsed') ? 'Expand' : 'Collapse';
+      panel.classList.toggle('debug--collapsed');
+      toggleBtn.textContent = panel.classList.contains('debug--collapsed') ? 'Expand' : 'Collapse';
     });
 
     clearBtn.addEventListener('click', () => {

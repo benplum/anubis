@@ -1,25 +1,25 @@
-.anubis-root,
-.anubis-root *,
-.anubis-root *::before,
-.anubis-root *::after {
+.root,
+.root *,
+.root *::before,
+.root *::after {
   box-sizing: border-box;
 }
 
-.anubis-root {
-  --anubis-bg: #fff;
-  --anubis-fg: #000;
-  --anubis-font-family: sans-serif;
-  --anubis-font-size: 16px;
-  --anubis-space: 12px;
-  --anubis-space-sm: calc(var(--anubis-space) * .5);
-  --anubis-space-lg: calc(var(--anubis-space) * 1.5);
-  --anubis-z: 99999;
+.root {
+  --bg: #fff;
+  --fg: #000;
+  --font-family: sans-serif;
+  --font-size: 16px;
+  --space: 12px;
+  --space-sm: calc(var(--space) * .5);
+  --space-lg: calc(var(--space) * 1.5);
+  --z: 99999;
 }
 
-.anubis-root {
-  color: var(--anubis-fg);
-  font-family: var(--anubis-font-family);
-  font-size: var(--anubis-font-size);
+.root {
+  color: var(--fg);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
   font-weight: 400;
   line-height: 1.3;
   font-style: normal;
@@ -32,10 +32,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.anubis-root button,
-.anubis-root input,
-.anubis-root select,
-.anubis-root textarea {
+.root button,
+.root input,
+.root select,
+.root textarea {
   font-size: inherit;
   letter-spacing: inherit;
   line-height: inherit;
@@ -45,105 +45,105 @@
   line-height: inherit; */
 }
 
-.anubis-banner {
+.banner {
   position: fixed;
   inset: auto 16px 16px;
   max-width: 460px;
-  padding: var(--anubis-space-lg);
-  background: var(--anubis-bg);
+  padding: var(--space-lg);
+  background: var(--bg);
   border: 1px solid;
-  z-index: var(--anubis-z);
+  z-index: var(--z);
 }
 
-.anubis-title {
-  margin: 0 0 var(--anubis-space-sm);
+.title {
+  margin: 0 0 var(--space-sm);
 }
 
-.anubis-content {
-  margin: 0 0 var(--anubis-space);
+.content {
+  margin: 0 0 var(--space);
 }
 
-.anubis-desc {
-  margin: 0 0 var(--anubis-space);
+.desc {
+  margin: 0 0 var(--space);
 }
 
-.anubis-actions {
+.actions {
   display: flex;
-  gap: var(--anubis-space);
+  gap: var(--space);
   flex-wrap: wrap;
 }
 
-.anubis-btn {
-  background: var(--anubis-bg);
+.btn {
+  background: var(--bg);
   border: 1px solid;
   color: inherit;
-  padding: var(--anubis-space) var(--anubis-space-lg);
+  padding: var(--space) var(--space-lg);
   cursor: pointer;
 }
 
-.anubis-btn-primary {
-  background: var(--anubis-fg);
-  color: var(--anubis-bg);
+.btn-primary {
+  background: var(--fg);
+  color: var(--bg);
 }
 
-.anubis-btn-link {
+.btn-link {
   text-decoration: underline;
   border: 0;
   padding-left: 0;
   padding-right: 0;
 }
 
-.anubis-link {
+.link {
   color: inherit;
   display: inline-block;
   margin: 0;
 }
 
-.anubis-links {
+.links {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--anubis-space-sm);
-  margin: 0 0 var(--anubis-space);
+  gap: var(--space-sm);
+  margin: 0 0 var(--space);
 }
 
-.anubis-dialog {
-  background: var(--anubis-bg);
+.dialog {
+  background: var(--bg);
   border: 1px solid;
-  width: min(740px, calc(100vw - var(--anubis-space-lg)));
+  width: min(740px, calc(100vw - var(--space-lg)));
   padding: 16px;
 }
 
-.anubis-dialog .anubis-desc {
-  margin-bottom: var(--anubis-space-lg);
+.dialog .desc {
+  margin-bottom: var(--space-lg);
 }
 
-.anubis-form {
+.form {
   margin: 0;
 }
 
-.anubis-dialog .anubis-actions {
+.dialog .actions {
   /* display: inline-flex;
   align-items: center;
-  gap: var(--anubis-space-sm); */
-  margin-top: var(--anubis-space-lg);
+  gap: var(--space-sm); */
+  margin-top: var(--space-lg);
 }
 
-.anubis-dialog-header {
+.dialog-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--anubis-space-sm);
+  gap: var(--space-sm);
 }
 
-.anubis-dialog-header .anubis-actions {
+.dialog-header .actions {
   margin: 0;
 }
 
-.anubis-dialog .anubis-title {
+.dialog .title {
   margin: 0;
 }
 
-.anubis-btn-icon {
+.btn-icon {
   border: 1px solid;
   width: 40px;
   height: 40px;
@@ -154,15 +154,15 @@
   justify-content: center;
 }
 
-button.anubis-btn-icon {
+button.btn-icon {
   font-size: 1.75rem;
 }
 
-.anubis-btn-icon::before {
+.btn-icon::before {
   content: '×';
 }
 
-.anubis-sr {
+.sr {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -174,77 +174,77 @@ button.anubis-btn-icon {
   border: 0;
 }
 
-.anubis-cats {
+.cats {
   display: grid;
-  gap: var(--anubis-space-sm);
-  margin: 0 0 var(--anubis-space);
+  gap: var(--space-sm);
+  margin: 0 0 var(--space);
 }
 
-.anubis-cat {
+.cat {
   border: 1px solid;
-  padding: var(--anubis-space);
+  padding: var(--space);
 }
 
-.anubis-summary {
+.summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--anubis-space);
+  gap: var(--space);
   list-style: none;
   cursor: pointer;
   user-select: none;
 }
 
-.anubis-summary::-webkit-details-marker {
+.summary::-webkit-details-marker {
   display: none;
 }
 
-.anubis-summary-handle {
+.summary-handle {
   display: flex;
   align-items: center;
-  gap: var(--anubis-space);
+  gap: var(--space);
   font-weight: 600;
 }
 
-.anubis-summary-arrow {
+.summary-arrow {
   width: 0;
   height: 0;
-  border: var(--anubis-space-sm) solid transparent;
+  border: var(--space-sm) solid transparent;
   border-right-width: 0;
   border-left-color: currentColor;
   transition: transform 0.15s ease;
 }
 
-.anubis-cat[open] .anubis-summary-arrow {
+.cat[open] .summary-arrow {
   transform: rotate(90deg);
 }
 
-.anubis-switch {
+.switch {
   display: inline-flex;
   align-items: center;
-  gap: var(--anubis-space-sm);
+  gap: var(--space-sm);
 }
 
-.anubis-switch-note {
+.switch-note {
   font-size: 0.85em;
   opacity: 0.75;
   white-space: nowrap;
 }
 
-.anubis-cat .anubis-desc {
-  margin: var(--anubis-space) 0 0;
+.cat .desc {
+  margin: var(--space) 0 0;
 }
 
-.anubis-toggle {
-  height: var(--anubis-space-lg);
-  width: var(--anubis-space-lg);
+.toggle {
+  height: var(--space-lg);
+  width: var(--space-lg);
   margin: 0;
 }
 
-.anubis-btn:focus-visible,
-.anubis-link:focus-visible,
-.anubis-toggle:focus-visible,
-.anubis-summary:focus-visible {
-  outline: 2px solid var(--anubis-fg);
+.btn:focus-visible,
+.link:focus-visible,
+.toggle:focus-visible,
+.summary:focus-visible {
+  outline: 2px solid var(--fg);
   outline-offset: 2px;
 }
