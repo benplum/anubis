@@ -59,7 +59,7 @@ export const DEFAULT_OPTIONS = {
   storageKey: 'consent-options',
   storageDuration: 180,
   //
-  defaultMode: 'opt-out',
+  defaultMode: 'opt-in',
   defaultConsent: {},
   fastDefaults: true,
   unknownPolicy: 'block',
