@@ -67,6 +67,10 @@ textarea {
   margin: 0 0 var(--space);
 }
 
+.sec a {
+  color: var(--fg);
+}
+
 .actions {
   display: flex;
   gap: var(--space);

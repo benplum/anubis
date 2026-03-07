@@ -18,10 +18,8 @@
   color: var(--fg);
 }
 
-.desc,
-.desc,
-.desc {
-  /* color: var(--border); */
+.desc a {
+  color: var(--primary);
 }
 
 .btn {
@@ -89,14 +87,6 @@
   transform: translateX(var(--space-lg));
 }
 
-.toggle:focus-visible {
-  /* outline: 2px solid #60a5fa;
-  outline-offset: 2px; */
-}
-
 .toggle:disabled {
-  /* cursor: default;
-  background: #dbeafe;
-  border-color: #93c5fd; */
   opacity: 0.5;
 }
