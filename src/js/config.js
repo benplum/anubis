@@ -60,6 +60,7 @@ export const DEFAULT_OPTIONS = {
   storageDuration: 180,
   //
   defaultMode: 'opt-in',
+  respectDoNotTrack: true,
   defaultConsent: {},
   fastDefaults: true,
   unknownPolicy: 'block',

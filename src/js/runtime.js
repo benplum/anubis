@@ -167,12 +167,34 @@ function isCategoryAllowed(state, options, category) {
   return options.unknownPolicy === 'allow';
 }
 
+function isDoNotTrackEnabled() {
+  if (typeof navigator === 'undefined' && typeof window === 'undefined') {
+    return false;
+  }
+
+  const values = [
+    typeof navigator !== 'undefined' ? navigator.doNotTrack : null,
+    typeof window !== 'undefined' ? window.doNotTrack : null,
+    typeof navigator !== 'undefined' ? navigator.msDoNotTrack : null,
+  ];
+
+  return values.some((value) => {
+    if (value === null || typeof value === 'undefined') {
+      return false;
+    }
+    const normalized = String(value).trim().toLowerCase();
+    return normalized === '1' || normalized === 'yes';
+  });
+}
+
 export async function initAnubis(rawOptions = {}) {
   const fastDefault = applyFastStoredDefault(rawOptions);
   await waitForBody();
   const options = await resolveOptions(rawOptions);
   const stored = readStoredConsent(options);
   const validStored = isValidStoredConsent(stored, options.version);
+  let hasStoredConsent = validStored;
+  let doNotTrackApplied = false;
 
   let state = { ...options.defaultConsentInternal };
   if (validStored) {
@@ -183,11 +205,25 @@ export async function initAnubis(rawOptions = {}) {
     state = enforceRequiredGranted(state, options.categories, options.requiredCategories);
   }
 
+  if (!hasStoredConsent && options.respectDoNotTrack && isDoNotTrackEnabled()) {
+    state = createAllState(options, 'denied');
+    saveStoredConsent(
+      {
+        version: options.version,
+        grants: state,
+        updatedAt: Date.now(),
+      },
+      options,
+    );
+    hasStoredConsent = true;
+    doNotTrackApplied = true;
+  }
+
   if (!fastDefault.applied) {
     applyDefaultConsent(options.defaultConsentGoogle, options);
   }
 
-  if (validStored) {
+  if (hasStoredConsent) {
     const storedGoogleState = toGoogleConsent(state, options.consentMapping);
     if (!fastDefault.applied || !statesEqual(fastDefault.googleState, storedGoogleState)) {
       applyUpdatedConsent(storedGoogleState, options);
@@ -278,10 +314,11 @@ export async function initAnubis(rawOptions = {}) {
   });
 
   ui.updateFromState(state);
-  ui.showBanner(!validStored);
+  ui.showBanner(!hasStoredConsent);
 
   emitConsentEvent('consent:ready', {
-    hasStoredConsent: Boolean(validStored),
+    hasStoredConsent: Boolean(hasStoredConsent),
+    doNotTrackApplied,
     ...buildConsentEventDetail(options, state),
   });
 

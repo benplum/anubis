@@ -4,6 +4,7 @@
   "storageKey": "consent-options",
   "storageDuration": 180,
   "defaultMode": "opt-out",
+  "respectDoNotTrack": true,
   "fastDefaults": true,
   "defaultConsent": {
     "analytics_storage": "denied"
