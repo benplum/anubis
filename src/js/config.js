@@ -90,6 +90,7 @@ export const DEFAULT_OPTIONS = {
   links: {
     actions: [],
   },
+  styles: '',
   actions: DEFAULT_ACTIONS,
 };
 
@@ -213,6 +214,10 @@ function normalizeLinks(links) {
   }
 
   return normalized;
+}
+
+function normalizeStyles(stylesInput) {
+  return typeof stylesInput === 'string' ? stylesInput.trim() : '';
 }
 
 function normalizedConsentKeys(value) {
@@ -498,6 +503,7 @@ export async function resolveOptions(rawOptions = {}) {
   options.categories = normalizedCategories.categoryMap;
   options.requiredCategories = normalizedCategories.requiredCategories;
   options.links = normalizeLinks(options.links);
+  options.styles = normalizeStyles(options.styles);
 
   options.actions = normalizeActions(options.actions);
 

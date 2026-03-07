@@ -1,7 +1,7 @@
 .root,
-.root *,
-.root *::before,
-.root *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -32,10 +32,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.root button,
-.root input,
-.root select,
-.root textarea {
+button,
+input,
+select,
+textarea {
   font-size: inherit;
   letter-spacing: inherit;
   line-height: inherit;

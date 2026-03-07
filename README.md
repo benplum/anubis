@@ -36,6 +36,7 @@ Load the library first on page, before tag scripts that should be consent-gated.
   window.ConsentOptions = {
     defaultMode: 'opt-out',
     version: 1,
+    styles: '/dist/css/theme-light.css',
     links: {
       actions: [
         { title: 'Privacy policy', url: '/privacy' },
@@ -44,19 +45,18 @@ Load the library first on page, before tag scripts that should be consent-gated.
     }
   };
 </script>
-<link rel="stylesheet" href="/dist/css/theme-light.css" />
 <script src="/dist/js/consent.bundled.js"></script>
 
 <script data-consent-category="analytics" src="https://example.com/analytics.js"></script>
 ```
 
-Use `dist/js/consent.bundled.js` for auto-injected structural CSS. Use `dist/js/consent.js` when you want a lean runtime and explicitly load `dist/css/consent.css` yourself.
+`dist/js/consent.bundled.js` auto-injects the base structural CSS. Use `styles` (single CSS URL string) to load a theme stylesheet into the Shadow Root.
 
-Anubis mounts its UI in a Shadow Root by default to isolate consent UI styles from host frameworks (for example Bulma/Tailwind). It mirrors Anubis style nodes (`consent.css` and theme stylesheets) into that shadow root.
+Anubis mounts its UI in a Shadow Root by default to isolate consent UI styles from host frameworks (for example Bulma/Tailwind).
 
 The base stylesheet (`src/css/base.css`) also applies safe typography/control defaults inside the Anubis root (color, font-size, font-weight, line-height, form control inheritance, box sizing) to reduce inherited host-style drift. For visual customization, prefer editing theme files (`theme-light` / `theme-dark`) or overriding Anubis CSS variables instead of relying on host-page framework styles.
 
-If you swap or disable theme stylesheets after initialization, call `window.Anubis.refreshStyles()` (or `api.refreshStyles()` in ESM mode) to re-sync shadow-root styles from current page styles.
+If you change `window.Anubis.getOptions().styles` at runtime, call `window.Anubis.refreshStyles()` (or `api.refreshStyles()` in ESM mode) to re-apply shadow-root styles.
 
 ## Source layout
 
@@ -82,6 +82,8 @@ window.ConsentOptions = {
       { title: 'Cookie policy', url: '/cookies' },
     ],
   },
+
+  styles: '/dist/css/theme-light.css',
 
   categories: {
     necessary: { consent: ['security_storage'], required: true },

@@ -127,84 +127,32 @@ function dialogFooterActionsMarkup(options, strings) {
   return actions.map((action) => actionButtonMarkup(action, strings, false)).join('');
 }
 
-function classifyStylesheetLink(node) {
-  if (!node || node.tagName !== 'LINK') {
-    return null;
-  }
-  if ((node.getAttribute('rel') || '').toLowerCase() !== 'stylesheet') {
-    return null;
-  }
-
-  if (node.hasAttribute('data-consent-theme')) {
-    return 'theme';
-  }
-
-  const href = (node.getAttribute('href') || '').trim();
+function appendShadowStylesheet(shadowRoot, href, role) {
   if (!href) {
-    return null;
-  }
-
-  const hrefLower = href.toLowerCase();
-  const hrefWithoutHash = hrefLower.split('#')[0];
-  const hrefWithoutQuery = hrefWithoutHash.split('?')[0];
-  const fileName = hrefWithoutQuery.split('/').pop() || '';
-
-  if (node.id === 'consent-theme' || fileName === 'theme-light.css' || fileName === 'theme-dark.css') {
-    return 'theme';
-  }
-
-  return fileName === 'consent.css' ? 'base' : null;
-}
-
-function cloneStylesIntoShadow(shadowRoot) {
-  if (!shadowRoot || typeof shadowRoot.appendChild !== 'function') {
     return;
   }
 
-  const seen = new Set();
-  const baseNodes = [];
-  const themeNodes = [];
-
-  function pushNode(role, node, key) {
-    const fingerprint = `${role}:${key}`;
-    if (seen.has(fingerprint)) {
-      return;
-    }
-    seen.add(fingerprint);
-    if (role === 'theme') {
-      themeNodes.push(node);
-      return;
-    }
-    baseNodes.push(node);
-  }
-
-  const inlineBase = document.getElementById('consent-styles');
-  if (inlineBase && inlineBase.tagName === 'STYLE') {
-    pushNode('base', inlineBase, '#consent-styles');
-  }
-
-  document.querySelectorAll('style[data-consent-theme]').forEach((node) => {
-    const text = node.textContent || '';
-    pushNode('theme', node, `inline-theme:${text.length}`);
-  });
-
-  document.querySelectorAll('link[rel="stylesheet"]').forEach((node) => {
-    const role = classifyStylesheetLink(node);
-    if (!role) {
-      return;
-    }
-    const href = node.getAttribute('href') || '';
-    pushNode(role, node, href || node.id || 'link');
-  });
-
-  [...baseNodes, ...themeNodes].forEach((node) => {
-    const clone = node.cloneNode(true);
-    clone.setAttribute('data-shadow', '1');
-    shadowRoot.appendChild(clone);
-  });
+  const node = document.createElement('link');
+  node.rel = 'stylesheet';
+  node.href = href;
+  node.setAttribute('data-shadow', '1');
+  node.setAttribute('data-shadow-role', role);
+  shadowRoot.appendChild(node);
 }
 
-function refreshShadowStyles(shadowRoot) {
+function appendShadowInlineStyle(shadowRoot, cssText, role) {
+  if (!cssText) {
+    return;
+  }
+
+  const node = document.createElement('style');
+  node.textContent = cssText;
+  node.setAttribute('data-shadow', '1');
+  node.setAttribute('data-shadow-role', role);
+  shadowRoot.appendChild(node);
+}
+
+function refreshShadowStyles(shadowRoot, styles) {
   if (!shadowRoot) {
     return;
   }
@@ -213,7 +161,15 @@ function refreshShadowStyles(shadowRoot) {
     node.remove();
   });
 
-  cloneStylesIntoShadow(shadowRoot);
+  const bundledBaseNode = document.getElementById('consent-styles');
+  if (bundledBaseNode && bundledBaseNode.tagName === 'STYLE') {
+    appendShadowInlineStyle(shadowRoot, bundledBaseNode.textContent || '', 'base-inline');
+  }
+
+  const themeHref = typeof styles === 'string' ? styles.trim() : '';
+  if (themeHref) {
+    appendShadowStylesheet(shadowRoot, themeHref, 'theme');
+  }
 }
 
 export function renderConsentUI(options, hooks) {
@@ -233,7 +189,7 @@ export function renderConsentUI(options, hooks) {
   const host = document.createElement('div');
   host.className = 'shadow-host';
   const shadowRoot = host.attachShadow({ mode: 'open' });
-  refreshShadowStyles(shadowRoot);
+  refreshShadowStyles(shadowRoot, options.styles);
 
   const container = document.createElement('div');
   container.className = 'root';
@@ -387,7 +343,7 @@ export function renderConsentUI(options, hooks) {
     updateFromState,
     readCategoryChoices,
     refreshStyles: () => {
-      refreshShadowStyles(shadowRoot);
+      refreshShadowStyles(shadowRoot, options.styles);
     },
     destroy: () => {
       if (host.parentNode) {

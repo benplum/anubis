@@ -8,14 +8,9 @@
     <script>
       (function () {
         const params = new URLSearchParams(window.location.search);
-        const theme = params.get('theme') || 'light';
-        if (theme !== 'none') {
-          const link = document.createElement('link');
-          link.rel = 'stylesheet';
-          link.setAttribute('data-consent-theme', '1');
-          link.href = `../dist/css/theme-${theme}.css`;
-          document.head.appendChild(link);
-        }
+        const allowedThemes = new Set(['none', 'light', 'dark']);
+        const requestedTheme = params.get('theme');
+        const theme = allowedThemes.has(requestedTheme) ? requestedTheme : 'light';
 
         const raw = params.get('options');
         let parsed = {};
@@ -34,6 +29,7 @@
               { title: 'Cookie policy', url: '#cookies' },
             ],
           },
+          styles: theme === 'none' ? '' : `../dist/css/theme-${theme}.css`,
           ...parsed,
         };
       }());
