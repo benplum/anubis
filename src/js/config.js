@@ -290,7 +290,7 @@ function buildConsentMapping(consentKeys, mappingInput) {
 }
 
 function buildDefaultInternalConsent(options) {
-  const modeGranted = options.defaultMode === 'opt-in' ? 'granted' : 'denied';
+  const modeGranted = options.defaultMode === 'opt-out' ? 'granted' : 'denied';
   const consent = {};
 
   options.consentKeys.forEach((key) => {

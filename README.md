@@ -102,6 +102,8 @@ Common options:
 - UI/i18n: `links`, `actions`, `localeActive`, `localeFallback`, `i18n.locales`
 - Region: `region`, `regionResolver`, `regionTimeout`, `regionCache`, `regionKey`, `regionDuration`, `regionOverrides`
 
+`defaultMode` baseline behavior: `opt-out` starts consent keys as `granted`, while `opt-in` starts as `denied` (required categories are still forced to granted).
+
 For the required-category helper label, localize the global `requiredLabel` UI key.
 
 `consentMapping` is optional and only needed when your internal consent keys differ from Google Consent Mode keys. If your category `consent` lists already use Google keys (for example `analytics_storage`, `ad_storage`), you can omit `consentMapping`.
@@ -290,7 +292,7 @@ The helper shows a floating bottom-right panel with:
 
 ## Examples
 
-- `examples/anubis-options.example.json` (full baseline options)
+- `examples/anubis-options.example.json` (full baseline options; `opt-out` baseline with one explicit denied override)
 - `examples/region-resolver.example.js` (resolver + region overrides)
 - `examples/us-state-overrides.example.js` (US + state-level overrides)
 - `examples/opt-out-except-eu-ca.example.js` (safe fallback model: default opt-in, opt-out for non-EU/non-CA)

@@ -6,8 +6,7 @@
   "defaultMode": "opt-out",
   "fastDefaults": true,
   "defaultConsent": {
-    "analytics_storage": "denied",
-    "functionality_storage": "granted"
+    "analytics_storage": "denied"
   },
   "unknownPolicy": "block",
   "reloadOnRevoke": true,
