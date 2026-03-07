@@ -37,12 +37,10 @@ Load the library first on page, before tag scripts that should be consent-gated.
     defaultMode: 'opt-out',
     version: 1,
     styles: '/dist/css/theme-light.css',
-    links: {
-      actions: [
-        { title: 'Privacy policy', url: '/privacy' },
-        { title: 'Cookie policy', url: '/cookies' }
-      ]
-    }
+    links: [
+      { title: 'Privacy policy', url: '/privacy' },
+      { title: 'Cookie policy', url: '/cookies' }
+    ]
   };
 </script>
 <script src="/dist/js/consent.bundled.js"></script>
@@ -76,12 +74,10 @@ window.ConsentOptions = {
   storageDuration: 180,
   storageKey: 'consent-options',
 
-  links: {
-    actions: [
-      { title: 'Privacy policy', url: '/privacy' },
-      { title: 'Cookie policy', url: '/cookies' },
-    ],
-  },
+  links: [
+    { title: 'Privacy policy', url: '/privacy' },
+    { title: 'Cookie policy', url: '/cookies' },
+  ],
 
   styles: '/dist/css/theme-light.css',
 
@@ -94,7 +90,7 @@ window.ConsentOptions = {
 };
 ```
 
-`links.actions` supports any number of banner links (`title` + `url`).
+`links` supports any number of banner links (`title` + `url`).
 
 Common options:
 
@@ -143,11 +139,9 @@ window.ConsentOptions = {
   regionResolver: async () => 'US-CA',
   regionOverrides: {
     US: {
-      links: {
-        actions: [
-          { title: 'Privacy policy', url: '/privacy-us' },
-        ],
-      },
+      links: [
+        { title: 'Privacy policy', url: '/privacy-us' },
+      ],
     },
     'US-CA': {
       defaultMode: 'opt-out',

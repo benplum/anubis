@@ -13,12 +13,10 @@ window.ConsentOptions = {
 
     // State-specific override (applied after US baseline)
     'US-CA': {
-      links: {
-        actions: [
-          { title: 'Privacy policy', url: '/privacy/california' },
-          { title: 'Cookie policy', url: '/cookies/california' },
-        ],
-      },
+      links: [
+        { title: 'Privacy policy', url: '/privacy/california' },
+        { title: 'Cookie policy', url: '/cookies/california' },
+      ],
       actions: {
         banner: [
           { id: 'reject', label: 'Reject all' },

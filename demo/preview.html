@@ -23,12 +23,10 @@
         window.ConsentOptions = {
           version: 1,
           defaultMode: 'opt-out',
-          links: {
-            actions: [
-              { title: 'Privacy policy', url: '#privacy' },
-              { title: 'Cookie policy', url: '#cookies' },
-            ],
-          },
+          links: [
+            { title: 'Privacy policy', url: '#privacy' },
+            { title: 'Cookie policy', url: '#cookies' },
+          ],
           styles: theme === 'none' ? '' : `../dist/css/theme-${theme}.css`,
           ...parsed,
         };

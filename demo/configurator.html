@@ -319,9 +319,7 @@
             regionDuration: Number(document.getElementById('regionDuration').value) || 1,
             localeActive: document.getElementById('localeActive').value.trim(),
             localeFallback: document.getElementById('localeFallback').value.trim() || 'en',
-            links: {
-              actions: rowsToLinkActions(),
-            },
+            links: rowsToLinkActions(),
             categories: rowsToCategoryObject(),
             regionOverrides,
             i18n: Object.keys(locales).length
@@ -358,11 +356,11 @@
           document.getElementById('regionKey').value = source.regionKey || 'consent-region';
           document.getElementById('regionDuration').value = Number(source.regionDuration) || 1;
 
-          const links = isObject(source.links) ? source.links : {};
+          const links = Array.isArray(source.links) ? source.links : [];
 
           clearRepeater(linksRepeater);
-          if (Array.isArray(links.actions) && links.actions.length) {
-            links.actions.forEach((item) => {
+          if (links.length) {
+            links.forEach((item) => {
               if (isObject(item)) {
                 addLinkActionRow(item.title || '', item.url || '');
               }

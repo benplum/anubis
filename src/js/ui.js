@@ -59,8 +59,8 @@ function categoryRowsMarkup(options, ids) {
 }
 
 function policyLinkMarkup(strings, links) {
-  const actions = Array.isArray(links.actions)
-    ? links.actions
+  const actions = Array.isArray(links)
+    ? links
       .filter((item) => item && typeof item === 'object')
       .map((item) => {
         const title = typeof item.title === 'string' ? item.title.trim() : '';
@@ -217,7 +217,7 @@ export function renderConsentUI(options, hooks) {
   <div class="content">
     <h2 class="title" id="${ids.bannerTitle}">${bannerTitleHtml}</h2>
     ${strings.bannerDescription ? `<p class="desc" id="${ids.bannerDescription}">${bannerDescriptionHtml}</p>` : ''}
-    ${policyLinkMarkup(strings, options.links || {})}
+    ${policyLinkMarkup(strings, options.links || [])}
   </div>
   <div class="actions">
     ${bannerActionsMarkup(options, strings)}
@@ -305,18 +305,24 @@ export function renderConsentUI(options, hooks) {
   }
 
   container.addEventListener('click', (event) => {
-    const actionButton = event.target && event.target.closest ? event.target.closest('[data-action]') : null;
-    if (!actionButton || !container.contains(actionButton)) {
+    const actionNode = event.target && event.target.closest
+      ? event.target.closest('[data-action], [data-consent]')
+      : null;
+    if (!actionNode || !container.contains(actionNode)) {
       return;
     }
 
-    const action = (actionButton.getAttribute('data-action') || '').trim();
+    const action = (actionNode.getAttribute('data-action') || actionNode.getAttribute('data-consent') || '').trim();
     if (!action) {
       return;
     }
 
-    const closeAfter = actionButton.getAttribute('data-close') === '1';
-    const source = actionButton.closest('.dialog') ? 'dialog' : 'banner';
+    if (actionNode.tagName === 'A' && actionNode.hasAttribute('href')) {
+      event.preventDefault();
+    }
+
+    const closeAfter = actionNode.getAttribute('data-close') === '1';
+    const source = actionNode.closest('.dialog') ? 'dialog' : 'banner';
 
     if (typeof hooks.onAction === 'function') {
       hooks.onAction(action, {

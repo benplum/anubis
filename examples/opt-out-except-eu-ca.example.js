@@ -25,12 +25,10 @@ window.ConsentOptions = {
     preferences: { consent: ['functionality_storage', 'personalization_storage'], required: false },
   },
 
-  links: {
-    actions: [
-      { title: 'Privacy policy', url: '/privacy' },
-      { title: 'Cookie policy', url: '/cookies' },
-    ],
-  },
+  links: [
+    { title: 'Privacy policy', url: '/privacy' },
+    { title: 'Cookie policy', url: '/cookies' },
+  ],
 
   regionOverrides: {
     NON_EU_CA: {

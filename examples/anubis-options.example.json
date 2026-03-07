@@ -56,18 +56,16 @@
     "functionality_storage": "functionality_storage",
     "personalization_storage": "personalization_storage"
   },
-  "links": {
-    "actions": [
-      {
-        "title": "Privacy policy",
-        "url": "/privacy"
-      },
-      {
-        "title": "Cookie policy",
-        "url": "/cookies"
-      }
-    ]
-  },
+  "links": [
+    {
+      "title": "Privacy policy",
+      "url": "/privacy"
+    },
+    {
+      "title": "Cookie policy",
+      "url": "/cookies"
+    }
+  ],
   "actions": {
     "banner": [
       {

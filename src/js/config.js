@@ -87,9 +87,7 @@ export const DEFAULT_OPTIONS = {
       en: EN_STRINGS,
     },
   },
-  links: {
-    actions: [],
-  },
+  links: [],
   styles: '',
   actions: DEFAULT_ACTIONS,
 };
@@ -192,28 +190,23 @@ function normalizeActions(actions) {
 }
 
 function normalizeLinks(links) {
-  const source = isObject(links) ? links : {};
-  const normalized = {
-    actions: [],
-  };
-
-  if (Array.isArray(source.actions)) {
-    normalized.actions = source.actions
-      .map((item) => {
-        if (!isObject(item)) {
-          return null;
-        }
-        const title = typeof item.title === 'string' ? item.title.trim() : '';
-        const url = typeof item.url === 'string' ? item.url.trim() : '';
-        if (!title || !url) {
-          return null;
-        }
-        return { title, url };
-      })
-      .filter(Boolean);
+  if (!Array.isArray(links)) {
+    return [];
   }
 
-  return normalized;
+  return links
+    .map((item) => {
+      if (!isObject(item)) {
+        return null;
+      }
+      const title = typeof item.title === 'string' ? item.title.trim() : '';
+      const url = typeof item.url === 'string' ? item.url.trim() : '';
+      if (!title || !url) {
+        return null;
+      }
+      return { title, url };
+    })
+    .filter(Boolean);
 }
 
 function normalizeStyles(stylesInput) {
