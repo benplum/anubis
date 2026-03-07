@@ -114,6 +114,70 @@ function mergeDeep(target, source) {
   return out;
 }
 
+function cloneValue(value) {
+  if (Array.isArray(value)) {
+    return value.slice();
+  }
+  if (isObject(value)) {
+    return { ...value };
+  }
+  return value;
+}
+
+function hasOwnPath(source, pathParts) {
+  let node = source;
+  for (let i = 0; i < pathParts.length; i += 1) {
+    const part = pathParts[i];
+    if (!node || typeof node !== 'object' || !Object.prototype.hasOwnProperty.call(node, part)) {
+      return false;
+    }
+    node = node[part];
+  }
+  return true;
+}
+
+function getPathValue(source, pathParts) {
+  let node = source;
+  for (let i = 0; i < pathParts.length; i += 1) {
+    node = node[pathParts[i]];
+  }
+  return node;
+}
+
+function setPathValue(target, pathParts, value) {
+  let node = target;
+  for (let i = 0; i < pathParts.length - 1; i += 1) {
+    const part = pathParts[i];
+    if (!isObject(node[part])) {
+      node[part] = {};
+    }
+    node = node[part];
+  }
+  node[pathParts[pathParts.length - 1]] = cloneValue(value);
+}
+
+const REPLACE_MERGE_PATHS = [
+  ['categories'],
+  ['links'],
+  ['actions', 'banner'],
+  ['actions', 'dialog', 'header'],
+  ['actions', 'dialog', 'footer'],
+];
+
+function applyReplacementPaths(target, source, replacementPaths = REPLACE_MERGE_PATHS) {
+  if (!isObject(source)) {
+    return target;
+  }
+
+  replacementPaths.forEach((pathParts) => {
+    if (hasOwnPath(source, pathParts)) {
+      setPathValue(target, pathParts, getPathValue(source, pathParts));
+    }
+  });
+
+  return target;
+}
+
 function normalizeAction(item, fallback) {
   const input = isObject(item) ? item : {};
   const candidateId = typeof input.id === 'string' ? input.id.trim() : '';
@@ -478,23 +542,20 @@ function freezeShallow(object) {
 
 export async function resolveOptions(rawOptions = {}) {
   const inputOptions = isObject(rawOptions) ? rawOptions : {};
-  let options = mergeDeep(DEFAULT_OPTIONS, inputOptions);
-
-  if (Object.prototype.hasOwnProperty.call(inputOptions, 'categories')) {
-    options.categories = isObject(inputOptions.categories) ? { ...inputOptions.categories } : {};
-  }
+  let options = applyReplacementPaths(mergeDeep(DEFAULT_OPTIONS, inputOptions), inputOptions);
 
   const region = await resolveConfiguredRegion(options);
   const regionOverrides = isObject(options.regionOverrides) ? options.regionOverrides : {};
   const regionOverrideKeys = getRegionOverrideKeys(region);
   regionOverrideKeys.forEach((overrideKey) => {
     if (isObject(regionOverrides[overrideKey])) {
-      options = mergeDeep(options, regionOverrides[overrideKey]);
+      const override = regionOverrides[overrideKey];
+      options = applyReplacementPaths(mergeDeep(options, override), override);
     }
   });
 
   if (!region && isObject(regionOverrides.default)) {
-    options = mergeDeep(options, regionOverrides.default);
+    options = applyReplacementPaths(mergeDeep(options, regionOverrides.default), regionOverrides.default);
   }
 
   const normalizedCategories = normalizeCategoriesDefinition(options.categories);
