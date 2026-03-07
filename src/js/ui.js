@@ -16,6 +16,10 @@ function toIdFragment(value) {
     .replace(/^-+|-+$/g, '') || 'item';
 }
 
+function htmlString(value) {
+  return typeof value === 'string' ? value : '';
+}
+
 function isRequiredCategory(options, name) {
   return Array.isArray(options.requiredCategories) && options.requiredCategories.includes(name);
 }
@@ -29,8 +33,8 @@ function categoryRowsMarkup(options, ids) {
       const titleId = `${rowId}-title`;
       const descriptionId = `${rowId}-description`;
       const text = (options.strings.categories && options.strings.categories[name]) || {};
-      const label = escapeHtml(text.label || name);
-      const description = escapeHtml(text.description || '');
+      const label = htmlString(text.label || name);
+      const description = htmlString(text.description || '');
       const required = isRequiredCategory(options, name);
       const disabled = required ? 'disabled aria-disabled="true" checked' : '';
       const alwaysActiveText = required
@@ -204,10 +208,15 @@ export function renderConsentUI(options, hooks) {
   const bannerDescribedBy = strings.bannerDescription ? ` aria-describedby="${ids.bannerDescription}"` : '';
   const dialogDescribedBy = strings.dialogDescription ? ` aria-describedby="${ids.dialogDescription}"` : '';
 
+  const bannerTitleHtml = htmlString(strings.bannerTitle || 'Privacy choices');
+  const bannerDescriptionHtml = htmlString(strings.bannerDescription || '');
+  const dialogTitleHtml = htmlString(strings.dialogTitle || 'Consent preferences');
+  const dialogDescriptionHtml = htmlString(strings.dialogDescription || '');
+
   container.innerHTML = `<section class="banner" role="region" aria-labelledby="${ids.bannerTitle}"${bannerDescribedBy}>
   <div class="content">
-    <h2 class="title" id="${ids.bannerTitle}">${escapeHtml(strings.bannerTitle || 'Privacy choices')}</h2>
-    ${strings.bannerDescription ? `<p class="desc" id="${ids.bannerDescription}">${escapeHtml(strings.bannerDescription)}</p>` : ''}
+    <h2 class="title" id="${ids.bannerTitle}">${bannerTitleHtml}</h2>
+    ${strings.bannerDescription ? `<p class="desc" id="${ids.bannerDescription}">${bannerDescriptionHtml}</p>` : ''}
     ${policyLinkMarkup(strings, options.links || {})}
   </div>
   <div class="actions">
@@ -217,12 +226,12 @@ export function renderConsentUI(options, hooks) {
 <dialog class="dialog" aria-labelledby="${ids.dialogTitle}"${dialogDescribedBy} aria-modal="true">
   <form class="form" method="dialog">
     <div class="dialog-header">
-      <h2 class="title" id="${ids.dialogTitle}" tabindex="-1">${escapeHtml(strings.dialogTitle || 'Consent preferences')}</h2>
+      <h2 class="title" id="${ids.dialogTitle}" tabindex="-1">${dialogTitleHtml}</h2>
       <div class="actions">
         ${dialogHeaderActionsMarkup(options, strings)}
       </div>
     </div>
-    ${strings.dialogDescription ? `<p class="desc" id="${ids.dialogDescription}">${escapeHtml(strings.dialogDescription)}</p>` : ''}
+    ${strings.dialogDescription ? `<p class="desc" id="${ids.dialogDescription}">${dialogDescriptionHtml}</p>` : ''}
     <div class="cats">
       ${categoryRowsMarkup(options, ids)}
     </div>

@@ -484,7 +484,12 @@ function freezeShallow(object) {
 }
 
 export async function resolveOptions(rawOptions = {}) {
-  let options = mergeDeep(DEFAULT_OPTIONS, isObject(rawOptions) ? rawOptions : {});
+  const inputOptions = isObject(rawOptions) ? rawOptions : {};
+  let options = mergeDeep(DEFAULT_OPTIONS, inputOptions);
+
+  if (Object.prototype.hasOwnProperty.call(inputOptions, 'categories')) {
+    options.categories = isObject(inputOptions.categories) ? { ...inputOptions.categories } : {};
+  }
 
   const region = await resolveConfiguredRegion(options);
   const regionOverrides = isObject(options.regionOverrides) ? options.regionOverrides : {};
