@@ -40,6 +40,7 @@ button,
 input,
 select,
 textarea {
+  appearance: none;
   font-size: inherit;
   letter-spacing: inherit;
   line-height: inherit;
@@ -53,10 +54,6 @@ main {
 
 a {
   color: var(--primary);
-}
-
-button {
-  // margin-bottom: var(--space-sm);
 }
 
 p {
@@ -78,13 +75,17 @@ h6 {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: inherit;
+  display: inline-block;
   padding: var(--space) var(--space-lg);
   cursor: pointer;
   font-size: inherit;
+  text-decoration: none;
+  vertical-align: middle;
 }
 
 .btn-primary {
   background: var(--primary);
+  border-color: var(--primary);
   color: var(--bg);
 }
 

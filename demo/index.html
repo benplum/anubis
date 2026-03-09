@@ -146,56 +146,40 @@
     <script src="../dist/js/debugger.js"></script>
   </head>
   <body>
-    <main class="container is-max-desktop mt-5 mb-6 px-3">
-      <div class="navbar mb-5">
-        <div class="navbar-start">
-          <div class="navbar-item">
-            <h1 class="title is-3">Demo</h1>
-          </div>
-        </div>
-        <div class="navbar-end">
-          <div class="navbar-item">
-            <a href="./configurator.html" class="button is-link">Open Configurator</a>
-          </div>
-        </div>
+    
+    <main>
+
+      <h1>Consent Demo</h1>
+        
+      <a class="btn btn-link" href="./configurator.html">Open Configurator</a>
+
+      <h2>Preset Layouts</h2>
+      <div>
+        <a class="btn btn-primary" href="?preset=default">Defaults</a>
+        <a class="btn btn-primary" href="?preset=dialog-first">Dialog First</a>
+        <a class="btn btn-primary" href="?preset=accept-only">Accept Only</a>
+        <a class="btn btn-primary" href="?preset=opt-out-except-eu-ca">Opt-Out (Except EU/CA)</a>
       </div>
 
-      <section class="mb-5 panel">
-        <h2 class="panel-heading title is-5 mb-0">Preset Layouts</h2>
-        <div class="panel-block buttons p-5">
-          <a href="?preset=default" class="button is-light">Defaults</a>
-          <a href="?preset=dialog-first" class="button is-light">Dialog First</a>
-          <a href="?preset=accept-only" class="button is-light">Accept Only</a>
-          <a href="?preset=opt-out-except-eu-ca" class="button is-light">Opt-Out (Except EU/CA)</a>
-        </div>
-      </section>
+      <h2>Theme</h2>
+      <div>
+        <button class="btn" type="button" data-theme="none">None</button>
+        <button class="btn" type="button" data-theme="light">Light</button>
+        <button class="btn" type="button" data-theme="dark">Dark</button>
+      </div>
 
-      <section class="mb-5 panel">
-        <h2 class="panel-heading title is-5 mb-0">Theme</h2>
-        <div class="panel-block buttons p-5">
-          <button class="button is-light" type="button" data-theme="none">None</button>
-          <button class="button is-light" type="button" data-theme="light">Light</button>
-          <button class="button is-light" type="button" data-theme="dark">Dark</button>
-        </div>
-      </section>
+      <h2>Tools</h2>
+      <div>
+        <button class="btn" type="button" data-consent="open">Open Preferences</button>
+        <button class="btn" type="button" data-consent="accept">Accept All</button>
+        <button class="btn" type="button" data-consent="reject">Reject All</button>
+        <button class="btn" type="button" id="showState">Log Current State</button>
+        <button class="btn" type="button" id="resetAnubis">Reset Demo</button>
+      </div>
 
-      <section class="mb-5 panel">
-        <h2 class="panel-heading title is-5 mb-0">Tools</h2>
-        <div class="panel-block buttons p-5">
-          <button class="button is-light" type="button" data-consent="open">Open Preferences</button>
-          <button class="button is-light" type="button" data-consent="accept">Accept All</button>
-          <button class="button is-light" type="button" data-consent="reject">Reject All</button>
-          <button class="button is-light" type="button" id="showState">Log Current State</button>
-          <button class="button is-light" type="button" id="resetAnubis">Reset Demo</button>
-        </div>
-      </section>
+      <h2>Log</h2>
+      <pre id="log"></pre>
 
-      <section class="mb-5 panel">
-        <h2 class="panel-heading title is-5 mb-0">Log</h2>
-        <div class="panel-block p-0">
-          <pre id="log"></pre>
-        </div>
-      </section>
     </main>
 
     <script>
@@ -215,8 +199,7 @@
 
             const isActive = buttonPreset === preset;
             button.setAttribute('aria-current', isActive ? 'page' : 'false');
-            button.classList.toggle('is-link', isActive);
-            button.classList.toggle('is-light', !isActive);
+            button.classList.toggle('btn-primary', isActive);
           });
 
           if (configuratorLink) {
@@ -248,8 +231,7 @@
           themeButtons.forEach((button) => {
             const isActive = button.getAttribute('data-theme') === theme;
             button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-            button.classList.toggle('is-link', isActive);
-            button.classList.toggle('is-light', !isActive);
+            button.classList.toggle('btn-primary', isActive);
           });
         };
 
@@ -352,8 +334,8 @@
       }());
     </script>
 
-    <script data-consent-category="analytics" src="./js/analytics.js"></script>
-    <script data-consent-category="marketing" src="./js/marketing.js"></script>
-    <script data-consent-category="preferences" src="./js/preferences.js"></script>
+    <script data-consent-category="analytics" src="/demo/js/analytics.js"></script>
+    <script data-consent-category="marketing" src="/demo/js/marketing.js"></script>
+    <script data-consent-category="preferences" src="/demo/js/preferences.js"></script>
   </body>
 </html>
