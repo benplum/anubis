@@ -75,8 +75,9 @@ textarea {
 
 .actions {
   display: flex;
-  gap: var(--space);
   flex-wrap: wrap;
+  gap: var(--space);
+  align-items: center;
 }
 
 .btn {
@@ -95,8 +96,7 @@ textarea {
 .btn-link {
   text-decoration: underline;
   border: 0;
-  padding-left: 0;
-  padding-right: 0;
+  padding: 0;
 }
 
 .link {
@@ -128,9 +128,6 @@ textarea {
 }
 
 .dialog .actions {
-  /* display: inline-flex;
-  align-items: center;
-  gap: var(--space-sm); */
   margin-top: var(--space-lg);
 }
 
@@ -188,7 +185,6 @@ button.btn-icon {
 
 .cat {
   border: 1px solid;
-  padding: var(--space);
 }
 
 .summary {
@@ -197,6 +193,7 @@ button.btn-icon {
   justify-content: space-between;
   gap: var(--space);
   list-style: none;
+  padding: var(--space);
   cursor: pointer;
   user-select: none;
 }
@@ -238,7 +235,7 @@ button.btn-icon {
 }
 
 .cat .desc {
-  margin: var(--space) 0 0;
+  margin: 0 var(--space) var(--space);
 }
 
 .toggle {

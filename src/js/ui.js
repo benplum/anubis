@@ -176,6 +176,39 @@ function refreshShadowStyles(shadowRoot, styles) {
   }
 }
 
+function waitForThemeStyles(shadowRoot, timeoutMs = 400) {
+  if (!shadowRoot) {
+    return Promise.resolve();
+  }
+
+  const themeNode = shadowRoot.querySelector('[data-shadow-role="theme"]');
+  if (!themeNode || themeNode.tagName !== 'LINK') {
+    return Promise.resolve();
+  }
+
+  if (themeNode.sheet) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) {
+        return;
+      }
+      done = true;
+      themeNode.removeEventListener('load', finish);
+      themeNode.removeEventListener('error', finish);
+      clearTimeout(timerId);
+      resolve();
+    };
+
+    const timerId = setTimeout(finish, timeoutMs);
+    themeNode.addEventListener('load', finish, { once: true });
+    themeNode.addEventListener('error', finish, { once: true });
+  });
+}
+
 export function renderConsentUI(options, hooks) {
   if (typeof document === 'undefined') {
     return {
@@ -259,6 +292,16 @@ export function renderConsentUI(options, hooks) {
   });
 
   let lastFocus = null;
+  let themeReady = false;
+  let pendingBannerVisible = null;
+
+  waitForThemeStyles(shadowRoot).then(() => {
+    themeReady = true;
+    if (pendingBannerVisible !== null) {
+      banner.hidden = !pendingBannerVisible;
+      pendingBannerVisible = null;
+    }
+  });
 
   function openDialog() {
     if (dialog.open) {
@@ -301,6 +344,11 @@ export function renderConsentUI(options, hooks) {
   }
 
   function showBanner(visible) {
+    if (!themeReady) {
+      pendingBannerVisible = Boolean(visible);
+      banner.hidden = true;
+      return;
+    }
     banner.hidden = !visible;
   }
 

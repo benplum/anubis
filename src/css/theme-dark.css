@@ -1,9 +1,8 @@
 .root {
-  --bg: #0f172a;
-  --fg: #e5e7eb;
-  --muted: #94a3b8;
-  --border: #334155;
-  --primary: #2563eb;
+  --bg: #020618;
+  --fg: #fff;
+  --border: #45556c;
+  --primary: #1447e6;
   --overlay: rgba(0, 0, 0, 0.7);
   --radius: 12px;
   --radius-sm: calc(var(--radius) * .7);
