@@ -307,9 +307,11 @@ export function renderConsentUI(options, hooks) {
         ${dialogHeaderActionsMarkup(options, strings)}
       </div>
     </div>
-    ${strings.dialogDescription ? `<p class="desc" id="${ids.dialogDescription}">${dialogDescriptionHtml}</p>` : ''}
-    <div class="cats">
-      ${categoryRowsMarkup(options, ids)}
+    <div class="body">
+      ${strings.dialogDescription ? `<p class="desc" id="${ids.dialogDescription}">${dialogDescriptionHtml}</p>` : ''}
+      <div class="cats">
+        ${categoryRowsMarkup(options, ids)}
+      </div>
     </div>
     <div class="footer">
       <div class="actions">

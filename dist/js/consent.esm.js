@@ -29,9 +29,11 @@ function De(e){try{return JSON.parse(e)}catch{return null}}function I(){try{if(t
         ${st(e,t)}
       </div>
     </div>
-    ${t.dialogDescription?`<p class="desc" id="${s.dialogDescription}">${m}</p>`:""}
-    <div class="cats">
-      ${rt(e,s)}
+    <div class="body">
+      ${t.dialogDescription?`<p class="desc" id="${s.dialogDescription}">${m}</p>`:""}
+      <div class="cats">
+        ${rt(e,s)}
+      </div>
     </div>
     <div class="footer">
       <div class="actions">

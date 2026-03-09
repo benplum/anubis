@@ -29,9 +29,11 @@ var Anubis=(()=>{var K=Object.defineProperty;var Ee=Object.getOwnPropertyDescrip
         ${pt(e,t)}
       </div>
     </div>
-    ${t.dialogDescription?`<p class="desc" id="${s.dialogDescription}">${m}</p>`:""}
-    <div class="cats">
-      ${ut(e,s)}
+    <div class="body">
+      ${t.dialogDescription?`<p class="desc" id="${s.dialogDescription}">${m}</p>`:""}
+      <div class="cats">
+        ${ut(e,s)}
+      </div>
     </div>
     <div class="footer">
       <div class="actions">
