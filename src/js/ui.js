@@ -156,9 +156,45 @@ function appendShadowInlineStyle(shadowRoot, cssText, role) {
   shadowRoot.appendChild(node);
 }
 
-function getBundledBaseStyles() {
-  const cssText = window.ConsentStyles;
-  return typeof cssText === 'string' ? cssText : '';
+function getStyleSourceById(id) {
+  if (typeof document === 'undefined' || !id) {
+    return { cssText: '', href: '' };
+  }
+
+  const element = document.getElementById(id);
+  if (!element) {
+    return { cssText: '', href: '' };
+  }
+
+  const tagName = element.tagName;
+  if (tagName === 'STYLE') {
+    return { cssText: element.textContent || '', href: '' };
+  }
+
+  if (tagName === 'LINK') {
+    const href = (element.getAttribute('href') || '').trim();
+    return { cssText: '', href };
+  }
+
+  let cssText = '';
+  let href = '';
+
+  if (tagName === 'TEMPLATE' && element.content) {
+    const styleNodes = element.content.querySelectorAll('style');
+    cssText = Array.from(styleNodes)
+      .map((node) => node.textContent || '')
+      .join('\n')
+      .trim();
+
+    const linkNode = element.content.querySelector('link[rel="stylesheet"][href]');
+    href = linkNode ? (linkNode.getAttribute('href') || '').trim() : '';
+  }
+
+  if (!cssText && !href) {
+    cssText = (element.textContent || '').trim();
+  }
+
+  return { cssText, href };
 }
 
 function refreshShadowStyles(shadowRoot, styles) {
@@ -170,11 +206,16 @@ function refreshShadowStyles(shadowRoot, styles) {
     node.remove();
   });
 
-  appendShadowInlineStyle(shadowRoot, getBundledBaseStyles(), 'base-inline');
+  const baseTemplateSource = getStyleSourceById('consent-styles');
+  appendShadowInlineStyle(shadowRoot, baseTemplateSource.cssText, 'base-inline');
+
+  const themeTemplateSource = getStyleSourceById('consent-theme');
+  appendShadowInlineStyle(shadowRoot, themeTemplateSource.cssText, 'theme-inline');
 
   const themeHref = typeof styles === 'string' ? styles.trim() : '';
-  if (themeHref) {
-    appendShadowStylesheet(shadowRoot, themeHref, 'theme');
+  const resolvedThemeHref = themeHref || themeTemplateSource.href;
+  if (resolvedThemeHref) {
+    appendShadowStylesheet(shadowRoot, resolvedThemeHref, 'theme');
   }
 }
 

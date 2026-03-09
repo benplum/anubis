@@ -50,6 +50,25 @@ Load the library first on page, before tag scripts that should be consent-gated.
 
 `dist/js/consent.bundled.js` auto-injects the base structural CSS. Use `styles` (single CSS URL string) to load a theme stylesheet into the Shadow Root.
 
+You can also provide hidden style sources in the host document:
+
+```html
+<template id="consent-styles">
+  <style>
+    /* base overrides */
+  </style>
+</template>
+
+<template id="consent-theme">
+  <style>
+    /* theme overrides */
+  </style>
+  <!-- or: <link rel="stylesheet" href="/dist/css/theme-dark.css"> -->
+</template>
+```
+
+Anubis looks for `#consent-styles` (base CSS fallback) and `#consent-theme` (theme inline CSS and/or theme stylesheet href) and injects those into the Shadow Root.
+
 Anubis mounts its UI in a Shadow Root by default to isolate consent UI styles from host frameworks (for example Bulma/Tailwind).
 
 The base stylesheet (`src/css/base.css`) also applies safe typography/control defaults inside the Anubis root (color, font-size, font-weight, line-height, form control inheritance, box sizing) to reduce inherited host-style drift. For visual customization, prefer editing theme files (`theme-light` / `theme-dark`) or overriding Anubis CSS variables instead of relying on host-page framework styles.
