@@ -35,7 +35,6 @@ const EN_STRINGS = {
 };
 
 const VALID_ACTION_IDS = new Set(['open', 'accept', 'reject', 'save', 'close']);
-const VALID_ACTION_VARIANTS = new Set(['primary', 'link', 'icon']);
 
 const DEFAULT_ACTIONS = {
   banner: [
@@ -190,11 +189,7 @@ function normalizeAction(item, fallback) {
 
   const variantCandidate = typeof input.variant === 'string' ? input.variant.trim() : '';
   const fallbackVariant = typeof fallback.variant === 'string' ? fallback.variant : '';
-  const variant = VALID_ACTION_VARIANTS.has(variantCandidate)
-    ? variantCandidate
-    : VALID_ACTION_VARIANTS.has(fallbackVariant)
-      ? fallbackVariant
-      : '';
+  const variant = variantCandidate || fallbackVariant || '';
 
   const normalized = {
     id,

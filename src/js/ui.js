@@ -104,7 +104,7 @@ function actionButtonMarkup(action, strings, useTriggerAttribute) {
   const isIcon = variant === 'icon';
   const className = isIcon
     ? 'btn btn-icon'
-    : (variant === 'primary' || variant === 'link')
+    : variant
       ? `btn btn-${variant}`
       : 'btn';
   const triggerAttribute = useTriggerAttribute ? ` data-consent="${escapeHtml(action.id)}"` : '';
