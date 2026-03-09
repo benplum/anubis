@@ -1,0 +1,128 @@
+:root {
+  --bg: #fff;
+  --fg: #020618;
+  --gray: #f1f5f9;
+  --border: #4a5565;
+  --border: #4a5565;
+  --primary: #1447e6;
+  --font-family: sans-serif;
+  --radius: 12px;
+  --radius-sm: calc(var(--radius) * .7);
+  --font-size: 16px;
+  --space: 12px;
+  --space-sm: calc(var(--space) * .5);
+  --space-lg: calc(var(--space) * 1.5);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  font-weight: 400;
+  line-height: 1.6;
+  font-style: normal;
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: left;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+select,
+textarea {
+  font-size: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+}
+
+main {
+  width: 95%;
+  max-width: 800px;
+  margin: 60px auto;
+}
+
+a {
+  color: var(--primary);
+}
+
+button {
+  // margin-bottom: var(--space-sm);
+}
+
+p {
+  margin: var(--space) 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  line-height: 1.3;
+  margin: var(--space-lg) 0 var(--space);
+}
+
+.btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: inherit;
+  padding: var(--space) var(--space-lg);
+  cursor: pointer;
+  font-size: inherit;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--bg);
+}
+
+.btn-link {
+  text-decoration: underline;
+  border: 0;
+  padding: 0;
+}
+
+img {
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: block;
+  margin: var(--space-lg) 0;
+  padding: var(--space);
+}
+
+code {
+  color: var(--primary);
+  font-family: monospace;
+  font-size: calc(var(--font-size) - 1px);
+}
+
+pre {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  background: var(--gray);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: block;
+  font-family: monospace;
+  font-size: calc(var(--font-size) - 1px);
+  margin: 30px 0;
+  padding: var(--space) var(--space-lg);
+}
+
+pre code {
+  color: var(--fg);
+}

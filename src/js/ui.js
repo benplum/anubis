@@ -156,6 +156,11 @@ function appendShadowInlineStyle(shadowRoot, cssText, role) {
   shadowRoot.appendChild(node);
 }
 
+function getBundledBaseStyles() {
+  const cssText = window.ConsentStyles;
+  return typeof cssText === 'string' ? cssText : '';
+}
+
 function refreshShadowStyles(shadowRoot, styles) {
   if (!shadowRoot) {
     return;
@@ -165,10 +170,7 @@ function refreshShadowStyles(shadowRoot, styles) {
     node.remove();
   });
 
-  const bundledBaseNode = document.getElementById('consent-styles');
-  if (bundledBaseNode && bundledBaseNode.tagName === 'STYLE') {
-    appendShadowInlineStyle(shadowRoot, bundledBaseNode.textContent || '', 'base-inline');
-  }
+  appendShadowInlineStyle(shadowRoot, getBundledBaseStyles(), 'base-inline');
 
   const themeHref = typeof styles === 'string' ? styles.trim() : '';
   if (themeHref) {

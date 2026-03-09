@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Consent Demo</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css" />
+    <link rel="stylesheet" href="/demo/css/main.css" />
     <script>
       const preset = new URLSearchParams(window.location.search).get('preset') || 'default';
       const allowedThemes = new Set(['none', 'light', 'dark']);
@@ -349,8 +349,8 @@
       }());
     </script>
 
-    <script data-consent-category="analytics" src="./scripts/analytics.js"></script>
-    <script data-consent-category="marketing" src="./scripts/marketing.js"></script>
-    <script data-consent-category="preferences" src="./scripts/preferences.js"></script>
+    <script data-consent-category="analytics" src="./js/analytics.js"></script>
+    <script data-consent-category="marketing" src="./js/marketing.js"></script>
+    <script data-consent-category="preferences" src="./js/preferences.js"></script>
   </body>
 </html>

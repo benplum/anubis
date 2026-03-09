@@ -35,7 +35,7 @@ const themeDark = await readFile('src/css/theme-dark.css', 'utf8');
 const js = await readFile('dist/js/consent.js', 'utf8');
 
 const escapedBaseCss = JSON.stringify(baseCss);
-const injected = `(function(){if(typeof document==='undefined'){return;}if(document.getElementById('consent-styles')){return;}var s=document.createElement('style');s.id='consent-styles';s.textContent=${escapedBaseCss};document.head.appendChild(s);}());\n${js}`;
+const injected = `(function(){window.ConsentStyles=${escapedBaseCss};}());\n${js}`;
 
 await writeFile('dist/js/consent.bundled.js', injected, 'utf8');
 await writeFile('dist/css/consent.css', baseCss, 'utf8');
