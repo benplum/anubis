@@ -227,8 +227,21 @@ function normalizeAction(item, fallback) {
 
 function normalizeActionList(inputList, fallbackList) {
   const source = Array.isArray(inputList) ? inputList : fallbackList;
+
+  function resolveFallback(item) {
+    const input = isObject(item) ? item : {};
+    const candidateId = typeof input.id === 'string' ? input.id.trim() : '';
+    if (candidateId) {
+      const matchById = fallbackList.find((fallback) => fallback && fallback.id === candidateId);
+      if (matchById) {
+        return matchById;
+      }
+    }
+    return {};
+  }
+
   const normalized = source
-    .map((item, index) => normalizeAction(item, fallbackList[index] || fallbackList[0] || {}))
+    .map((item) => normalizeAction(item, resolveFallback(item)))
     .filter(Boolean)
     .filter((item) => item.visible !== false);
 
