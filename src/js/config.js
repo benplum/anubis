@@ -90,6 +90,7 @@ export const DEFAULT_OPTIONS = {
   },
   links: [],
   styles: '',
+  className: '',
   actions: DEFAULT_ACTIONS,
 };
 
@@ -276,6 +277,19 @@ function normalizeLinks(links) {
 
 function normalizeStyles(stylesInput) {
   return typeof stylesInput === 'string' ? stylesInput.trim() : '';
+}
+
+function normalizeclassName(classNameInput) {
+  if (typeof classNameInput !== 'string') {
+    return '';
+  }
+
+  const tokens = classNameInput
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  return Array.from(new Set(tokens)).join(' ');
 }
 
 function normalizedConsentKeys(value) {
@@ -564,6 +578,7 @@ export async function resolveOptions(rawOptions = {}) {
   options.requiredCategories = normalizedCategories.requiredCategories;
   options.links = normalizeLinks(options.links);
   options.styles = normalizeStyles(options.styles);
+  options.className = normalizeclassName(options.className);
 
   options.actions = normalizeActions(options.actions);
 

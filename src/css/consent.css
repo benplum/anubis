@@ -34,17 +34,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-button,
-input,
-select,
-textarea {
+button {
   font-size: inherit;
   letter-spacing: inherit;
   line-height: inherit;
-  /* color: inherit;
-  font: inherit;
-  letter-spacing: inherit;
-  line-height: inherit; */
 }
 
 .banner {
@@ -69,7 +62,7 @@ textarea {
   margin: 0 0 var(--space);
 }
 
-.sec a {
+.desc a {
   color: var(--fg);
 }
 
@@ -131,14 +124,14 @@ textarea {
   margin-top: var(--space-lg);
 }
 
-.dialog-header {
+.header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
 }
 
-.dialog-header .actions {
+.header .actions {
   margin: 0;
 }
 
@@ -162,7 +155,7 @@ button.btn-icon {
 }
 
 .btn-icon::before {
-  content: '×';
+  content: '✕';
 }
 
 .sr {

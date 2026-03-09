@@ -272,7 +272,7 @@ export function renderConsentUI(options, hooks) {
   refreshShadowStyles(shadowRoot, options.styles);
 
   const container = document.createElement('div');
-  container.className = 'root';
+  container.className = ['root', options.className || ''].filter(Boolean).join(' ');
   const idSeed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const ids = {
     prefix: `consent-${idSeed}`,
@@ -301,7 +301,7 @@ export function renderConsentUI(options, hooks) {
 </section>
 <dialog class="dialog" aria-labelledby="${ids.dialogTitle}"${dialogDescribedBy} aria-modal="true">
   <form class="form" method="dialog">
-    <div class="dialog-header">
+    <div class="header">
       <h2 class="title" id="${ids.dialogTitle}" tabindex="-1">${dialogTitleHtml}</h2>
       <div class="actions">
         ${dialogHeaderActionsMarkup(options, strings)}
@@ -311,8 +311,10 @@ export function renderConsentUI(options, hooks) {
     <div class="cats">
       ${categoryRowsMarkup(options, ids)}
     </div>
-    <div class="actions">
-      ${dialogFooterActionsMarkup(options, strings)}
+    <div class="footer">
+      <div class="actions">
+        ${dialogFooterActionsMarkup(options, strings)}
+      </div>
     </div>
   </form>
 </dialog>`;

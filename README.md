@@ -37,6 +37,7 @@ Load the library first on page, before tag scripts that should be consent-gated.
     defaultMode: 'opt-out',
     version: 1,
     styles: '/dist/css/theme-light.css',
+    className: 'brand-consent',
     links: [
       { title: 'Privacy policy', url: '/privacy' },
       { title: 'Cookie policy', url: '/cookies' }
@@ -99,6 +100,7 @@ window.ConsentOptions = {
   ],
 
   styles: '/dist/css/theme-light.css',
+  className: 'brand-a-consent',
 
   categories: {
     necessary: { consent: ['security_storage'], required: true },
@@ -112,6 +114,8 @@ window.ConsentOptions = {
 `links` supports any number of banner links (`title` + `url`).
 
 Common options:
+
+- `className` → optional custom class (or space-separated classes) added to the shadow-root container element (which already includes `root`).
 
 - Core: `autoStart`, `version`, `defaultMode`, `storageDuration`, `storageKey`
 - Consent behavior: `defaultConsent`, `unknownPolicy`, `reloadOnRevoke`, `respectDoNotTrack`
