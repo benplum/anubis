@@ -16,42 +16,6 @@
 
       window.ConsentOptions = {
         styles: initialTheme === 'none' ? '' : `../dist/css/theme-${initialTheme}.css`,
-        "actions": {
-    "banner": [
-      {
-        "id": "open",
-        "variant": "primary",
-        "labelKey": "buttonManage",
-        "visible": true
-      },
-      {
-        "id": "accept",
-        "variant": "icon",
-        "labelKey": "buttonAccept",
-        "visible": true
-      }
-    ],
-    "dialog": {
-      "header": [
-        {
-          "id": "close",
-          "variant": "icon",
-          "labelKey": "buttonCancel",
-          "closeDialog": true,
-          "visible": true
-        }
-      ],
-      "footer": [
-        {
-          "id": "save",
-          "variant": "primary",
-          "labelKey": "buttonSave",
-          "closeDialog": true,
-          "visible": true
-        }
-      ]
-    }
-  },
         // version: 1,
         // defaultMode: 'opt-out',
         // storageDuration: 180,
@@ -124,6 +88,14 @@
         window.ConsentOptions.regionOverrides = {
           NON_EU_CA: {
             defaultMode: 'opt-out',
+            defaultConsent: {
+              ad_storage: 'granted',
+              ad_user_data: 'granted',
+              ad_personalization: 'granted',
+              analytics_storage: 'granted',
+              functionality_storage: 'granted',
+              personalization_storage: 'granted',
+            },
           },
           EU: {
             defaultMode: 'opt-in',

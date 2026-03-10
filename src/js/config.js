@@ -466,8 +466,19 @@ function getRegionOverrideKeys(region) {
 
   const parts = normalized.split('-').filter(Boolean);
   const keys = [];
+  const seen = new Set();
   for (let i = 1; i <= parts.length; i += 1) {
-    keys.push(parts.slice(0, i).join('-'));
+    const hyphenKey = parts.slice(0, i).join('-');
+    if (!seen.has(hyphenKey)) {
+      seen.add(hyphenKey);
+      keys.push(hyphenKey);
+    }
+
+    const underscoreKey = parts.slice(0, i).join('_');
+    if (!seen.has(underscoreKey)) {
+      seen.add(underscoreKey);
+      keys.push(underscoreKey);
+    }
   }
   return keys;
 }
