@@ -98,7 +98,7 @@ function resolveActionText(action, strings) {
   return action.id;
 }
 
-function actionButtonMarkup(action, strings, useTriggerAttribute) {
+function actionButtonMarkup(action, strings) {
   const variant = action.variant || '';
   const text = resolveActionText(action, strings);
   const isIcon = variant === 'icon';
@@ -107,28 +107,27 @@ function actionButtonMarkup(action, strings, useTriggerAttribute) {
     : variant
       ? `btn btn-${variant}`
       : 'btn';
-  const triggerAttribute = useTriggerAttribute ? ` data-consent="${escapeHtml(action.id)}"` : '';
 
   if (isIcon) {
-    return `<button type="button" class="${escapeHtml(className)}" data-action="${escapeHtml(action.id)}" data-close="${action.closeDialog ? '1' : '0'}"${triggerAttribute}><span class="sr">${escapeHtml(text)}</span></button>`;
+    return `<button type="button" class="${escapeHtml(className)}" data-consent="${escapeHtml(action.id)}" data-close="${action.closeDialog ? '1' : '0'}"><span class="sr">${escapeHtml(text)}</span></button>`;
   }
 
-  return `<button type="button" class="${escapeHtml(className)}" data-action="${escapeHtml(action.id)}" data-close="${action.closeDialog ? '1' : '0'}"${triggerAttribute}>${escapeHtml(text)}</button>`;
+  return `<button type="button" class="${escapeHtml(className)}" data-consent="${escapeHtml(action.id)}" data-close="${action.closeDialog ? '1' : '0'}">${escapeHtml(text)}</button>`;
 }
 
 function bannerActionsMarkup(options, strings) {
   const actions = (options.actions && options.actions.banner) || [];
-  return actions.map((action) => actionButtonMarkup(action, strings, true)).join('');
+  return actions.map((action) => actionButtonMarkup(action, strings)).join('');
 }
 
 function dialogHeaderActionsMarkup(options, strings) {
   const actions = (options.actions && options.actions.dialog && options.actions.dialog.header) || [];
-  return actions.map((action) => actionButtonMarkup(action, strings, false)).join('');
+  return actions.map((action) => actionButtonMarkup(action, strings)).join('');
 }
 
 function dialogFooterActionsMarkup(options, strings) {
   const actions = (options.actions && options.actions.dialog && options.actions.dialog.footer) || [];
-  return actions.map((action) => actionButtonMarkup(action, strings, false)).join('');
+  return actions.map((action) => actionButtonMarkup(action, strings)).join('');
 }
 
 function appendShadowStylesheet(shadowRoot, href, role) {
@@ -401,13 +400,13 @@ export function renderConsentUI(options, hooks) {
 
   container.addEventListener('click', (event) => {
     const actionNode = event.target && event.target.closest
-      ? event.target.closest('[data-action], [data-consent]')
+      ? event.target.closest('[data-consent]')
       : null;
     if (!actionNode || !container.contains(actionNode)) {
       return;
     }
 
-    const action = (actionNode.getAttribute('data-action') || actionNode.getAttribute('data-consent') || '').trim();
+    const action = (actionNode.getAttribute('data-consent') || '').trim();
     if (!action) {
       return;
     }
