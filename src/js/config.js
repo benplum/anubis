@@ -90,6 +90,7 @@ export const DEFAULT_OPTIONS = {
   },
   links: [],
   styles: '',
+  stylesTimeout: 0,
   className: '',
   actions: DEFAULT_ACTIONS,
 };
@@ -286,6 +287,19 @@ function normalizeLinks(links) {
 
 function normalizeStyles(stylesInput) {
   return typeof stylesInput === 'string' ? stylesInput.trim() : '';
+}
+
+function normalizeStylesTimeout(value) {
+  if (value === null || typeof value === 'undefined' || value === '') {
+    return 0;
+  }
+
+  const timeoutMs = Number(value);
+  if (!Number.isFinite(timeoutMs) || timeoutMs < 0) {
+    return 0;
+  }
+
+  return Math.floor(timeoutMs);
 }
 
 function normalizeclassName(classNameInput) {
@@ -611,6 +625,7 @@ export async function resolveOptions(rawOptions = {}) {
   options.requiredCategories = normalizedCategories.requiredCategories;
   options.links = normalizeLinks(options.links);
   options.styles = normalizeStyles(options.styles);
+  options.stylesTimeout = normalizeStylesTimeout(options.stylesTimeout);
   options.className = normalizeclassName(options.className);
 
   options.actions = normalizeActions(options.actions);

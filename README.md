@@ -54,26 +54,14 @@ Load the library first on page, before tag scripts that should be consent-gated.
 </script>
 ```
 
-`dist/js/consent.bundled.js` auto-injects the base structural CSS. Use `styles` (single CSS URL string) to load a theme stylesheet into the Shadow Root.
+`dist/js/consent.bundled.js` auto-injects the base structural CSS.
 
-You can also provide hidden style sources in the host document:
+Use `styles` as the single customization input for Shadow Root styling:
 
-```html
-<template id="consent-styles">
-  <style>
-    /* base overrides */
-  </style>
-</template>
+- Pass a stylesheet URL string, for example `'/dist/css/theme-light.css'`
+- Or pass an inline CSS string block
 
-<template id="consent-theme">
-  <style>
-    /* theme overrides */
-  </style>
-  <!-- or: <link rel="stylesheet" href="/dist/css/theme-dark.css"> -->
-</template>
-```
-
-Anubis looks for `#consent-styles` (base CSS fallback) and `#consent-theme` (theme inline CSS and/or theme stylesheet href) and injects those into the Shadow Root.
+When `styles` is a stylesheet URL, the banner stays hidden until that stylesheet finishes loading (or errors), which avoids first-paint unstyled flashes.
 
 Anubis mounts its UI in a Shadow Root by default to isolate consent UI styles from host frameworks (for example Bulma/Tailwind).
 
@@ -124,7 +112,7 @@ Common options:
 - `className` → optional custom class (or space-separated classes) added to the shadow-root container element (which already includes `root`).
 
 - Core: `autoStart`, `version`, `defaultMode`, `storageDuration`, `storageKey`
-- Consent behavior: `defaultConsent`, `unknownPolicy`, `reloadOnRevoke`, `respectDoNotTrack`, `waitForUpdate`
+- Consent behavior: `defaultConsent`, `unknownPolicy`, `reloadOnRevoke`, `respectDoNotTrack`, `waitForUpdate`, `stylesTimeout`
 - Categories/mapping: `categories`, `consentMapping`
 - UI/i18n: `links`, `actions`, `localeActive`, `localeFallback`, `i18n.locales`
 - Region: `region`, `regionResolver`, `regionTimeout`, `regionCache`, `regionKey`, `regionDuration`, `regionOverrides`
@@ -134,6 +122,8 @@ Common options:
 `respectDoNotTrack` defaults to `true`. When enabled and the browser DNT signal is on, Anubis initializes consent as denied (except required categories), stores that state, and suppresses the first-run banner.
 
 `waitForUpdate` maps to Google Consent Mode `wait_for_update` on the initial `gtag('consent', 'default', ...)` call.
+
+`stylesTimeout` controls the maximum wait (in milliseconds) for a linked theme stylesheet before allowing banner display. Default is `0` (no timeout, wait indefinitely). Set a positive value (for example `5000`) if you prefer a bounded wait.
 
 For the required-category helper label, localize the global `requiredLabel` UI key.
 
@@ -308,7 +298,6 @@ Outputs:
 Include this only in development/debug sessions:
 
 ```html
-<link rel="stylesheet" href="/dist/css/theme-light.css" />
 <script src="/dist/js/consent.bundled.js"></script>
 <script src="/dist/js/debugger.js"></script>
 ```

@@ -155,45 +155,35 @@ function appendShadowInlineStyle(shadowRoot, cssText, role) {
   shadowRoot.appendChild(node);
 }
 
-function getStyleSourceById(id) {
-  if (typeof document === 'undefined' || !id) {
+function getBaseTemplateCssText() {
+  if (typeof document === 'undefined') {
+    return '';
+  }
+
+  const template = document.getElementById('consent-styles');
+  if (!template || template.tagName !== 'TEMPLATE' || !template.content) {
+    return '';
+  }
+
+  const styleNodes = template.content.querySelectorAll('style');
+  return Array.from(styleNodes)
+    .map((node) => node.textContent || '')
+    .join('\n')
+    .trim();
+}
+
+function resolveStylesSource(styles) {
+  const raw = typeof styles === 'string' ? styles.trim() : '';
+  if (!raw) {
     return { cssText: '', href: '' };
   }
 
-  const element = document.getElementById(id);
-  if (!element) {
-    return { cssText: '', href: '' };
+  const looksLikeUrl = /^(?:https?:|\/\/|\/|\.\/|\.\.\/)/i.test(raw) || /\.css(?:[?#].*)?$/i.test(raw);
+  if (looksLikeUrl) {
+    return { cssText: '', href: raw };
   }
 
-  const tagName = element.tagName;
-  if (tagName === 'STYLE') {
-    return { cssText: element.textContent || '', href: '' };
-  }
-
-  if (tagName === 'LINK') {
-    const href = (element.getAttribute('href') || '').trim();
-    return { cssText: '', href };
-  }
-
-  let cssText = '';
-  let href = '';
-
-  if (tagName === 'TEMPLATE' && element.content) {
-    const styleNodes = element.content.querySelectorAll('style');
-    cssText = Array.from(styleNodes)
-      .map((node) => node.textContent || '')
-      .join('\n')
-      .trim();
-
-    const linkNode = element.content.querySelector('link[rel="stylesheet"][href]');
-    href = linkNode ? (linkNode.getAttribute('href') || '').trim() : '';
-  }
-
-  if (!cssText && !href) {
-    cssText = (element.textContent || '').trim();
-  }
-
-  return { cssText, href };
+  return { cssText: raw, href: '' };
 }
 
 function refreshShadowStyles(shadowRoot, styles) {
@@ -205,30 +195,26 @@ function refreshShadowStyles(shadowRoot, styles) {
     node.remove();
   });
 
-  const baseTemplateSource = getStyleSourceById('consent-styles');
-  appendShadowInlineStyle(shadowRoot, baseTemplateSource.cssText, 'base-inline');
+  appendShadowInlineStyle(shadowRoot, getBaseTemplateCssText(), 'base-inline');
 
-  const themeTemplateSource = getStyleSourceById('consent-theme');
-  appendShadowInlineStyle(shadowRoot, themeTemplateSource.cssText, 'theme-inline');
-
-  const themeHref = typeof styles === 'string' ? styles.trim() : '';
-  const resolvedThemeHref = themeHref || themeTemplateSource.href;
-  if (resolvedThemeHref) {
-    appendShadowStylesheet(shadowRoot, resolvedThemeHref, 'theme');
+  const stylesSource = resolveStylesSource(styles);
+  appendShadowInlineStyle(shadowRoot, stylesSource.cssText, 'styles-inline');
+  if (stylesSource.href) {
+    appendShadowStylesheet(shadowRoot, stylesSource.href, 'styles-link');
   }
 }
 
-function waitForThemeStyles(shadowRoot, timeoutMs = 400) {
+function waitForStyles(shadowRoot, timeoutMs = 0) {
   if (!shadowRoot) {
     return Promise.resolve();
   }
 
-  const themeNode = shadowRoot.querySelector('[data-shadow-role="theme"]');
-  if (!themeNode || themeNode.tagName !== 'LINK') {
+  const stylesNode = shadowRoot.querySelector('[data-shadow-role="styles-link"]');
+  if (!stylesNode || stylesNode.tagName !== 'LINK') {
     return Promise.resolve();
   }
 
-  if (themeNode.sheet) {
+  if (stylesNode.sheet) {
     return Promise.resolve();
   }
 
@@ -239,15 +225,15 @@ function waitForThemeStyles(shadowRoot, timeoutMs = 400) {
         return;
       }
       done = true;
-      themeNode.removeEventListener('load', finish);
-      themeNode.removeEventListener('error', finish);
+      stylesNode.removeEventListener('load', finish);
+      stylesNode.removeEventListener('error', finish);
       clearTimeout(timerId);
       resolve();
     };
 
-    const timerId = setTimeout(finish, timeoutMs);
-    themeNode.addEventListener('load', finish, { once: true });
-    themeNode.addEventListener('error', finish, { once: true });
+    const timerId = Number(timeoutMs) > 0 ? setTimeout(finish, timeoutMs) : null;
+    stylesNode.addEventListener('load', finish, { once: true });
+    stylesNode.addEventListener('error', finish, { once: true });
   });
 }
 
@@ -288,7 +274,7 @@ export function renderConsentUI(options, hooks) {
   const dialogTitleHtml = htmlString(strings.dialogTitle || 'Consent preferences');
   const dialogDescriptionHtml = htmlString(strings.dialogDescription || '');
 
-  container.innerHTML = `<section class="banner" role="region" aria-labelledby="${ids.bannerTitle}"${bannerDescribedBy}>
+  container.innerHTML = `<section class="banner" hidden role="region" aria-labelledby="${ids.bannerTitle}"${bannerDescribedBy}>
   <div class="content">
     <h2 class="title" id="${ids.bannerTitle}">${bannerTitleHtml}</h2>
     ${strings.bannerDescription ? `<p class="desc" id="${ids.bannerDescription}">${bannerDescriptionHtml}</p>` : ''}
@@ -338,16 +324,21 @@ export function renderConsentUI(options, hooks) {
   });
 
   let lastFocus = null;
-  let themeReady = false;
+  let stylesReady = false;
   let pendingBannerVisible = null;
 
-  waitForThemeStyles(shadowRoot).then(() => {
-    themeReady = true;
-    if (pendingBannerVisible !== null) {
-      banner.hidden = !pendingBannerVisible;
-      pendingBannerVisible = null;
-    }
-  });
+  function armStylesWait() {
+    stylesReady = false;
+    waitForStyles(shadowRoot, options.stylesTimeout).then(() => {
+      stylesReady = true;
+      if (pendingBannerVisible !== null) {
+        banner.hidden = !pendingBannerVisible;
+        pendingBannerVisible = null;
+      }
+    });
+  }
+
+  armStylesWait();
 
   function openDialog() {
     if (dialog.open) {
@@ -390,7 +381,7 @@ export function renderConsentUI(options, hooks) {
   }
 
   function showBanner(visible) {
-    if (!themeReady) {
+    if (!stylesReady) {
       pendingBannerVisible = Boolean(visible);
       banner.hidden = true;
       return;
@@ -452,7 +443,10 @@ export function renderConsentUI(options, hooks) {
     updateFromState,
     readCategoryChoices,
     refreshStyles: () => {
+      pendingBannerVisible = !banner.hidden;
+      banner.hidden = true;
       refreshShadowStyles(shadowRoot, options.styles);
+      armStylesWait();
     },
     destroy: () => {
       if (host.parentNode) {
