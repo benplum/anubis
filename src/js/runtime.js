@@ -280,15 +280,16 @@ export async function initAnubis(rawOptions = {}) {
 
     const googleState = toGoogleConsent(state, options.consentMapping);
     applyUpdatedConsent(googleState, options);
-    scriptGate.refresh();
-    ui.updateFromState(state);
-    ui.showBanner(false);
 
     emitConsentEvent('consent:updated', {
       source,
       googleState,
       ...buildConsentEventDetail(options, state),
     });
+
+    scriptGate.refresh();
+    ui.updateFromState(state);
+    ui.showBanner(false);
 
     if (revoked) {
       emitConsentEvent('consent:revoked', { source, state, googleState });

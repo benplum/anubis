@@ -47,6 +47,11 @@ Load the library first on page, before tag scripts that should be consent-gated.
 <script src="/dist/js/consent.bundled.js"></script>
 
 <script data-consent-category="analytics" src="https://example.com/analytics.js"></script>
+
+<!-- Inline scripts should start inert and be activated by Anubis -->
+<script type="text/plain" data-type="text/javascript" data-consent-category="analytics">
+  console.log('inline analytics runs only after consent allows it');
+</script>
 ```
 
 `dist/js/consent.bundled.js` auto-injects the base structural CSS. Use `styles` (single CSS URL string) to load a theme stylesheet into the Shadow Root.

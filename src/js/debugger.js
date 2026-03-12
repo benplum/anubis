@@ -296,7 +296,13 @@
       return () => document.removeEventListener(name, handler);
     }
 
-    ['consent:ready', 'consent:updated', 'consent:revoked'].forEach((eventName) => {
+    [
+      'consent:ready',
+      'consent:updated',
+      'consent:revoked',
+      'consent:script-blocked',
+      'consent:script-activated',
+    ].forEach((eventName) => {
       consentEventUnsubscribers.push(bindConsentLogEvent(eventName));
     });
 

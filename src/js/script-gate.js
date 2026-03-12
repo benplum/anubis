@@ -1,3 +1,5 @@
+import { emitConsentEvent } from './events.js';
+
 function scriptFingerprint(script) {
   const source = script.getAttribute('src') || '';
   const content = script.textContent || '';
@@ -18,6 +20,17 @@ function getScriptCategory(script) {
   return value ? value.trim() : '';
 }
 
+function describeScript(script) {
+  const src = script.getAttribute('src') || '';
+  return {
+    category: getScriptCategory(script),
+    src,
+    inline: !src,
+    currentType: script.getAttribute('type') || 'text/javascript',
+    declaredType: script.getAttribute('data-type') || '',
+  };
+}
+
 export function createScriptGate(options, isCategoryAllowed) {
   if (typeof document === 'undefined') {
     return { refresh: () => {}, disconnect: () => {} };
@@ -35,16 +48,37 @@ export function createScriptGate(options, isCategoryAllowed) {
 
   function blockScript(script) {
     const currentType = script.getAttribute('type') || 'text/javascript';
-    if (currentType === 'text/plain' && script.getAttribute('data-managed') === '1') {
+    const wasBlocked = script.getAttribute('data-blocked') === '1';
+
+    if (currentType === 'text/plain') {
+      if (!script.getAttribute('data-type')) {
+        script.setAttribute('data-type', 'text/javascript');
+      }
+      script.setAttribute('data-managed', '1');
+      script.setAttribute('data-blocked', '1');
+      if (!wasBlocked) {
+        emitConsentEvent('consent:script-blocked', {
+          reason: 'consent-denied',
+          script: describeScript(script),
+        });
+      }
       return;
     }
+
     script.setAttribute('data-managed', '1');
     script.setAttribute('data-type', currentType);
     script.setAttribute('type', 'text/plain');
+    script.setAttribute('data-blocked', '1');
+    if (!wasBlocked) {
+      emitConsentEvent('consent:script-blocked', {
+        reason: 'consent-denied',
+        script: describeScript(script),
+      });
+    }
   }
 
   function activateScript(script) {
-    if (script.getAttribute('type') !== 'text/plain' || script.getAttribute('data-managed') !== '1') {
+    if (script.getAttribute('type') !== 'text/plain') {
       return;
     }
 
@@ -61,6 +95,14 @@ export function createScriptGate(options, isCategoryAllowed) {
     }
     replacement.setAttribute('data-managed', '1');
     replacement.setAttribute('data-executed', '1');
+    replacement.removeAttribute('data-blocked');
+
+    emitConsentEvent('consent:script-activated', {
+      script: {
+        ...describeScript(script),
+        activateType: replacement.type,
+      },
+    });
 
     script.replaceWith(replacement);
     executed.add(key);
