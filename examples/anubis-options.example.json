@@ -3,6 +3,7 @@
   "version": 2,
   "storageKey": "consent-options",
   "storageDuration": 180,
+  "waitForUpdate": 500,
   "defaultMode": "opt-out",
   "respectDoNotTrack": true,
   "fastDefaults": true,

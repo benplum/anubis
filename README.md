@@ -91,6 +91,7 @@ window.ConsentOptions = {
   autoStart: true,
   version: 1,
   defaultMode: 'opt-out', // or 'opt-in'
+  waitForUpdate: 500,
   storageDuration: 180,
   storageKey: 'consent-options',
 
@@ -118,7 +119,7 @@ Common options:
 - `className` → optional custom class (or space-separated classes) added to the shadow-root container element (which already includes `root`).
 
 - Core: `autoStart`, `version`, `defaultMode`, `storageDuration`, `storageKey`
-- Consent behavior: `defaultConsent`, `unknownPolicy`, `reloadOnRevoke`, `respectDoNotTrack`
+- Consent behavior: `defaultConsent`, `unknownPolicy`, `reloadOnRevoke`, `respectDoNotTrack`, `waitForUpdate`
 - Categories/mapping: `categories`, `consentMapping`
 - UI/i18n: `links`, `actions`, `localeActive`, `localeFallback`, `i18n.locales`
 - Region: `region`, `regionResolver`, `regionTimeout`, `regionCache`, `regionKey`, `regionDuration`, `regionOverrides`
@@ -126,6 +127,8 @@ Common options:
 `defaultMode` baseline behavior: `opt-out` starts consent keys as `granted`, while `opt-in` starts as `denied` (required categories are still forced to granted).
 
 `respectDoNotTrack` defaults to `true`. When enabled and the browser DNT signal is on, Anubis initializes consent as denied (except required categories), stores that state, and suppresses the first-run banner.
+
+`waitForUpdate` maps to Google Consent Mode `wait_for_update` on the initial `gtag('consent', 'default', ...)` call.
 
 For the required-category helper label, localize the global `requiredLabel` UI key.
 

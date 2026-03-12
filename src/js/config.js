@@ -57,6 +57,7 @@ export const DEFAULT_OPTIONS = {
   version: 1,
   storageKey: 'consent-options',
   storageDuration: 180,
+  waitForUpdate: 500,
   //
   defaultMode: 'opt-in',
   respectDoNotTrack: true,
@@ -574,6 +575,19 @@ function freezeShallow(object) {
   return Object.freeze({ ...object });
 }
 
+function normalizeWaitForUpdate(value) {
+  if (value === null || typeof value === 'undefined' || value === '') {
+    return null;
+  }
+
+  const waitForUpdate = Number(value);
+  if (!Number.isFinite(waitForUpdate) || waitForUpdate < 0) {
+    return null;
+  }
+
+  return Math.floor(waitForUpdate);
+}
+
 export async function resolveOptions(rawOptions = {}) {
   const inputOptions = isObject(rawOptions) ? rawOptions : {};
   let options = applyReplacementPaths(mergeDeep(DEFAULT_OPTIONS, inputOptions), inputOptions);
@@ -600,6 +614,7 @@ export async function resolveOptions(rawOptions = {}) {
   options.className = normalizeclassName(options.className);
 
   options.actions = normalizeActions(options.actions);
+  options.waitForUpdate = normalizeWaitForUpdate(options.waitForUpdate);
 
   const consentKeys = uniqueConsentKeys(options.categories);
   const consentMapping = buildConsentMapping(consentKeys, options.consentMapping);

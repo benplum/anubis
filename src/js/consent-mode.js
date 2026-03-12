@@ -49,6 +49,14 @@ function applyWithGtag(command, consent) {
 
 function applyConsent(command, googleConsentState, options) {
   const consent = { ...googleConsentState };
+  if (
+    command === 'default'
+    && options
+    && Number.isFinite(options.waitForUpdate)
+    && options.waitForUpdate >= 0
+  ) {
+    consent.wait_for_update = options.waitForUpdate;
+  }
   const hasGtag = applyWithGtag(command, consent);
   pushDataLayer(command, consent, options);
   return hasGtag;
