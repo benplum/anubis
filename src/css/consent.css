@@ -108,8 +108,13 @@ button {
 .dialog {
   background: var(--bg);
   border: 1px solid;
-  width: min(740px, calc(100vw - var(--space-lg)));
-  padding: 16px;
+  padding: 0;
+}
+
+.dialog .header,
+.dialog .body,
+.dialog .footer {
+  padding: var(--space-lg);
 }
 
 .dialog .desc {
@@ -120,19 +125,16 @@ button {
   margin: 0;
 }
 
-.dialog .actions {
-  margin-top: var(--space-lg);
-}
-
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
+  border-bottom: 1px solid var(--border);
 }
 
-.header .actions {
-  margin: 0;
+.footer {
+  border-top: 1px solid var(--border);
 }
 
 .dialog .title {

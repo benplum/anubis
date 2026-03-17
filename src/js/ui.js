@@ -252,7 +252,7 @@ export function renderConsentUI(options, hooks) {
 
   const strings = options.strings;
   const host = document.createElement('div');
-  host.className = 'shadow-host';
+  host.className = 'anubis-host';
   const shadowRoot = host.attachShadow({ mode: 'open' });
   refreshShadowStyles(shadowRoot, options.styles);
 
