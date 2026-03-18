@@ -43,19 +43,25 @@ button {
 .banner {
   position: fixed;
   inset: auto 16px 16px;
-  max-width: 460px;
   padding: var(--space-lg);
   background: var(--bg);
   border: 1px solid;
   z-index: var(--z);
 }
 
-.title {
-  margin: 0 0 var(--space-sm);
+.banner-main {
+  max-width: 460px;
 }
 
-.content {
-  margin: 0 0 var(--space);
+.banner-dnt:not([hidden]) {
+  display: flex;
+  gap: var(--space-lg);
+  align-items: center;
+  width: fit-content;
+}
+
+.title {
+  margin: 0 0 var(--space-sm);
 }
 
 .desc {
@@ -64,6 +70,10 @@ button {
 
 .desc a {
   color: var(--fg);
+}
+
+.banner-dnt .desc {
+  margin: 0;
 }
 
 .actions {
@@ -109,6 +119,7 @@ button {
   background: var(--bg);
   border: 1px solid;
   padding: 0;
+  width: min(600px, 90vw);
 }
 
 .dialog .header,

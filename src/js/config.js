@@ -6,12 +6,16 @@ const REGION_COOKIE_FALLBACK_KEY = 'consent-region';
 const EN_STRINGS = {
   bannerTitle: 'Privacy Settings',
   bannerDescription: 'Choose how this site uses cookies and similar technologies.',
+  doNotTrackNotice: 'Do not track signal honored.',
+  buttonCloseNotice: 'Dismiss',
   buttonAccept: 'Accept All',
   buttonReject: 'Reject All',
   buttonManage: 'Manage Choices',
   dialogTitle: 'Privacy Settings',
   dialogDescription: 'Choose which categories to allow.',
-  requiredLabel: 'Always Active',
+  labelRequired: 'Always Enabled',
+  labelEnabled: 'Enabled',
+  labelDisabled: 'Disabled',
   buttonSave: 'Save Choices',
   buttonCancel: 'Cancel',
   categories: {

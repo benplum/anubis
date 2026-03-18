@@ -119,13 +119,19 @@ Common options:
 
 `defaultMode` baseline behavior: `opt-out` starts consent keys as `granted`, while `opt-in` starts as `denied` (required categories are still forced to granted).
 
-`respectDoNotTrack` defaults to `true`. When enabled and the browser DNT signal is on, Anubis initializes consent as denied (except required categories), stores that state, and suppresses the first-run banner.
+`respectDoNotTrack` defaults to `true`. When enabled and the browser DNT signal is on, Anubis initializes consent as denied (except required categories), stores that state, and replaces the first-run consent banner with a small DNT notice banner.
 
 `waitForUpdate` maps to Google Consent Mode `wait_for_update` on the initial `gtag('consent', 'default', ...)` call.
 
 `stylesTimeout` controls the maximum wait (in milliseconds) for a linked theme stylesheet before allowing banner display. Default is `0` (no timeout, wait indefinitely). Set a positive value (for example `5000`) if you prefer a bounded wait.
 
-For the required-category helper label, localize the global `requiredLabel` UI key.
+For the required-category helper label, localize the global `labelRequired` UI key.
+
+For per-category state labels in the switch row, localize `stateActive` and `stateDisabled`.
+
+For the DNT notice text, localize the global `doNotTrackNotice` UI key.
+
+For the DNT notice dismiss button label, localize the global `buttonCloseNotice` UI key.
 
 `consentMapping` is optional and only needed when your internal consent keys differ from Google Consent Mode keys. If your category `consent` lists already use Google keys (for example `analytics_storage`, `ad_storage`), you can omit `consentMapping`.
 

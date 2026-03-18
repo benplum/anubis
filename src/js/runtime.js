@@ -316,6 +316,9 @@ export async function initAnubis(rawOptions = {}) {
 
   ui.updateFromState(state);
   ui.showBanner(!hasStoredConsent);
+  if (ui && typeof ui.showDntBanner === 'function') {
+    ui.showDntBanner(doNotTrackApplied);
+  }
 
   emitConsentEvent('consent:ready', {
     hasStoredConsent: Boolean(hasStoredConsent),

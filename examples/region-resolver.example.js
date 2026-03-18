@@ -31,7 +31,9 @@ window.ConsentOptions = {
         dialogDescription: 'Choose which categories you allow. Necessary is always enabled.',
         buttonSave: 'Save choices',
         buttonCancel: 'Close',
-        requiredLabel: 'Always active',
+        labelRequired: 'Always Enabled',
+        labelEnabled: 'Enabled',
+        labelDisabled: 'Disabled',
         categories: {
           necessary: { label: 'Necessary', description: 'Required for core site functionality.' },
           marketing: { label: 'Marketing', description: 'Advertising and campaign-related storage.' },
@@ -49,7 +51,9 @@ window.ConsentOptions = {
         dialogDescription: 'Elige qué categorías permites. Necesarias siempre está activada.',
         buttonSave: 'Guardar opciones',
         buttonCancel: 'Cerrar',
-        requiredLabel: 'Siempre activo',
+        labelRequired: 'Siempre Activado',
+        labelEnabled: 'Activado',
+        labelDisabled: 'Desactivado',
         categories: {
           necessary: { label: 'Necesarias', description: 'Requeridas para el funcionamiento básico del sitio.' },
           marketing: { label: 'Marketing', description: 'Almacenamiento relacionado con publicidad y campañas.' },

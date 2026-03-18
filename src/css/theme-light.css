@@ -1,6 +1,7 @@
 .root {
   --bg: #fff;
   --fg: #020618;
+  --muted: #94a3b8;
   --border: #4a5565;
   --primary: #1447e6;
   --overlay: rgba(0, 0, 0, 0.5);
@@ -88,7 +89,7 @@
   width: calc((var(--space-lg) * 2) + 4px);
   height: calc(var(--space-lg) + 4px);
   border-radius: 999px;
-  background: var(--border);
+  background: var(--muted);
   position: relative;
   margin: 0;
   cursor: pointer;
@@ -108,8 +109,8 @@
 }
 
 .toggle:checked {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: var(--primary);
+  border-color: var(--primary);
 }
 
 .toggle:checked::after {

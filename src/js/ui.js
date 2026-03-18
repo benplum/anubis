@@ -26,6 +26,8 @@ function isRequiredCategory(options, name) {
 
 function categoryRowsMarkup(options, ids) {
   const categoryNames = Object.keys(options.categories);
+  const activeStateText = escapeHtml(getStringByKey(options.strings, 'labelEnabled', 'Active'));
+  const disabledStateText = escapeHtml(getStringByKey(options.strings, 'labelDisabled', 'Disabled'));
   return categoryNames
     .map((name) => {
       const safeName = toIdFragment(name);
@@ -38,8 +40,9 @@ function categoryRowsMarkup(options, ids) {
       const required = isRequiredCategory(options, name);
       const disabled = required ? 'disabled aria-disabled="true" checked' : '';
       const alwaysActiveText = required
-        ? escapeHtml(getStringByKey(options.strings, 'requiredLabel', 'Always Active'))
+        ? escapeHtml(getStringByKey(options.strings, 'labelRequired', 'Always Active'))
         : '';
+      const stateText = required ? activeStateText : disabledStateText;
       const describedBy = description ? ` aria-describedby="${descriptionId}"` : '';
       return `<details class="cat" data-cat="${escapeHtml(name)}" id="${rowId}">
   <summary class="summary">
@@ -48,7 +51,7 @@ function categoryRowsMarkup(options, ids) {
       <span class="summary-title" id="${titleId}">${label}</span>
     </span>
     <label class="switch" data-wrap="${escapeHtml(name)}">
-      ${alwaysActiveText ? `<span class="switch-note">${alwaysActiveText}</span>` : ''}
+      ${alwaysActiveText ? `<span class="switch-note">${alwaysActiveText}</span>` : `<span class="switch-note switch-note-state" data-cat-state="${escapeHtml(name)}">${stateText}</span>`}
       <input class="toggle" type="checkbox" data-cat="${escapeHtml(name)}" aria-labelledby="${titleId}"${describedBy} ${disabled}>
     </label>
   </summary>
@@ -251,6 +254,8 @@ export function renderConsentUI(options, hooks) {
   }
 
   const strings = options.strings;
+  const activeStateLabel = getStringByKey(strings, 'labelEnabled', 'Active');
+  const disabledStateLabel = getStringByKey(strings, 'labelDisabled', 'Disabled');
   const host = document.createElement('div');
   host.className = 'anubis-host';
   const shadowRoot = host.attachShadow({ mode: 'open' });
@@ -263,6 +268,7 @@ export function renderConsentUI(options, hooks) {
     prefix: `consent-${idSeed}`,
     bannerTitle: `consent-banner-title-${idSeed}`,
     bannerDescription: `consent-banner-description-${idSeed}`,
+    dntNoticeDescription: `consent-dnt-description-${idSeed}`,
     dialogTitle: `consent-title-${idSeed}`,
     dialogDescription: `consent-desc-${idSeed}`,
   };
@@ -271,10 +277,12 @@ export function renderConsentUI(options, hooks) {
 
   const bannerTitleHtml = htmlString(strings.bannerTitle || 'Privacy choices');
   const bannerDescriptionHtml = htmlString(strings.bannerDescription || '');
+  const dntNoticeHtml = htmlString(strings.doNotTrackNotice || 'Do not track signal honored.');
+  const dntDismissLabel = escapeHtml(getStringByKey(strings, 'buttonCloseNotice', getStringByKey(strings, 'buttonCancel', 'Dismiss')));
   const dialogTitleHtml = htmlString(strings.dialogTitle || 'Consent preferences');
   const dialogDescriptionHtml = htmlString(strings.dialogDescription || '');
 
-  container.innerHTML = `<section class="banner" hidden role="region" aria-labelledby="${ids.bannerTitle}"${bannerDescribedBy}>
+  container.innerHTML = `<section class="banner banner-main" hidden role="region" aria-labelledby="${ids.bannerTitle}"${bannerDescribedBy}>
   <div class="content">
     <h2 class="title" id="${ids.bannerTitle}">${bannerTitleHtml}</h2>
     ${strings.bannerDescription ? `<p class="desc" id="${ids.bannerDescription}">${bannerDescriptionHtml}</p>` : ''}
@@ -282,6 +290,14 @@ export function renderConsentUI(options, hooks) {
   </div>
   <div class="actions">
     ${bannerActionsMarkup(options, strings)}
+  </div>
+</section>
+<section class="banner banner-dnt" hidden role="status" aria-live="polite" aria-atomic="true" aria-describedby="${ids.dntNoticeDescription}">
+  <div class="content">
+    <p class="desc" id="${ids.dntNoticeDescription}">${dntNoticeHtml}</p>
+  </div>
+  <div class="actions">
+    <button type="button" class="btn btn-icon" data-dismiss-dnt="1"><span class="sr">${dntDismissLabel}</span></button>
   </div>
 </section>
 <dialog class="dialog" aria-labelledby="${ids.dialogTitle}"${dialogDescribedBy} aria-modal="true">
@@ -310,12 +326,23 @@ export function renderConsentUI(options, hooks) {
   document.body.prepend(host);
 
   const banner = container.querySelector('.banner');
+  const dntBanner = container.querySelector('.banner-dnt');
   const dialog = container.querySelector('.dialog');
   const form = container.querySelector('.form');
   const toggleMap = {};
+  const stateNoteMap = {};
   Object.keys(options.categories).forEach((name) => {
     toggleMap[name] = container.querySelector(`input[data-cat="${name}"]`);
+    stateNoteMap[name] = container.querySelector(`[data-cat-state="${name}"]`);
   });
+
+  function setCategoryStateNote(name, isActive) {
+    const note = stateNoteMap[name];
+    if (!note) {
+      return;
+    }
+    note.textContent = isActive ? activeStateLabel : disabledStateLabel;
+  }
 
   container.querySelectorAll('.switch, .toggle').forEach((node) => {
     node.addEventListener('click', (event) => {
@@ -326,6 +353,7 @@ export function renderConsentUI(options, hooks) {
   let lastFocus = null;
   let stylesReady = false;
   let pendingBannerVisible = null;
+  let pendingDntBannerVisible = null;
 
   function armStylesWait() {
     stylesReady = false;
@@ -334,6 +362,10 @@ export function renderConsentUI(options, hooks) {
       if (pendingBannerVisible !== null) {
         banner.hidden = !pendingBannerVisible;
         pendingBannerVisible = null;
+      }
+      if (pendingDntBannerVisible !== null) {
+        dntBanner.hidden = !pendingDntBannerVisible;
+        pendingDntBannerVisible = null;
       }
     });
   }
@@ -374,11 +406,25 @@ export function renderConsentUI(options, hooks) {
     Object.keys(toggleMap).forEach((name) => {
       if (isRequiredCategory(options, name)) {
         toggleMap[name].checked = true;
+        setCategoryStateNote(name, true);
         return;
       }
-      toggleMap[name].checked = categoryGranted(name, state, options.categories);
+      const granted = categoryGranted(name, state, options.categories);
+      toggleMap[name].checked = granted;
+      setCategoryStateNote(name, granted);
     });
   }
+
+  Object.keys(toggleMap).forEach((name) => {
+    const toggle = toggleMap[name];
+    if (!toggle) {
+      return;
+    }
+    toggle.addEventListener('change', () => {
+      const active = isRequiredCategory(options, name) ? true : Boolean(toggle.checked);
+      setCategoryStateNote(name, active);
+    });
+  });
 
   function showBanner(visible) {
     if (!stylesReady) {
@@ -389,7 +435,30 @@ export function renderConsentUI(options, hooks) {
     banner.hidden = !visible;
   }
 
+  function showDntBanner(visible) {
+    if (!stylesReady) {
+      pendingDntBannerVisible = Boolean(visible);
+      dntBanner.hidden = true;
+      return;
+    }
+    dntBanner.hidden = !visible;
+  }
+
+  function dismissDntBanner() {
+    pendingDntBannerVisible = false;
+    dntBanner.hidden = true;
+  }
+
   container.addEventListener('click', (event) => {
+    const dismissNode = event.target && event.target.closest
+      ? event.target.closest('[data-dismiss-dnt="1"]')
+      : null;
+    if (dismissNode && container.contains(dismissNode)) {
+      event.preventDefault();
+      dismissDntBanner();
+      return;
+    }
+
     const actionNode = event.target && event.target.closest
       ? event.target.closest('[data-consent]')
       : null;
@@ -438,13 +507,16 @@ export function renderConsentUI(options, hooks) {
 
   return {
     showBanner,
+    showDntBanner,
     openDialog,
     closeDialog,
     updateFromState,
     readCategoryChoices,
     refreshStyles: () => {
       pendingBannerVisible = !banner.hidden;
+      pendingDntBannerVisible = !dntBanner.hidden;
       banner.hidden = true;
+      dntBanner.hidden = true;
       refreshShadowStyles(shadowRoot, options.styles);
       armStylesWait();
     },
