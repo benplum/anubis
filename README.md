@@ -69,6 +69,8 @@ The base stylesheet (`src/css/base.css`) also applies safe typography/control de
 
 If you change `window.Anubis.getOptions().styles` at runtime, call `window.Anubis.refreshStyles()` (or `api.refreshStyles()` in ESM mode) to re-apply shadow-root styles.
 
+To clear consent storage quickly during testing, call `window.Anubis.reset()` (or `api.reset()` in ESM mode). This clears the mirrored consent cookie/localStorage entry, resets in-memory consent to defaults, and reopens the consent banner.
+
 ## Source layout
 
 - `src/js/*` → runtime, UI, storage, consent-mode, debug helper

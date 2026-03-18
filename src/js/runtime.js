@@ -1,5 +1,5 @@
 import { resolveOptions, toGoogleConsent, categoryGranted, DEFAULT_OPTIONS, normalizeCategoriesDefinition } from './config.js';
-import { readStoredConsent, saveStoredConsent, clearClientCookies } from './storage.js';
+import { readStoredConsent, saveStoredConsent, clearStoredConsent, clearClientCookies } from './storage.js';
 import { applyDefaultConsent, applyUpdatedConsent } from './consent-mode.js';
 import { emitConsentEvent, bindConsentTriggers } from './events.js';
 import { createScriptGate } from './script-gate.js';
@@ -310,6 +310,27 @@ export async function initAnubis(rawOptions = {}) {
     commitState(createAllState(options, 'denied'), 'reject');
   }
 
+  function reset() {
+    clearStoredConsent(options);
+    hasStoredConsent = false;
+    doNotTrackApplied = false;
+    state = { ...options.defaultConsentInternal };
+
+    applyUpdatedConsent(options.defaultConsentGoogle, options);
+    scriptGate.refresh();
+    ui.updateFromState(state);
+    ui.showBanner(true);
+    if (ui && typeof ui.showDntBanner === 'function') {
+      ui.showDntBanner(false);
+    }
+
+    emitConsentEvent('consent:updated', {
+      source: 'reset',
+      googleState: options.defaultConsentGoogle,
+      ...buildConsentEventDetail(options, state),
+    });
+  }
+
   const unbindTriggers = bindConsentTriggers((action) => {
     handleAction(action, { source: 'trigger' });
   });
@@ -337,6 +358,7 @@ export async function initAnubis(rawOptions = {}) {
     },
     acceptAll,
     rejectAll,
+    reset,
     saveChoices: (choices) => commitState(applyCategoryChoices(state, choices || {}, options), 'api'),
     destroy: () => {
       unbindTriggers();

@@ -24,6 +24,7 @@ window.ConsentOptions = {
       en: {
         bannerTitle: 'Your privacy choices',
         bannerDescription: 'Choose how this site uses cookies and similar technologies.',
+        doNotTrackNotice: 'Do not track signal honored.',
         buttonAccept: 'Accept all',
         buttonReject: 'Reject all',
         buttonManage: 'Manage choices',
@@ -44,6 +45,7 @@ window.ConsentOptions = {
       es: {
         bannerTitle: 'Tus opciones de privacidad',
         bannerDescription: 'Elige cómo este sitio usa cookies y tecnologías similares.',
+        doNotTrackNotice: 'Se ha respetado la señal de «No rastrear».',
         buttonAccept: 'Aceptar todo',
         buttonReject: 'Rechazar todo',
         buttonManage: 'Gestionar opciones',
