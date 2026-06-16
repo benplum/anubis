@@ -24,6 +24,83 @@ function isRequiredCategory(options, name) {
   return Array.isArray(options.requiredCategories) && options.requiredCategories.includes(name);
 }
 
+function formatCookieDuration(expires, strings) {
+  const sessionLabel = escapeHtml(getStringByKey(strings, 'cookieSession', 'Session'));
+  if (!expires) {
+    return sessionLabel;
+  }
+  
+  const seconds = Number(expires);
+  if (!Number.isFinite(seconds)) {
+    return escapeHtml(String(expires)); // Fallback if already a string date
+  }
+  
+  let delta = seconds;
+  if (seconds > 946684800) { // If it's > Year 2000, treat as a Unix timestamp
+    delta = seconds - (Date.now() / 1000);
+  }
+  
+  if (delta <= 0) {
+    return sessionLabel;
+  }
+  
+  const days = Math.round(delta / 86400);
+  if (days < 1) return '< 1 day';
+  if (days === 1) return '1 day';
+  if (days < 30) return `${days} days`;
+  
+  const months = Math.round(days / 30);
+  if (days < 365) return `${months} month${months !== 1 ? 's' : ''}`;
+  
+  const years = Math.round(days / 365);
+  return `${years} year${years !== 1 ? 's' : ''}`;
+}
+
+function cookieListMarkup(options, categoryName) {
+  if (!Array.isArray(options.cookies) || options.cookies.length === 0) {
+    return '';
+  }
+
+  const categoryCookies = options.cookies.filter((c) => c.category === categoryName);
+  if (categoryCookies.length === 0) {
+    return '';
+  }
+
+  const thName = escapeHtml(getStringByKey(options.strings, 'cookieName', 'Name'));
+  const thVendor = escapeHtml(getStringByKey(options.strings, 'cookieVendor', 'Vendor'));
+  const thDomain = escapeHtml(getStringByKey(options.strings, 'cookieDomain', 'Domain'));
+  const thDuration = escapeHtml(getStringByKey(options.strings, 'cookieDuration', 'Duration'));
+
+  const items = categoryCookies.map((c) => `
+    <li class="cookie-item">
+      <dl class="cookie-props">
+        <div class="cookie-prop">
+          <dt>${thName}</dt>
+          <dd>${escapeHtml(c.name)}</dd>
+        </div>
+        <div class="cookie-prop">
+          <dt>${thVendor}</dt>
+          <dd>${escapeHtml(c.vendor)}</dd>
+        </div>
+        <div class="cookie-prop">
+          <dt>${thDomain}</dt>
+          <dd>${escapeHtml(c.domain)}</dd>
+        </div>
+        <div class="cookie-prop">
+          <dt>${thDuration}</dt>
+          <dd>${formatCookieDuration(c.expires, options.strings)}</dd>
+        </div>
+      </dl>
+    </li>
+  `).join('');
+
+  return `<div class="cookie-wrap">
+  <ul class="cookie-list">
+    ${items}
+  </ul>
+</div>`;
+}
+
 function categoryRowsMarkup(options, ids) {
   const categoryNames = Object.keys(options.categories);
   const activeStateText = escapeHtml(getStringByKey(options.strings, 'labelEnabled', 'Active'));
@@ -56,6 +133,7 @@ function categoryRowsMarkup(options, ids) {
     </label>
   </summary>
   ${description ? `<p class="desc" id="${descriptionId}">${description}</p>` : ''}
+  ${cookieListMarkup(options, name)}
 </details>`;
     })
     .join('');

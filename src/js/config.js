@@ -18,6 +18,11 @@ const EN_STRINGS = {
   labelDisabled: 'Disabled',
   buttonSave: 'Save Choices',
   buttonCancel: 'Cancel',
+  cookieName: 'Name',
+  cookieVendor: 'Vendor',
+  cookieDomain: 'Domain',
+  cookieDuration: 'Duration',
+  cookieSession: 'Session',
   categories: {
     necessary: {
       label: 'Necessary',
@@ -97,6 +102,7 @@ export const DEFAULT_OPTIONS = {
   stylesTimeout: 0,
   className: '',
   actions: DEFAULT_ACTIONS,
+  cookies: [],
 };
 
 function isObject(value) {
@@ -317,6 +323,37 @@ function normalizeclassName(classNameInput) {
     .filter(Boolean);
 
   return Array.from(new Set(tokens)).join(' ');
+}
+
+function normalizeCookies(cookiesInput) {
+  if (!Array.isArray(cookiesInput)) {
+    return [];
+  }
+
+  const mapCategory = (cat) => {
+    const lower = typeof cat === 'string' ? cat.trim().toLowerCase() : '';
+    if (lower === 'functional') return 'preferences';
+    if (lower === 'strictly necessary' || lower === 'essential') return 'necessary';
+    return lower;
+  };
+
+  return cookiesInput
+    .map((item) => {
+      if (!isObject(item)) {
+        return null;
+      }
+      const name = typeof item.name === 'string' ? item.name.trim() : '';
+      if (!name) return null;
+
+      return {
+        name,
+        category: mapCategory(item.category),
+        vendor: typeof item.vendor === 'string' ? item.vendor.trim() : '',
+        domain: typeof item.domain === 'string' ? item.domain.trim() : '',
+        expires: item.expires,
+      };
+    })
+    .filter(Boolean);
 }
 
 function normalizedConsentKeys(value) {
@@ -634,6 +671,7 @@ export async function resolveOptions(rawOptions = {}) {
 
   options.actions = normalizeActions(options.actions);
   options.waitForUpdate = normalizeWaitForUpdate(options.waitForUpdate);
+  options.cookies = normalizeCookies(options.cookies);
 
   const consentKeys = uniqueConsentKeys(options.categories);
   const consentMapping = buildConsentMapping(consentKeys, options.consentMapping);

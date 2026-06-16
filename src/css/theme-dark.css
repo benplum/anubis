@@ -122,6 +122,10 @@
   opacity: 0.5;
 }
 
+.cookie-list li {
+  border-color: var(--border);
+}
+
 @media (max-width: 740px) {
   
   .form {

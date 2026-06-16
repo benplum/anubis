@@ -214,5 +214,387 @@
         "ad_storage": "denied"
       }
     }
-  }
+  },
+  "cookies": [
+    {
+      "name": "_ttp",
+      "category": "Marketing",
+      "vendor": "TikTok",
+      "domain": ".dolesunshine.com",
+      "path": "/",
+      "expires": 1814990563,
+      "httpOnly": false,
+      "secure": false
+    },
+    {
+      "name": "wp-wpml_current_language",
+      "category": "Functional",
+      "vendor": "WPML",
+      "domain": "www.dolesunshine.com",
+      "path": "/",
+      "expires": null,
+      "httpOnly": false,
+      "secure": false
+    },
+    {
+      "name": "dole_geo_settings",
+      "category": "Uncategorized",
+      "vendor": "Unknown",
+      "domain": "www.dolesunshine.com",
+      "path": "/",
+      "expires": 1781899363,
+      "httpOnly": false,
+      "secure": false
+    },
+    {
+      "name": "CLID",
+      "category": "Analytics",
+      "vendor": "Microsoft",
+      "domain": "www.clarity.ms",
+      "path": "/",
+      "expires": 1812830563.384513,
+      "httpOnly": true,
+      "secure": true
+    },
+    {
+      "name": "_tt_enable_cookie",
+      "category": "Marketing",
+      "vendor": "TikTok",
+      "domain": ".dolesunshine.com",
+      "path": "/",
+      "expires": 1814990563,
+      "httpOnly": false,
+      "secure": false
+    },
+    {
+      "name": "A3",
+      "category": "Marketing",
+      "vendor": "Yahoo",
+      "domain": ".yahoo.com",
+      "path": "/",
+      "expires": 1812852163.777196,
+      "httpOnly": true,
+      "secure": true
+    },
+    {
+      "name": "ttcsid_D3BENB3C77U6ID06I5U0",
+      "category": "Uncategorized",
+      "vendor": "Unknown",
+      "domain": ".dolesunshine.com",
+      "path": "/",
+      "expires": 1814990563,
+      "httpOnly": false,
+      "secure": false
+    },
+    {
+      "name": "_clck",
+      "category": "Analytics",
+      "vendor": "Microsoft",
+      "domain": ".dolesunshine.com",
+      "path": "/",
+      "expires": 1812830564,
+      "httpOnly": false,
+      "secure": false
+    },
+    {
+      "name": "_pin_unauth",
+      "category": "Marketing",
+      "vendor": "Pinterest",
+      "domain": ".dolesunshine.com",
+      "path": "/",
+      "expires": 1812830564,
+      "httpOnly": false,
+      "secure": false
+    },
+    {
+      "name": "_clsk",
+      "category": "Analytics",
+      "vendor": "Microsoft",
+      "domain": ".dolesunshine.com",
+      "path": "/",
+      "expires": 1781380964,
+      "httpOnly": false,
+      "secure": false
+    },
+    {
+      "name": "TDID",
+      "category": "Marketing",
+      "vendor": "The Tradedesk",
+      "domain": ".adsrvr.org",
+      "path": "/",
+      "expires": 1812830564.534243,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "audit_p",
+      "category": "Marketing",
+      "vendor": "Magnite",
+      "domain": ".rubiconproject.com",
+      "path": "/",
+      "expires": 1812830564.496576,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "khaos",
+      "category": "Marketing",
+      "vendor": "Magnite",
+      "domain": ".rubiconproject.com",
+      "path": "/",
+      "expires": 1812830564.496679,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "khaos_p",
+      "category": "Marketing",
+      "vendor": "Magnite",
+      "domain": ".rubiconproject.com",
+      "path": "/",
+      "expires": 1812830564.496709,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "audit",
+      "category": "Marketing",
+      "vendor": "Magnite",
+      "domain": ".rubiconproject.com",
+      "path": "/",
+      "expires": 1812830564.496728,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "IDE",
+      "category": "Marketing",
+      "vendor": "DoubleClick/Google Marketing",
+      "domain": ".doubleclick.net",
+      "path": "/",
+      "expires": 1815854564.526495,
+      "httpOnly": true,
+      "secure": true
+    },
+    {
+      "name": "BVBRANDID",
+      "category": "Analytics",
+      "vendor": "Bazaar Voice",
+      "domain": ".dolesunshine.com",
+      "path": "/",
+      "expires": 1812830564,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "TDCPM",
+      "category": "Marketing",
+      "vendor": "The Tradedesk",
+      "domain": ".adsrvr.org",
+      "path": "/",
+      "expires": 1812830564.534337,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "BVBRANDSID",
+      "category": "Analytics",
+      "vendor": "Bazaar Voice",
+      "domain": ".dolesunshine.com",
+      "path": "/",
+      "expires": 1781296364,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "MUID",
+      "category": "Marketing",
+      "vendor": "Bing / Microsoft",
+      "domain": ".clarity.ms",
+      "path": "/",
+      "expires": 1814990564.479445,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "MR",
+      "category": "Marketing",
+      "vendor": "Bing / Microsoft",
+      "domain": ".c.clarity.ms",
+      "path": "/",
+      "expires": 1781899364.479503,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "SRM_B",
+      "category": "Functional",
+      "vendor": "Bing / Microsoft",
+      "domain": ".c.bing.com",
+      "path": "/",
+      "expires": 1814990564.468552,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "SM",
+      "category": "Analytics",
+      "vendor": "Microsoft",
+      "domain": ".c.clarity.ms",
+      "path": "/",
+      "expires": null,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "ttcsid",
+      "category": "Marketing",
+      "vendor": "TikTok",
+      "domain": ".dolesunshine.com",
+      "path": "/",
+      "expires": 1814990565,
+      "httpOnly": false,
+      "secure": false
+    },
+    {
+      "name": "consent-options",
+      "category": "Uncategorized",
+      "vendor": "Unknown",
+      "domain": "www.dolesunshine.com",
+      "path": "/",
+      "expires": 1796846565.762582,
+      "httpOnly": false,
+      "secure": false
+    },
+    {
+      "name": "ANONCHK",
+      "category": "Marketing",
+      "vendor": "Bing / Microsoft",
+      "domain": ".c.clarity.ms",
+      "path": "/",
+      "expires": 1781295164.47952,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "_gcl_au",
+      "category": "Marketing",
+      "vendor": "Google",
+      "domain": ".dolesunshine.com",
+      "path": "/",
+      "expires": 1789070565,
+      "httpOnly": false,
+      "secure": false
+    },
+    {
+      "name": "_ga",
+      "category": "Analytics",
+      "vendor": "Google Analytics",
+      "domain": ".dolesunshine.com",
+      "path": "/",
+      "expires": 1815854565.12103,
+      "httpOnly": false,
+      "secure": false
+    },
+    {
+      "name": "_fbp",
+      "category": "Marketing",
+      "vendor": "Facebook",
+      "domain": ".dolesunshine.com",
+      "path": "/",
+      "expires": 1789069737,
+      "httpOnly": false,
+      "secure": false
+    },
+    {
+      "name": "CMID",
+      "category": "Marketing",
+      "vendor": "Casale Media",
+      "domain": ".casalemedia.com",
+      "path": "/",
+      "expires": 1812830039.037644,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "CMPS",
+      "category": "Marketing",
+      "vendor": "Casale Media",
+      "domain": ".casalemedia.com",
+      "path": "/",
+      "expires": 1789070039.037723,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "CMPRO",
+      "category": "Marketing",
+      "vendor": "Casale Media",
+      "domain": ".casalemedia.com",
+      "path": "/",
+      "expires": 1789070039.037751,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "KRTBCOOKIE_377",
+      "category": "Uncategorized",
+      "vendor": "Unknown",
+      "domain": ".pubmatic.com",
+      "path": "/",
+      "expires": 1789070039.008207,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "PugT",
+      "category": "Marketing",
+      "vendor": "PubMatic",
+      "domain": ".pubmatic.com",
+      "path": "/",
+      "expires": 1783886039.008385,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "tuuid",
+      "category": "Marketing",
+      "vendor": "Platform161",
+      "domain": ".bidswitch.net",
+      "path": "/",
+      "expires": 1812830039.059952,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "c",
+      "category": "Marketing",
+      "vendor": "CreativeCDN",
+      "domain": ".bidswitch.net",
+      "path": "/",
+      "expires": 1812830039.036156,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "tuuid_lu",
+      "category": "Marketing",
+      "vendor": "bidswitch.net",
+      "domain": ".bidswitch.net",
+      "path": "/",
+      "expires": 1812830039.060218,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "AWSALBTGCORS",
+      "category": "Functional",
+      "vendor": "Amazon Web Services",
+      "domain": "destinilocators.com",
+      "path": "/",
+      "expires": 1781898839.730123,
+      "httpOnly": false,
+      "secure": true
+    }
+  ]
 }

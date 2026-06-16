@@ -146,6 +146,91 @@
           }
         };
       }
+      
+      window.ConsentOptions.cookies = [
+        {
+          "name": "wp-wpml_current_language",
+          "category": "Functional",
+          "vendor": "WPML",
+          "domain": "www.dolesunshine.com",
+          "path": "/",
+          "expires": null,
+          "httpOnly": false,
+          "secure": false
+        },
+        {
+          "name": "SRM_B",
+          "category": "Functional",
+          "vendor": "Bing / Microsoft",
+          "domain": ".c.bing.com",
+          "path": "/",
+          "expires": 1814990564.468552,
+          "httpOnly": false,
+          "secure": true
+        },
+        {
+          "name": "_pin_unauth",
+          "category": "Marketing",
+          "vendor": "Pinterest",
+          "domain": ".dolesunshine.com",
+          "path": "/",
+          "expires": 1812830564,
+          "httpOnly": false,
+          "secure": false
+        },
+        {
+          "name": "_ttp",
+          "category": "Marketing",
+          "vendor": "TikTok",
+          "domain": ".dolesunshine.com",
+          "path": "/",
+          "expires": 1814990563,
+          "httpOnly": false,
+          "secure": false
+        },
+        {
+          "name": "A3",
+          "category": "Marketing",
+          "vendor": "Yahoo",
+          "domain": ".yahoo.com",
+          "path": "/",
+          "expires": 1812852163.777196,
+          "httpOnly": true,
+          "secure": true
+        },
+        {
+          "name": "dole_geo_settings",
+          "category": "Necessary",
+          "vendor": "Unknown",
+          "domain": "www.dolesunshine.com",
+          "path": "/",
+          "expires": 1781899363,
+          "httpOnly": false,
+          "secure": false
+        },
+        {
+          "name": "CLID",
+          "category": "Analytics",
+          "vendor": "Microsoft",
+          "domain": "www.clarity.ms",
+          "path": "/",
+          "expires": 1812830563.384513,
+          "httpOnly": true,
+          "secure": true
+        },
+        {
+          "name": "BVBRANDID",
+          "category": "Analytics",
+          "vendor": "Bazaar Voice",
+          "domain": ".dolesunshine.com",
+          "path": "/",
+          "expires": 1812830564,
+          "httpOnly": false,
+          "secure": true
+        }
+      ];
+      
+      console.log(window.ConsentOptions);
     </script>
     <script src="../dist/js/consent.bundled.js"></script>
     <script src="../dist/js/debugger.js"></script>

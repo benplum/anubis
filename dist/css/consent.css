@@ -12,6 +12,7 @@
   --fg: #000;
   --font-family: sans-serif;
   --font-size: 16px;
+  --font-size-sm: 14px;
   --space: 12px;
   --space-sm: calc(var(--space) * .5);
   --space-lg: calc(var(--space) * 1.5);
@@ -120,6 +121,7 @@ button {
   border: 1px solid;
   padding: 0;
   width: min(600px, 90vw);
+  overscroll-behavior: none;
 }
 
 .dialog .header,
@@ -256,4 +258,40 @@ button.btn-icon {
 .summary:focus-visible {
   outline: 2px solid var(--fg);
   outline-offset: 2px;
+}
+
+.cookie-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  list-style: none;
+  margin: var(--space);
+  padding: 0;
+}
+
+.cookie-list li,
+.cookie-props,
+.cookie-prop {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+}
+
+.cookie-list li {
+  border-top: 1px solid;
+  margin: 0;
+  padding: var(--space) 0;
+}
+
+.cookie-prop {
+  gap: var(--space-lg);
+  font-size: var(--font-size-sm);
+}
+
+.cookie-prop dt {
+  font-weight: bold;
+}
+
+.cookie-prop dt,
+.cookie-prop dd {
+  margin: 0;
 }
