@@ -92,6 +92,7 @@ export const DEFAULT_OPTIONS = {
     preferences: { consent: ['functionality_storage', 'personalization_storage'], required: false },
   },
   consentMapping: {},
+  cookieMapping: {},
   i18n: {
     locales: {
       en: EN_STRINGS,
@@ -325,16 +326,32 @@ function normalizeclassName(classNameInput) {
   return Array.from(new Set(tokens)).join(' ');
 }
 
-function normalizeCookies(cookiesInput) {
+function normalizeCookies(cookiesInput, cookieMapping) {
   if (!Array.isArray(cookiesInput)) {
     return [];
   }
 
   const mapCategory = (cat) => {
-    const lower = typeof cat === 'string' ? cat.trim().toLowerCase() : '';
-    if (lower === 'functional') return 'preferences';
-    if (lower === 'strictly necessary' || lower === 'essential') return 'necessary';
-    return lower;
+    const exact = typeof cat === 'string' ? cat.trim() : '';
+    const lower = exact.toLowerCase();
+
+    let defaultMapped = lower;
+    if (lower === 'functional') defaultMapped = 'preferences';
+    else if (lower === 'strictly necessary' || lower === 'essential') defaultMapped = 'necessary';
+
+    if (isObject(cookieMapping)) {
+      if (typeof cookieMapping[exact] === 'string' && cookieMapping[exact].trim()) {
+        return cookieMapping[exact].trim();
+      }
+      if (typeof cookieMapping[lower] === 'string' && cookieMapping[lower].trim()) {
+        return cookieMapping[lower].trim();
+      }
+      if (typeof cookieMapping[defaultMapped] === 'string' && cookieMapping[defaultMapped].trim()) {
+        return cookieMapping[defaultMapped].trim();
+      }
+    }
+
+    return defaultMapped;
   };
 
   return cookiesInput
@@ -671,7 +688,7 @@ export async function resolveOptions(rawOptions = {}) {
 
   options.actions = normalizeActions(options.actions);
   options.waitForUpdate = normalizeWaitForUpdate(options.waitForUpdate);
-  options.cookies = normalizeCookies(options.cookies);
+  options.cookies = normalizeCookies(options.cookies, options.cookieMapping);
 
   const consentKeys = uniqueConsentKeys(options.categories);
   const consentMapping = buildConsentMapping(consentKeys, options.consentMapping);
