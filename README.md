@@ -114,14 +114,16 @@ Common options:
 - `className` → optional custom class (or space-separated classes) added to the shadow-root container element (which already includes `root`).
 
 - Core: `autoStart`, `version`, `defaultMode`, `storageDuration`, `storageKey`
-- Consent behavior: `defaultConsent`, `unknownPolicy`, `reloadOnRevoke`, `respectDoNotTrack`, `waitForUpdate`, `stylesTimeout`
+- Consent behavior: `defaultConsent`, `unknownPolicy`, `reloadOnRevoke`, `respectPrivacySignal`, `waitForUpdate`, `stylesTimeout`
 - Categories/mapping: `categories`, `consentMapping`
 - UI/i18n: `links`, `actions`, `localeActive`, `localeFallback`, `i18n.locales`
 - Region: `region`, `regionResolver`, `regionTimeout`, `regionCache`, `regionKey`, `regionDuration`, `regionOverrides`
 
 `defaultMode` baseline behavior: `opt-out` starts consent keys as `granted`, while `opt-in` starts as `denied` (required categories are still forced to granted).
 
-`respectDoNotTrack` defaults to `true`. When enabled and the browser DNT signal is on, Anubis initializes consent as denied (except required categories), stores that state, and replaces the first-run consent banner with a small DNT notice banner.
+`respectPrivacySignal` defaults to `true`. When enabled and the browser privacy signal is on (GPC or DNT), Anubis initializes consent as denied (except required categories), stores that state, and replaces the first-run consent banner with a small privacy-signal notice banner.
+
+Legacy `respectDoNotTrack` is still supported for backward compatibility.
 
 `waitForUpdate` maps to Google Consent Mode `wait_for_update` on the initial `gtag('consent', 'default', ...)` call.
 
@@ -131,7 +133,8 @@ For the required-category helper label, localize the global `labelRequired` UI k
 
 For per-category state labels in the switch row, localize `stateActive` and `stateDisabled`.
 
-For the DNT notice text, localize the global `doNotTrackNotice` UI key.
+For the GPC/DNT notice text, localize the global `gpcNotice` UI key.
+Legacy `doNotTrackNotice` is still supported for backward compatibility.
 
 For the DNT notice dismiss button label, localize the global `buttonCloseNotice` UI key.
 
@@ -348,3 +351,15 @@ Demo pages (`index`, `preview`, `configurator`) use Bulma CSS from CDN for basel
 
 - On revoke, cookie clearing is best effort for first-party readable cookies only.
 - Third-party and HttpOnly cookies cannot be reliably cleared by client JS.
+
+## Changelog
+
+### v1.1.0
+
+- Added Global Privacy Control (GPC) signal handling (alongside DNT) when `respectPrivacySignal` is enabled.
+- Renamed notice copy key from `doNotTrackNotice` to `gpcNotice`.
+- Kept backward compatibility by still reading legacy `doNotTrackNotice` if `gpcNotice` is not provided.
+- Updated the preferences dialog behavior when a privacy signal is honored:
+  - Shows the same privacy-signal notice text in the dialog body.
+  - Disables all category toggles and prevents consent changes.
+  - Hides footer actions so only the header close button remains.

@@ -54,7 +54,7 @@ button {
   max-width: 460px;
 }
 
-.banner-dnt:not([hidden]) {
+.banner-gpc:not([hidden]) {
   display: flex;
   gap: var(--space-lg);
   align-items: center;
@@ -73,7 +73,7 @@ button {
   color: var(--fg);
 }
 
-.banner-dnt .desc {
+.banner-gpc .desc {
   margin: 0;
 }
 
@@ -134,6 +134,12 @@ button {
   margin-bottom: var(--space-lg);
 }
 
+.dialog .desc-gpc {
+  border: 1px solid;
+  margin: 0;
+  padding: var(--space);
+}
+
 .form {
   margin: 0;
 }
@@ -148,6 +154,12 @@ button {
 
 .footer {
   border-top: 1px solid var(--border);
+}
+
+.privacy-signal-honored .dialog .desc-consent,
+.privacy-signal-honored .dialog .cats,
+.privacy-signal-honored .dialog .footer {
+  display: none;
 }
 
 .dialog .title {

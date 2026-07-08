@@ -6,7 +6,7 @@ const REGION_COOKIE_FALLBACK_KEY = 'consent-region';
 const EN_STRINGS = {
   bannerTitle: 'Privacy Settings',
   bannerDescription: 'Choose how this site uses cookies and similar technologies.',
-  doNotTrackNotice: 'Do not track signal honored.',
+  gpcNotice: 'Opt-Out Signal Honored.',
   buttonCloseNotice: 'Dismiss',
   buttonAccept: 'Accept All',
   buttonReject: 'Reject All',
@@ -69,7 +69,7 @@ export const DEFAULT_OPTIONS = {
   waitForUpdate: 500,
   //
   defaultMode: 'opt-in',
-  respectDoNotTrack: true,
+  respectPrivacySignal: true,
   defaultConsent: {},
   fastDefaults: true,
   unknownPolicy: 'block',
@@ -660,8 +660,34 @@ function normalizeWaitForUpdate(value) {
   return Math.floor(waitForUpdate);
 }
 
+function normalizePrivacySignalAliases(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizePrivacySignalAliases(item));
+  }
+
+  if (!isObject(value)) {
+    return value;
+  }
+
+  const out = {};
+  Object.keys(value).forEach((key) => {
+    out[key] = normalizePrivacySignalAliases(value[key]);
+  });
+
+  if (typeof out.respectPrivacySignal === 'undefined' && typeof out.respectDoNotTrack !== 'undefined') {
+    out.respectPrivacySignal = out.respectDoNotTrack;
+  }
+
+  return out;
+}
+
+function normalizeBooleanOption(value, fallback) {
+  return typeof value === 'boolean' ? value : fallback;
+}
+
 export async function resolveOptions(rawOptions = {}) {
-  const inputOptions = isObject(rawOptions) ? rawOptions : {};
+  const sourceOptions = isObject(rawOptions) ? rawOptions : {};
+  const inputOptions = normalizePrivacySignalAliases(sourceOptions);
   let options = applyReplacementPaths(mergeDeep(DEFAULT_OPTIONS, inputOptions), inputOptions);
 
   const region = await resolveConfiguredRegion(options);
@@ -689,6 +715,11 @@ export async function resolveOptions(rawOptions = {}) {
   options.actions = normalizeActions(options.actions);
   options.waitForUpdate = normalizeWaitForUpdate(options.waitForUpdate);
   options.cookies = normalizeCookies(options.cookies, options.cookieMapping);
+  options.respectPrivacySignal = normalizeBooleanOption(
+    options.respectPrivacySignal,
+    DEFAULT_OPTIONS.respectPrivacySignal,
+  );
+  options.respectDoNotTrack = options.respectPrivacySignal;
 
   const consentKeys = uniqueConsentKeys(options.categories);
   const consentMapping = buildConsentMapping(consentKeys, options.consentMapping);

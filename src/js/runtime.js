@@ -167,9 +167,19 @@ function isCategoryAllowed(state, options, category) {
   return options.unknownPolicy === 'allow';
 }
 
-function isDoNotTrackEnabled() {
+function detectPrivacySignal() {
   if (typeof navigator === 'undefined' && typeof window === 'undefined') {
-    return false;
+    return { enabled: false, type: '' };
+  }
+
+  const gpcValues = [
+    typeof navigator !== 'undefined' ? navigator.globalPrivacyControl : null,
+    typeof window !== 'undefined' ? window.globalPrivacyControl : null,
+  ];
+
+  const gpcEnabled = gpcValues.some((value) => value === true);
+  if (gpcEnabled) {
+    return { enabled: true, type: 'gpc' };
   }
 
   const values = [
@@ -178,13 +188,18 @@ function isDoNotTrackEnabled() {
     typeof navigator !== 'undefined' ? navigator.msDoNotTrack : null,
   ];
 
-  return values.some((value) => {
+  const doNotTrackEnabled = values.some((value) => {
     if (value === null || typeof value === 'undefined') {
       return false;
     }
     const normalized = String(value).trim().toLowerCase();
     return normalized === '1' || normalized === 'yes';
   });
+
+  return {
+    enabled: doNotTrackEnabled,
+    type: doNotTrackEnabled ? 'dnt' : '',
+  };
 }
 
 export async function initAnubis(rawOptions = {}) {
@@ -194,7 +209,8 @@ export async function initAnubis(rawOptions = {}) {
   const stored = readStoredConsent(options);
   const validStored = isValidStoredConsent(stored, options.version);
   let hasStoredConsent = validStored;
-  let doNotTrackApplied = false;
+  let privacySignalApplied = false;
+  let privacySignalType = '';
 
   let state = { ...options.defaultConsentInternal };
   if (validStored) {
@@ -205,18 +221,26 @@ export async function initAnubis(rawOptions = {}) {
     state = enforceRequiredGranted(state, options.categories, options.requiredCategories);
   }
 
-  if (!hasStoredConsent && options.respectDoNotTrack && isDoNotTrackEnabled()) {
-    state = createAllState(options, 'denied');
-    saveStoredConsent(
-      {
-        version: options.version,
-        grants: state,
-        updatedAt: Date.now(),
-      },
-      options,
-    );
+  const detectedPrivacySignal = options.respectPrivacySignal ? detectPrivacySignal() : { enabled: false, type: '' };
+  if (detectedPrivacySignal.enabled) {
+    const signalDeniedState = createAllState(options, 'denied');
+    const shouldPersistSignalState = !hasStoredConsent || !statesEqual(state, signalDeniedState);
+
+    state = signalDeniedState;
     hasStoredConsent = true;
-    doNotTrackApplied = true;
+    privacySignalApplied = true;
+    privacySignalType = detectedPrivacySignal.type;
+
+    if (shouldPersistSignalState) {
+      saveStoredConsent(
+        {
+          version: options.version,
+          grants: state,
+          updatedAt: Date.now(),
+        },
+        options,
+      );
+    }
   }
 
   if (!fastDefault.applied) {
@@ -232,6 +256,16 @@ export async function initAnubis(rawOptions = {}) {
 
   const scriptGate = createScriptGate(options, (category) => isCategoryAllowed(state, options, category));
   function handleAction(action, meta = {}) {
+    if (privacySignalApplied && (action === 'accept' || action === 'reject' || action === 'save')) {
+      emitConsentEvent('consent:action', {
+        action,
+        source: meta.source || 'ui',
+        blocked: 'privacy-signal',
+        state,
+      });
+      return;
+    }
+
     switch (action) {
       case 'open':
         ui.openDialog();
@@ -303,30 +337,58 @@ export async function initAnubis(rawOptions = {}) {
   }
 
   function acceptAll() {
+    if (privacySignalApplied) {
+      return;
+    }
     commitState(createAllState(options, 'granted'), 'accept');
   }
 
   function rejectAll() {
+    if (privacySignalApplied) {
+      return;
+    }
     commitState(createAllState(options, 'denied'), 'reject');
   }
 
   function reset() {
     clearStoredConsent(options);
     hasStoredConsent = false;
-    doNotTrackApplied = false;
+    privacySignalApplied = false;
+    privacySignalType = '';
     state = { ...options.defaultConsentInternal };
 
-    applyUpdatedConsent(options.defaultConsentGoogle, options);
+    const resetPrivacySignal = options.respectPrivacySignal ? detectPrivacySignal() : { enabled: false, type: '' };
+    if (resetPrivacySignal.enabled) {
+      state = createAllState(options, 'denied');
+      hasStoredConsent = true;
+      privacySignalApplied = true;
+      privacySignalType = resetPrivacySignal.type;
+
+      saveStoredConsent(
+        {
+          version: options.version,
+          grants: state,
+          updatedAt: Date.now(),
+        },
+        options,
+      );
+    }
+
+    const resetGoogleState = toGoogleConsent(state, options.consentMapping);
+    applyUpdatedConsent(resetGoogleState, options);
     scriptGate.refresh();
     ui.updateFromState(state);
-    ui.showBanner(true);
-    if (ui && typeof ui.showDntBanner === 'function') {
-      ui.showDntBanner(false);
+    ui.showBanner(!hasStoredConsent);
+    if (ui && typeof ui.showGpcBanner === 'function') {
+      ui.showGpcBanner(privacySignalApplied);
+    }
+    if (ui && typeof ui.setPrivacySignalHonored === 'function') {
+      ui.setPrivacySignalHonored(privacySignalApplied);
     }
 
     emitConsentEvent('consent:updated', {
       source: 'reset',
-      googleState: options.defaultConsentGoogle,
+      googleState: resetGoogleState,
       ...buildConsentEventDetail(options, state),
     });
   }
@@ -337,13 +399,18 @@ export async function initAnubis(rawOptions = {}) {
 
   ui.updateFromState(state);
   ui.showBanner(!hasStoredConsent);
-  if (ui && typeof ui.showDntBanner === 'function') {
-    ui.showDntBanner(doNotTrackApplied);
+  if (ui && typeof ui.showGpcBanner === 'function') {
+    ui.showGpcBanner(privacySignalApplied);
+  }
+  if (ui && typeof ui.setPrivacySignalHonored === 'function') {
+    ui.setPrivacySignalHonored(privacySignalApplied);
   }
 
   emitConsentEvent('consent:ready', {
     hasStoredConsent: Boolean(hasStoredConsent),
-    doNotTrackApplied,
+    doNotTrackApplied: Boolean(privacySignalApplied),
+    privacySignalApplied,
+    privacySignalType,
     ...buildConsentEventDetail(options, state),
   });
 
@@ -359,7 +426,12 @@ export async function initAnubis(rawOptions = {}) {
     acceptAll,
     rejectAll,
     reset,
-    saveChoices: (choices) => commitState(applyCategoryChoices(state, choices || {}, options), 'api'),
+    saveChoices: (choices) => {
+      if (privacySignalApplied) {
+        return;
+      }
+      commitState(applyCategoryChoices(state, choices || {}, options), 'api');
+    },
     destroy: () => {
       unbindTriggers();
       scriptGate.disconnect();
