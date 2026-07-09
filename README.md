@@ -354,6 +354,12 @@ Demo pages (`index`, `preview`, `configurator`) use Bulma CSS from CDN for basel
 
 ## Changelog
 
+### v1.1.1
+
+- Fixed privacy-signal notice behavior so dismissing the GPC/DNT banner is persisted.
+- The GPC/DNT notice banner now appears on first load only (when a privacy signal is active) and stays hidden on subsequent page loads after dismissal.
+- Resetting consent state (`window.Anubis.reset()` / `api.reset()`) clears the dismissal state, allowing the notice to appear again when applicable.
+
 ### v1.1.0
 
 - Added Global Privacy Control (GPC) signal handling (alongside DNT) when `respectPrivacySignal` is enabled.

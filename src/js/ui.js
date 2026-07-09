@@ -322,6 +322,7 @@ export function renderConsentUI(options, hooks) {
   if (typeof document === 'undefined') {
     return {
       showBanner: () => {},
+      showGpcBanner: () => {},
       openDialog: () => {},
       closeDialog: () => {},
       updateFromState: () => {},
@@ -513,7 +514,7 @@ export function renderConsentUI(options, hooks) {
 
   function setPrivacySignalHonored(honored) {
     privacySignalHonored = Boolean(honored);
-    container.classList.toggle('privacy-signal-honored', privacySignalHonored);
+    container.classList.toggle('gpc-honored', privacySignalHonored);
     if (dialogPrivacySignalNotice) {
       dialogPrivacySignalNotice.hidden = !privacySignalHonored;
     }
@@ -569,6 +570,9 @@ export function renderConsentUI(options, hooks) {
   function dismissGpcBanner() {
     pendingGpcBannerVisible = false;
     gpcBanner.hidden = true;
+    if (hooks && typeof hooks.onDismissGpc === 'function') {
+      hooks.onDismissGpc();
+    }
   }
 
   container.addEventListener('click', (event) => {

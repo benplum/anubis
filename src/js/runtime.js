@@ -43,6 +43,17 @@ function isValidStoredConsent(stored, version) {
   );
 }
 
+function isGpcNoticeDismissed(stored) {
+  return Boolean(
+    stored
+    && typeof stored === 'object'
+    && (
+      stored.gpcNoticeDismissed === true
+      || (stored.meta && stored.meta.gpcNoticeDismissed === true)
+    )
+  );
+}
+
 function buildConsentEventDetail(options, state) {
   return {
     state,
@@ -211,6 +222,7 @@ export async function initAnubis(rawOptions = {}) {
   let hasStoredConsent = validStored;
   let privacySignalApplied = false;
   let privacySignalType = '';
+  let gpcNoticeDismissed = isGpcNoticeDismissed(stored);
 
   let state = { ...options.defaultConsentInternal };
   if (validStored) {
@@ -236,6 +248,7 @@ export async function initAnubis(rawOptions = {}) {
         {
           version: options.version,
           grants: state,
+          gpcNoticeDismissed,
           updatedAt: Date.now(),
         },
         options,
@@ -295,7 +308,23 @@ export async function initAnubis(rawOptions = {}) {
     });
   }
 
-  const ui = renderConsentUI(options, { onAction: handleAction });
+  function dismissGpcNotice() {
+    if (!privacySignalApplied || gpcNoticeDismissed) {
+      return;
+    }
+    gpcNoticeDismissed = true;
+    saveStoredConsent(
+      {
+        version: options.version,
+        grants: state,
+        gpcNoticeDismissed,
+        updatedAt: Date.now(),
+      },
+      options,
+    );
+  }
+
+  const ui = renderConsentUI(options, { onAction: handleAction, onDismissGpc: dismissGpcNotice });
 
   function commitState(nextState, source) {
     const previous = state;
@@ -307,10 +336,13 @@ export async function initAnubis(rawOptions = {}) {
       {
         version: options.version,
         grants: state,
+        gpcNoticeDismissed: false,
         updatedAt: Date.now(),
       },
       options,
     );
+
+    gpcNoticeDismissed = false;
 
     const googleState = toGoogleConsent(state, options.consentMapping);
     applyUpdatedConsent(googleState, options);
@@ -355,6 +387,7 @@ export async function initAnubis(rawOptions = {}) {
     hasStoredConsent = false;
     privacySignalApplied = false;
     privacySignalType = '';
+    gpcNoticeDismissed = false;
     state = { ...options.defaultConsentInternal };
 
     const resetPrivacySignal = options.respectPrivacySignal ? detectPrivacySignal() : { enabled: false, type: '' };
@@ -368,6 +401,7 @@ export async function initAnubis(rawOptions = {}) {
         {
           version: options.version,
           grants: state,
+          gpcNoticeDismissed,
           updatedAt: Date.now(),
         },
         options,
@@ -380,7 +414,7 @@ export async function initAnubis(rawOptions = {}) {
     ui.updateFromState(state);
     ui.showBanner(!hasStoredConsent);
     if (ui && typeof ui.showGpcBanner === 'function') {
-      ui.showGpcBanner(privacySignalApplied);
+      ui.showGpcBanner(privacySignalApplied && !gpcNoticeDismissed);
     }
     if (ui && typeof ui.setPrivacySignalHonored === 'function') {
       ui.setPrivacySignalHonored(privacySignalApplied);
@@ -400,7 +434,7 @@ export async function initAnubis(rawOptions = {}) {
   ui.updateFromState(state);
   ui.showBanner(!hasStoredConsent);
   if (ui && typeof ui.showGpcBanner === 'function') {
-    ui.showGpcBanner(privacySignalApplied);
+    ui.showGpcBanner(privacySignalApplied && !gpcNoticeDismissed);
   }
   if (ui && typeof ui.setPrivacySignalHonored === 'function') {
     ui.setPrivacySignalHonored(privacySignalApplied);

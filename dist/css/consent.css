@@ -156,9 +156,9 @@ button {
   border-top: 1px solid var(--border);
 }
 
-.privacy-signal-honored .dialog .desc-consent,
-.privacy-signal-honored .dialog .cats,
-.privacy-signal-honored .dialog .footer {
+.gpc-honored .dialog .desc-consent,
+.gpc-honored .dialog .cats,
+.gpc-honored .dialog .footer {
   display: none;
 }
 
