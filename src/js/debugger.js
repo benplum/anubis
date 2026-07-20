@@ -156,6 +156,46 @@
     return new Date().toLocaleTimeString();
   }
 
+  function normalizeDoNotTrackValue(value) {
+    if (value === null || typeof value === 'undefined') {
+      return '';
+    }
+    return String(value).trim().toLowerCase();
+  }
+
+  function readPrivacySignalStatus() {
+    const gpcCandidates = [
+      typeof navigator !== 'undefined' ? navigator.globalPrivacyControl : null,
+      typeof window !== 'undefined' ? window.globalPrivacyControl : null,
+    ];
+    const gpcRaw = gpcCandidates.find((candidate) => candidate !== null && typeof candidate !== 'undefined');
+    const gpcEnabled = gpcCandidates.some((candidate) => candidate === true);
+
+    const dntCandidates = [
+      typeof navigator !== 'undefined' ? navigator.doNotTrack : null,
+      typeof window !== 'undefined' ? window.doNotTrack : null,
+      typeof navigator !== 'undefined' ? navigator.msDoNotTrack : null,
+    ];
+    const dntRaw = dntCandidates.find((candidate) => candidate !== null && typeof candidate !== 'undefined');
+    const dntEnabled = dntCandidates.some((candidate) => {
+      const normalized = normalizeDoNotTrackValue(candidate);
+      return normalized === '1' || normalized === 'yes';
+    });
+
+    return {
+      gpc: {
+        enabled: gpcEnabled,
+        label: gpcEnabled ? 'enabled' : 'disabled',
+        raw: typeof gpcRaw === 'undefined' ? '' : String(gpcRaw),
+      },
+      dnt: {
+        enabled: dntEnabled,
+        label: dntEnabled ? 'enabled' : 'disabled',
+        raw: typeof dntRaw === 'undefined' ? '' : String(dntRaw),
+      },
+    };
+  }
+
   function buildPanel() {
     const host = document.createElement('div');
     host.className = 'debug-host';
@@ -214,18 +254,30 @@
 
     function renderTokens(state) {
       const entries = Object.entries(state || {});
-      if (!entries.length) {
-        tokensNode.innerHTML = '<div class="debug-state-row"><span class="debug-state-key">No consent state yet</span></div>';
-        return;
-      }
+      const signalStatus = readPrivacySignalStatus();
 
-      tokensNode.innerHTML = entries
+      const consentRows = entries.length
+        ? entries
         .map(([key, value]) => {
           const granted = value === 'granted';
           const klass = granted ? 'debug-token--granted' : 'debug-token--denied';
           return `<div class="debug-state-row"><span class="debug-state-key">${key}</span><span class="debug-token ${klass}">${granted ? 'granted' : 'denied'}</span></div>`;
         })
+        .join('')
+        : '<div class="debug-state-row"><span class="debug-state-key">No consent state yet</span></div>';
+
+      const signalRows = [
+        { key: 'GPC', value: signalStatus.gpc },
+        { key: 'DNT', value: signalStatus.dnt },
+      ]
+        .map((entry) => {
+          const klass = entry.value.enabled ? 'debug-token--granted' : 'debug-token--denied';
+          const rawSuffix = entry.value.raw ? ` (${entry.value.raw})` : '';
+          return `<div class="debug-state-row"><span class="debug-state-key">${entry.key}</span><span class="debug-token ${klass}">${entry.value.label}${rawSuffix}</span></div>`;
+        })
         .join('');
+
+      tokensNode.innerHTML = `${consentRows}${signalRows}`;
     }
 
     function renderLog(targetNode, entries) {

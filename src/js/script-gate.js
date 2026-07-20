@@ -31,6 +31,15 @@ function describeScript(script) {
   };
 }
 
+function getDeclaredExecutableType(script) {
+  const declared = script.getAttribute('data-type');
+  if (typeof declared !== 'string') {
+    return '';
+  }
+  const normalized = declared.trim();
+  return normalized;
+}
+
 export function createScriptGate(options, isCategoryAllowed) {
   if (typeof document === 'undefined') {
     return { refresh: () => {}, disconnect: () => {} };
@@ -51,9 +60,6 @@ export function createScriptGate(options, isCategoryAllowed) {
     const wasBlocked = script.getAttribute('data-blocked') === '1';
 
     if (currentType === 'text/plain') {
-      if (!script.getAttribute('data-type')) {
-        script.setAttribute('data-type', 'text/javascript');
-      }
       script.setAttribute('data-managed', '1');
       script.setAttribute('data-blocked', '1');
       if (!wasBlocked) {
@@ -82,6 +88,18 @@ export function createScriptGate(options, isCategoryAllowed) {
       return;
     }
 
+    const declaredType = getDeclaredExecutableType(script);
+    const hasSrc = Boolean(script.getAttribute('src'));
+    const activateType = declaredType || (hasSrc ? 'text/javascript' : '');
+
+    if (!activateType) {
+      emitConsentEvent('consent:script-skipped', {
+        reason: 'missing-data-type',
+        script: describeScript(script),
+      });
+      return;
+    }
+
     const key = scriptFingerprint(script);
     if (executed.has(key)) {
       return;
@@ -89,7 +107,7 @@ export function createScriptGate(options, isCategoryAllowed) {
 
     const replacement = document.createElement('script');
     copyAttributes(script, replacement);
-    replacement.type = script.getAttribute('data-type') || 'text/javascript';
+    replacement.type = activateType;
     if (script.textContent) {
       replacement.textContent = script.textContent;
     }

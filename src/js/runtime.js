@@ -43,17 +43,6 @@ function isValidStoredConsent(stored, version) {
   );
 }
 
-function isGpcNoticeDismissed(stored) {
-  return Boolean(
-    stored
-    && typeof stored === 'object'
-    && (
-      stored.gpcNoticeDismissed === true
-      || (stored.meta && stored.meta.gpcNoticeDismissed === true)
-    )
-  );
-}
-
 function buildConsentEventDetail(options, state) {
   return {
     state,
@@ -222,7 +211,6 @@ export async function initAnubis(rawOptions = {}) {
   let hasStoredConsent = validStored;
   let privacySignalApplied = false;
   let privacySignalType = '';
-  let gpcNoticeDismissed = isGpcNoticeDismissed(stored);
 
   let state = { ...options.defaultConsentInternal };
   if (validStored) {
@@ -235,24 +223,11 @@ export async function initAnubis(rawOptions = {}) {
 
   const detectedPrivacySignal = options.respectPrivacySignal ? detectPrivacySignal() : { enabled: false, type: '' };
   if (detectedPrivacySignal.enabled) {
-    const signalDeniedState = createAllState(options, 'denied');
-    const shouldPersistSignalState = !hasStoredConsent || !statesEqual(state, signalDeniedState);
-
-    state = signalDeniedState;
-    hasStoredConsent = true;
     privacySignalApplied = true;
     privacySignalType = detectedPrivacySignal.type;
 
-    if (shouldPersistSignalState) {
-      saveStoredConsent(
-        {
-          version: options.version,
-          grants: state,
-          gpcNoticeDismissed,
-          updatedAt: Date.now(),
-        },
-        options,
-      );
+    if (!hasStoredConsent) {
+      state = createAllState(options, 'denied');
     }
   }
 
@@ -269,16 +244,6 @@ export async function initAnubis(rawOptions = {}) {
 
   const scriptGate = createScriptGate(options, (category) => isCategoryAllowed(state, options, category));
   function handleAction(action, meta = {}) {
-    if (privacySignalApplied && (action === 'accept' || action === 'reject' || action === 'save')) {
-      emitConsentEvent('consent:action', {
-        action,
-        source: meta.source || 'ui',
-        blocked: 'privacy-signal',
-        state,
-      });
-      return;
-    }
-
     switch (action) {
       case 'open':
         ui.openDialog();
@@ -308,41 +273,77 @@ export async function initAnubis(rawOptions = {}) {
     });
   }
 
-  function dismissGpcNotice() {
-    if (!privacySignalApplied || gpcNoticeDismissed) {
-      return;
-    }
-    gpcNoticeDismissed = true;
-    saveStoredConsent(
-      {
-        version: options.version,
-        grants: state,
-        gpcNoticeDismissed,
-        updatedAt: Date.now(),
-      },
-      options,
-    );
-  }
+  const ui = renderConsentUI(options, { onAction: handleAction });
 
-  const ui = renderConsentUI(options, { onAction: handleAction, onDismissGpc: dismissGpcNotice });
+  function applyDetectedPrivacySignal(detectedSignal, source, emitUpdatedEvent = true) {
+    if (!detectedSignal || !detectedSignal.enabled || privacySignalApplied) {
+      return false;
+    }
+
+    privacySignalApplied = true;
+    privacySignalType = detectedSignal.type;
+
+    if (hasStoredConsent) {
+      ui.showBanner(true);
+      if (ui && typeof ui.setPrivacySignalHonored === 'function') {
+        ui.setPrivacySignalHonored(privacySignalApplied);
+      }
+
+      if (emitUpdatedEvent) {
+        emitConsentEvent('consent:updated', {
+          source,
+          ...buildConsentEventDetail(options, state),
+          privacySignalApplied,
+          privacySignalType,
+        });
+      }
+
+      return true;
+    }
+
+    const signalDeniedState = createAllState(options, 'denied');
+    const changed = !statesEqual(state, signalDeniedState);
+
+    state = signalDeniedState;
+
+    const googleState = toGoogleConsent(state, options.consentMapping);
+    applyUpdatedConsent(googleState, options);
+    scriptGate.refresh();
+    ui.updateFromState(state);
+    ui.showBanner(true);
+    if (ui && typeof ui.setPrivacySignalHonored === 'function') {
+      ui.setPrivacySignalHonored(privacySignalApplied);
+    }
+
+    if (emitUpdatedEvent && changed) {
+      emitConsentEvent('consent:updated', {
+        source,
+        googleState,
+        ...buildConsentEventDetail(options, state),
+        privacySignalApplied,
+        privacySignalType,
+      });
+    }
+
+    return true;
+  }
 
   function commitState(nextState, source) {
     const previous = state;
     const revoked = hasGrantedToDeniedChange(previous, nextState);
 
     state = enforceRequiredGranted(nextState, options.categories, options.requiredCategories);
+    privacySignalApplied = false;
+    privacySignalType = '';
 
     saveStoredConsent(
       {
         version: options.version,
         grants: state,
-        gpcNoticeDismissed: false,
         updatedAt: Date.now(),
       },
       options,
     );
-
-    gpcNoticeDismissed = false;
 
     const googleState = toGoogleConsent(state, options.consentMapping);
     applyUpdatedConsent(googleState, options);
@@ -369,16 +370,10 @@ export async function initAnubis(rawOptions = {}) {
   }
 
   function acceptAll() {
-    if (privacySignalApplied) {
-      return;
-    }
     commitState(createAllState(options, 'granted'), 'accept');
   }
 
   function rejectAll() {
-    if (privacySignalApplied) {
-      return;
-    }
     commitState(createAllState(options, 'denied'), 'reject');
   }
 
@@ -387,35 +382,20 @@ export async function initAnubis(rawOptions = {}) {
     hasStoredConsent = false;
     privacySignalApplied = false;
     privacySignalType = '';
-    gpcNoticeDismissed = false;
     state = { ...options.defaultConsentInternal };
 
     const resetPrivacySignal = options.respectPrivacySignal ? detectPrivacySignal() : { enabled: false, type: '' };
     if (resetPrivacySignal.enabled) {
       state = createAllState(options, 'denied');
-      hasStoredConsent = true;
       privacySignalApplied = true;
       privacySignalType = resetPrivacySignal.type;
-
-      saveStoredConsent(
-        {
-          version: options.version,
-          grants: state,
-          gpcNoticeDismissed,
-          updatedAt: Date.now(),
-        },
-        options,
-      );
     }
 
     const resetGoogleState = toGoogleConsent(state, options.consentMapping);
     applyUpdatedConsent(resetGoogleState, options);
     scriptGate.refresh();
     ui.updateFromState(state);
-    ui.showBanner(!hasStoredConsent);
-    if (ui && typeof ui.showGpcBanner === 'function') {
-      ui.showGpcBanner(privacySignalApplied && !gpcNoticeDismissed);
-    }
+    ui.showBanner(!hasStoredConsent || privacySignalApplied);
     if (ui && typeof ui.setPrivacySignalHonored === 'function') {
       ui.setPrivacySignalHonored(privacySignalApplied);
     }
@@ -431,14 +411,60 @@ export async function initAnubis(rawOptions = {}) {
     handleAction(action, { source: 'trigger' });
   });
 
-  ui.updateFromState(state);
-  ui.showBanner(!hasStoredConsent);
-  if (ui && typeof ui.showGpcBanner === 'function') {
-    ui.showGpcBanner(privacySignalApplied && !gpcNoticeDismissed);
+  let stopPrivacySignalWatch = () => {};
+
+  function startPrivacySignalWatch() {
+    if (!options.respectPrivacySignal || privacySignalApplied) {
+      return () => {};
+    }
+
+    let stopped = false;
+    const timerIds = [];
+
+    const runCheck = (source) => {
+      if (stopped || privacySignalApplied) {
+        return;
+      }
+      const signal = detectPrivacySignal();
+      applyDetectedPrivacySignal(signal, source);
+    };
+
+    // Catch async/plugin-populated GPC values without delaying first paint.
+    [1, 10, 50, 150, 300, 600, 1000, 2000].forEach((delayMs) => {
+      timerIds.push(setTimeout(() => {
+        runCheck(`privacy-signal-watch-${delayMs}ms`);
+      }, delayMs));
+    });
+
+    const onVisibility = () => runCheck('privacy-signal-watch-visibilitychange');
+    const onPageShow = () => runCheck('privacy-signal-watch-pageshow');
+
+    if (typeof document !== 'undefined' && document.addEventListener) {
+      document.addEventListener('visibilitychange', onVisibility);
+    }
+    if (typeof window !== 'undefined' && window.addEventListener) {
+      window.addEventListener('pageshow', onPageShow);
+    }
+
+    return () => {
+      stopped = true;
+      timerIds.forEach((timerId) => clearTimeout(timerId));
+      if (typeof document !== 'undefined' && document.removeEventListener) {
+        document.removeEventListener('visibilitychange', onVisibility);
+      }
+      if (typeof window !== 'undefined' && window.removeEventListener) {
+        window.removeEventListener('pageshow', onPageShow);
+      }
+    };
   }
+
+  ui.updateFromState(state);
+  ui.showBanner(!hasStoredConsent || privacySignalApplied);
   if (ui && typeof ui.setPrivacySignalHonored === 'function') {
     ui.setPrivacySignalHonored(privacySignalApplied);
   }
+
+  stopPrivacySignalWatch = startPrivacySignalWatch();
 
   emitConsentEvent('consent:ready', {
     hasStoredConsent: Boolean(hasStoredConsent),
@@ -461,12 +487,10 @@ export async function initAnubis(rawOptions = {}) {
     rejectAll,
     reset,
     saveChoices: (choices) => {
-      if (privacySignalApplied) {
-        return;
-      }
       commitState(applyCategoryChoices(state, choices || {}, options), 'api');
     },
     destroy: () => {
+      stopPrivacySignalWatch();
       unbindTriggers();
       scriptGate.disconnect();
       if (ui && typeof ui.destroy === 'function') {

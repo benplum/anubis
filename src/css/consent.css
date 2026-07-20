@@ -54,13 +54,6 @@ button {
   max-width: 460px;
 }
 
-.banner-gpc:not([hidden]) {
-  display: flex;
-  gap: var(--space-lg);
-  align-items: center;
-  width: fit-content;
-}
-
 .title {
   margin: 0 0 var(--space-sm);
 }
@@ -73,8 +66,10 @@ button {
   color: var(--fg);
 }
 
-.banner-gpc .desc {
-  margin: 0;
+.desc-gpc {
+  border: 1px solid;
+  margin: 0 0 var(--space);
+  padding: var(--space);
 }
 
 .actions {
@@ -134,12 +129,6 @@ button {
   margin-bottom: var(--space-lg);
 }
 
-.dialog .desc-gpc {
-  border: 1px solid;
-  margin: 0;
-  padding: var(--space);
-}
-
 .form {
   margin: 0;
 }
@@ -154,12 +143,6 @@ button {
 
 .footer {
   border-top: 1px solid var(--border);
-}
-
-.gpc-honored .dialog .desc-consent,
-.gpc-honored .dialog .cats,
-.gpc-honored .dialog .footer {
-  display: none;
 }
 
 .dialog .title {

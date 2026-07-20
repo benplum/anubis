@@ -22,7 +22,7 @@
   color: var(--primary);
 }
 
-.dialog .desc-gpc {
+.desc-gpc {
   background-color: var(--primary);
   border-color: var(--primary);
   border-radius: var(--radius-sm);

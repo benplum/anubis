@@ -322,7 +322,6 @@ export function renderConsentUI(options, hooks) {
   if (typeof document === 'undefined') {
     return {
       showBanner: () => {},
-      showGpcBanner: () => {},
       openDialog: () => {},
       closeDialog: () => {},
       updateFromState: () => {},
@@ -348,7 +347,7 @@ export function renderConsentUI(options, hooks) {
     prefix: `consent-${idSeed}`,
     bannerTitle: `consent-banner-title-${idSeed}`,
     bannerDescription: `consent-banner-description-${idSeed}`,
-    gpcNoticeDescription: `consent-gpc-description-${idSeed}`,
+    bannerGpcNoticeDescription: `consent-banner-gpc-description-${idSeed}`,
     dialogNoticeDescription: `consent-dialog-notice-${idSeed}`,
     dialogTitle: `consent-title-${idSeed}`,
     dialogDescription: `consent-desc-${idSeed}`,
@@ -359,26 +358,18 @@ export function renderConsentUI(options, hooks) {
   const bannerTitleHtml = htmlString(strings.bannerTitle || 'Privacy choices');
   const bannerDescriptionHtml = htmlString(strings.bannerDescription || '');
   const gpcNoticeHtml = htmlString(strings.gpcNotice || strings.doNotTrackNotice || 'Opt-Out Signal Honored.');
-  const gpcDismissLabel = escapeHtml(getStringByKey(strings, 'buttonCloseNotice', getStringByKey(strings, 'buttonCancel', 'Dismiss')));
   const dialogTitleHtml = htmlString(strings.dialogTitle || 'Consent preferences');
   const dialogDescriptionHtml = htmlString(strings.dialogDescription || '');
 
   container.innerHTML = `<section class="banner banner-main" hidden role="region" aria-labelledby="${ids.bannerTitle}"${bannerDescribedBy}>
   <div class="content">
     <h2 class="title" id="${ids.bannerTitle}">${bannerTitleHtml}</h2>
+    <p class="desc desc-gpc desc-gpc-banner" id="${ids.bannerGpcNoticeDescription}" hidden>${gpcNoticeHtml}</p>
     ${strings.bannerDescription ? `<p class="desc" id="${ids.bannerDescription}">${bannerDescriptionHtml}</p>` : ''}
     ${policyLinkMarkup(strings, options.links || [])}
   </div>
   <div class="actions">
     ${bannerActionsMarkup(options, strings)}
-  </div>
-</section>
-<section class="banner banner-gpc" hidden role="status" aria-live="polite" aria-atomic="true" aria-describedby="${ids.gpcNoticeDescription}">
-  <div class="content">
-    <p class="desc" id="${ids.gpcNoticeDescription}">${gpcNoticeHtml}</p>
-  </div>
-  <div class="actions">
-    <button type="button" class="btn btn-icon" data-dismiss-gpc="1"><span class="sr">${gpcDismissLabel}</span></button>
   </div>
 </section>
 <dialog class="dialog" aria-labelledby="${ids.dialogTitle}"${dialogDescribedBy} aria-modal="true">
@@ -407,9 +398,9 @@ export function renderConsentUI(options, hooks) {
   shadowRoot.appendChild(container);
   document.body.prepend(host);
 
-  const banner = container.querySelector('.banner');
-  const gpcBanner = container.querySelector('.banner-gpc');
-  const dialogPrivacySignalNotice = container.querySelector('.desc-gpc');
+  const banner = container.querySelector('.banner-main');
+  const bannerPrivacySignalNotice = container.querySelector('.desc-gpc-banner');
+  const dialogPrivacySignalNotice = container.querySelector('.dialog .desc-gpc');
   const dialog = container.querySelector('.dialog');
   const form = container.querySelector('.form');
   const toggleMap = {};
@@ -435,9 +426,7 @@ export function renderConsentUI(options, hooks) {
 
   let lastFocus = null;
   let stylesReady = false;
-  let privacySignalHonored = false;
   let pendingBannerVisible = null;
-  let pendingGpcBannerVisible = null;
 
   function armStylesWait() {
     stylesReady = false;
@@ -446,10 +435,6 @@ export function renderConsentUI(options, hooks) {
       if (pendingBannerVisible !== null) {
         banner.hidden = !pendingBannerVisible;
         pendingBannerVisible = null;
-      }
-      if (pendingGpcBannerVisible !== null) {
-        gpcBanner.hidden = !pendingGpcBannerVisible;
-        pendingGpcBannerVisible = null;
       }
     });
   }
@@ -502,40 +487,20 @@ export function renderConsentUI(options, hooks) {
       }
       const granted = categoryGranted(name, state, options.categories);
       toggle.checked = granted;
-      toggle.disabled = privacySignalHonored;
-      if (privacySignalHonored) {
-        toggle.setAttribute('aria-disabled', 'true');
-      } else {
-        toggle.removeAttribute('aria-disabled');
-      }
+      toggle.disabled = false;
+      toggle.removeAttribute('aria-disabled');
       setCategoryStateNote(name, granted);
     });
   }
 
   function setPrivacySignalHonored(honored) {
-    privacySignalHonored = Boolean(honored);
-    container.classList.toggle('gpc-honored', privacySignalHonored);
+    const privacySignalHonored = Boolean(honored);
+    if (bannerPrivacySignalNotice) {
+      bannerPrivacySignalNotice.hidden = !privacySignalHonored;
+    }
     if (dialogPrivacySignalNotice) {
       dialogPrivacySignalNotice.hidden = !privacySignalHonored;
     }
-    Object.keys(toggleMap).forEach((name) => {
-      const toggle = toggleMap[name];
-      if (!toggle) {
-        return;
-      }
-      if (isRequiredCategory(options, name)) {
-        toggle.disabled = true;
-        toggle.setAttribute('aria-disabled', 'true');
-        toggle.checked = true;
-        return;
-      }
-      toggle.disabled = privacySignalHonored;
-      if (privacySignalHonored) {
-        toggle.setAttribute('aria-disabled', 'true');
-      } else {
-        toggle.removeAttribute('aria-disabled');
-      }
-    });
   }
 
   Object.keys(toggleMap).forEach((name) => {
@@ -558,33 +523,7 @@ export function renderConsentUI(options, hooks) {
     banner.hidden = !visible;
   }
 
-  function showGpcBanner(visible) {
-    if (!stylesReady) {
-      pendingGpcBannerVisible = Boolean(visible);
-      gpcBanner.hidden = true;
-      return;
-    }
-    gpcBanner.hidden = !visible;
-  }
-
-  function dismissGpcBanner() {
-    pendingGpcBannerVisible = false;
-    gpcBanner.hidden = true;
-    if (hooks && typeof hooks.onDismissGpc === 'function') {
-      hooks.onDismissGpc();
-    }
-  }
-
   container.addEventListener('click', (event) => {
-    const dismissNode = event.target && event.target.closest
-      ? event.target.closest('[data-dismiss-gpc="1"]')
-      : null;
-    if (dismissNode && container.contains(dismissNode)) {
-      event.preventDefault();
-      dismissGpcBanner();
-      return;
-    }
-
     const actionNode = event.target && event.target.closest
       ? event.target.closest('[data-consent]')
       : null;
@@ -633,7 +572,6 @@ export function renderConsentUI(options, hooks) {
 
   return {
     showBanner,
-    showGpcBanner,
     openDialog,
     closeDialog,
     updateFromState,
@@ -641,9 +579,7 @@ export function renderConsentUI(options, hooks) {
     readCategoryChoices,
     refreshStyles: () => {
       pendingBannerVisible = !banner.hidden;
-      pendingGpcBannerVisible = !gpcBanner.hidden;
       banner.hidden = true;
-      gpcBanner.hidden = true;
       refreshShadowStyles(shadowRoot, options.styles);
       armStylesWait();
     },

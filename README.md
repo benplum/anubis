@@ -54,6 +54,8 @@ Load the library first on page, before tag scripts that should be consent-gated.
 </script>
 ```
 
+For inert scripts (`type="text/plain"`), set `data-type` to the executable type you want restored on activation (usually `text/javascript`). Anubis will not implicitly promote `text/plain` scripts to `text/javascript` when `data-type` is missing.
+
 `dist/js/consent.bundled.js` auto-injects the base structural CSS.
 
 Use `styles` as the single customization input for Shadow Root styling:
@@ -353,6 +355,22 @@ Demo pages (`index`, `preview`, `configurator`) use Bulma CSS from CDN for basel
 - Third-party and HttpOnly cookies cannot be reliably cleared by client JS.
 
 ## Changelog
+
+### v1.2.0
+
+- Refined privacy-signal UX to use a single main banner:
+  - Removed the separate GPC/DNT notice banner.
+  - Shows the `gpcNotice` message inline in the normal banner.
+  - Keeps the same notice visible in the preferences dialog.
+- Updated privacy-signal behavior to preserve user choice controls:
+  - Users can still open preferences and submit consent choices while a signal is active.
+  - Signal-based defaults are applied in memory and are no longer auto-persisted as stored consent.
+- Improved late privacy-signal detection consistency:
+  - Added non-blocking watcher checks across early timeouts and page lifecycle events (`visibilitychange`, `pageshow`).
+  - Banner renders immediately, then updates notice/state when delayed GPC/DNT becomes available.
+- Enhanced debug helper `State` tab:
+  - Added explicit `GPC` and `DNT` status rows, including raw values when available.
+
 
 ### v1.1.1
 

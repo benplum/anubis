@@ -6,6 +6,28 @@
     <title>Consent Demo</title>
     <link rel="stylesheet" href="/demo/css/main.css" />
     <script>
+      (function() {
+          const originalValue = navigator.globalPrivacyControl;
+
+          Object.defineProperty(navigator, 'globalPrivacyControl', {
+              get: function() {
+                  console.log('GPC property accessed. Current value:', originalValue);
+                  return originalValue;
+              },
+              set: function(val) {
+                  console.log('GPC property changed to:', val);
+                  // You can trigger your CMP logic here
+                  triggerCMPLogic(val);
+              },
+              configurable: true
+          });
+      })();
+      
+      // Object.defineProperty(navigator, 'globalPrivacyControl', {
+      //     value: true,
+      //     configurable: true
+      // });
+      
       const preset = new URLSearchParams(window.location.search).get('preset') || 'default';
       const allowedThemes = new Set(['none', 'light', 'dark']);
       const requestedTheme = new URLSearchParams(window.location.search).get('theme');
@@ -231,10 +253,16 @@
       ];
       
       console.log(window.ConsentOptions);
+      
+      console.log(navigator.globalPrivacyControl);
     </script>
     <script src="../dist/js/consent.bundled.js"></script>
     <script src="../dist/js/debugger.js"></script>
     
+    
+    <script type="text/plain" data-consent-category="marketing">
+      console.log('Test');
+    </script>
     
     <script type="text/plain" data-type="text/javascript" data-consent-category="analytics">
       console.log('[demo] inline analytics script executed');
@@ -439,5 +467,13 @@
     <script data-consent-category="analytics" src="/demo/js/analytics.js"></script>
     <script data-consent-category="marketing" src="/demo/js/marketing.js"></script>
     <script data-consent-category="preferences" src="/demo/js/preferences.js"></script>
+    
+    <script>
+      console.log(navigator.globalPrivacyControl);
+      
+      setTimeout(function() {
+        console.log(navigator.globalPrivacyControl);
+      }, 1);
+    </script>
   </body>
 </html>
