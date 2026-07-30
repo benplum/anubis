@@ -315,6 +315,20 @@ Include this only in development/debug sessions:
 <script src="/dist/js/debugger.js"></script>
 ```
 
+Optional: set debugger mode before loading `debugger.js`.
+
+```html
+<script>
+  window.AnubisDebugOptions = { mode: 'console' };
+</script>
+<script src="/dist/js/debugger.js"></script>
+```
+
+Modes:
+
+- `panel` (default): floating UI panel
+- `console`: logs live consent events, state snapshots, `dataLayer.push`, and `gtag()` activity to the browser console
+
 The helper shows a floating bottom-right panel with:
 
 - `State` tab: current internal consent state

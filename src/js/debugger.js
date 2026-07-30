@@ -7,6 +7,18 @@
     return;
   }
 
+  const DEBUG_PREFIX = '[Anubis Debug]';
+
+  function getDebugOptions() {
+    const input = window.AnubisDebugOptions && typeof window.AnubisDebugOptions === 'object'
+      ? window.AnubisDebugOptions
+      : {};
+    const requestedMode = typeof input.mode === 'string' ? input.mode.trim().toLowerCase() : '';
+    return {
+      mode: requestedMode === 'console' ? 'console' : 'panel',
+    };
+  }
+
   function safeStringify(value) {
     try {
       return JSON.stringify(value, null, 2);
@@ -240,14 +252,18 @@
   }
 
   function init() {
-    const { panel, host } = buildPanel();
-    const tokensNode = panel.querySelector('[data-anubis-debug="tokens"]');
-    const consentLogNode = panel.querySelector('[data-anubis-debug="consent-log"]');
-    const dataLayerLogNode = panel.querySelector('[data-anubis-debug="datalayer-log"]');
-    const stateWrap = panel.querySelector('[data-anubis-debug="state-wrap"]');
-    const toggleBtn = panel.querySelector('[data-anubis-debug="toggle"]');
-    const clearBtn = panel.querySelector('[data-anubis-debug="clear"]');
-    const tabs = panel.querySelectorAll('[data-anubis-debug-tab]');
+    const debugOptions = getDebugOptions();
+    const useConsoleMode = debugOptions.mode === 'console';
+    const panelParts = useConsoleMode ? null : buildPanel();
+    const panel = panelParts ? panelParts.panel : null;
+    const host = panelParts ? panelParts.host : null;
+    const tokensNode = panel ? panel.querySelector('[data-anubis-debug="tokens"]') : null;
+    const consentLogNode = panel ? panel.querySelector('[data-anubis-debug="consent-log"]') : null;
+    const dataLayerLogNode = panel ? panel.querySelector('[data-anubis-debug="datalayer-log"]') : null;
+    const stateWrap = panel ? panel.querySelector('[data-anubis-debug="state-wrap"]') : null;
+    const toggleBtn = panel ? panel.querySelector('[data-anubis-debug="toggle"]') : null;
+    const clearBtn = panel ? panel.querySelector('[data-anubis-debug="clear"]') : null;
+    const tabs = panel ? panel.querySelectorAll('[data-anubis-debug-tab]') : [];
     const consentLogs = [];
     const dataLayerLogs = [];
     const consentEventUnsubscribers = [];
@@ -277,10 +293,23 @@
         })
         .join('');
 
-      tokensNode.innerHTML = `${consentRows}${signalRows}`;
+      if (tokensNode) {
+        tokensNode.innerHTML = `${consentRows}${signalRows}`;
+      }
+
+      return {
+        consent: state || {},
+        signals: {
+          gpc: signalStatus.gpc,
+          dnt: signalStatus.dnt,
+        },
+      };
     }
 
     function renderLog(targetNode, entries) {
+      if (!targetNode) {
+        return;
+      }
       targetNode.innerHTML = entries
         .map((entry) => {
           return `<article class="debug-log-item">
@@ -292,8 +321,9 @@
     }
 
     function pushLog(logs, maxEntries, targetNode, name, detail) {
+      const time = nowLabel();
       logs.unshift({
-        time: nowLabel(),
+        time,
         name,
         data: safeStringify(detail || {}),
       });
@@ -301,6 +331,10 @@
         logs.length = maxEntries;
       }
       renderLog(targetNode, logs);
+
+      if (useConsoleMode) {
+        console.log(`${DEBUG_PREFIX} ${time} ${name}`, detail || {});
+      }
     }
 
     function pushConsentLog(name, detail) {
@@ -312,6 +346,9 @@
     }
 
     function setTab(tabName) {
+      if (!panel) {
+        return;
+      }
       const showState = tabName === 'state';
       const showInternal = tabName === 'internal';
       const showDataLayer = tabName === 'datalayer';
@@ -325,24 +362,29 @@
 
     function updateFromDetail(detail) {
       if (detail && detail.state) {
-        renderTokens(detail.state);
-        return;
+        return renderTokens(detail.state);
       }
       if (window.Anubis && typeof window.Anubis.getState === 'function') {
-        renderTokens(window.Anubis.getState());
+        return renderTokens(window.Anubis.getState());
       }
+      return renderTokens({});
     }
 
-    tabs.forEach((tab) => {
-      tab.addEventListener('click', () => {
-        setTab(tab.getAttribute('data-anubis-debug-tab'));
+    if (panel) {
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          setTab(tab.getAttribute('data-anubis-debug-tab'));
+        });
       });
-    });
+    }
 
     function bindConsentLogEvent(name) {
       const handler = (event) => {
         pushConsentLog(name, event.detail);
-        updateFromDetail(event.detail);
+        const tokenSnapshot = updateFromDetail(event.detail);
+        if (useConsoleMode && tokenSnapshot) {
+          console.log(`${DEBUG_PREFIX} state`, tokenSnapshot);
+        }
       };
       document.addEventListener(name, handler);
       return () => document.removeEventListener(name, handler);
@@ -449,33 +491,47 @@
 
     if (window.Anubis && typeof window.Anubis.getState === 'function') {
       const state = window.Anubis.getState();
-      renderTokens(state);
+      const tokenSnapshot = renderTokens(state);
       pushConsentLog('debug:init', { state });
+      if (useConsoleMode) {
+        console.log(`${DEBUG_PREFIX} mode`, { mode: 'console' });
+        console.log(`${DEBUG_PREFIX} state`, tokenSnapshot);
+      }
     } else {
-      renderTokens({});
+      const tokenSnapshot = renderTokens({});
       pushConsentLog('debug:init', { waitingFor: 'consent:ready' });
+      if (useConsoleMode) {
+        console.log(`${DEBUG_PREFIX} mode`, { mode: 'console' });
+        console.log(`${DEBUG_PREFIX} state`, tokenSnapshot);
+      }
     }
 
     setTab('state');
 
-    toggleBtn.addEventListener('click', () => {
-      panel.classList.toggle('debug--collapsed');
-      toggleBtn.textContent = panel.classList.contains('debug--collapsed') ? 'Expand' : 'Collapse';
-    });
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        panel.classList.toggle('debug--collapsed');
+        toggleBtn.textContent = panel.classList.contains('debug--collapsed') ? 'Expand' : 'Collapse';
+      });
+    }
 
-    clearBtn.addEventListener('click', () => {
-      consentLogs.length = 0;
-      dataLayerLogs.length = 0;
-      renderLog(consentLogNode, consentLogs);
-      renderLog(dataLayerLogNode, dataLayerLogs);
-    });
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        consentLogs.length = 0;
+        dataLayerLogs.length = 0;
+        renderLog(consentLogNode, consentLogs);
+        renderLog(dataLayerLogNode, dataLayerLogs);
+      });
+    }
 
     window.AnubisDebugPanel = {
       destroy() {
         consentEventUnsubscribers.forEach((unsubscribe) => unsubscribe());
         dataLayer.push = originalPush;
         cleanupGtagLogger();
-        host.remove();
+        if (host) {
+          host.remove();
+        }
         delete window.AnubisDebugPanel;
       },
     };
