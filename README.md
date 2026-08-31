@@ -341,6 +341,7 @@ The helper shows a floating bottom-right panel with:
 - `examples/region-resolver.example.js` (resolver + region overrides)
 - `examples/us-state-overrides.example.js` (US + state-level overrides)
 - `examples/opt-out-except-eu-ca.example.js` (safe fallback model: default opt-in, opt-out for non-EU/non-CA)
+- `examples/hubspot-consent-bridge.example.js` (bridge function: maps Anubis consent state to `window._hsp.push(['setHubSpotConsent', ...])`)
 
 ## Demo
 
