@@ -371,6 +371,10 @@ Demo pages (`index`, `preview`, `configurator`) use Bulma CSS from CDN for basel
 
 ## Changelog
 
+### v1.2.2
+
+- Dynamic viewport sizing. 
+
 ### v1.2.0
 
 - Refined privacy-signal UX to use a single main banner:
