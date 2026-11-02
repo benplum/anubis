@@ -6,28 +6,14 @@
     <title>Consent Demo</title>
     <link rel="stylesheet" href="/demo/css/main.css" />
     <script>
-      (function() {
-          const originalValue = navigator.globalPrivacyControl;
+      // Simulate a Global Privacy Control signal with ?gpc=1.
+      if (new URLSearchParams(window.location.search).get('gpc') === '1') {
+        Object.defineProperty(Navigator.prototype, 'globalPrivacyControl', {
+          get: () => true,
+          configurable: true,
+        });
+      }
 
-          Object.defineProperty(navigator, 'globalPrivacyControl', {
-              get: function() {
-                  console.log('GPC property accessed. Current value:', originalValue);
-                  return originalValue;
-              },
-              set: function(val) {
-                  console.log('GPC property changed to:', val);
-                  // You can trigger your CMP logic here
-                  triggerCMPLogic(val);
-              },
-              configurable: true
-          });
-      })();
-      
-      // Object.defineProperty(navigator, 'globalPrivacyControl', {
-      //     value: true,
-      //     configurable: true
-      // });
-      
       const preset = new URLSearchParams(window.location.search).get('preset') || 'default';
       const allowedThemes = new Set(['none', 'light', 'dark']);
       const requestedTheme = new URLSearchParams(window.location.search).get('theme');
@@ -101,6 +87,7 @@
       } else if (preset === 'opt-out-except-eu-ca') {
         window.ConsentOptions.defaultMode = 'opt-in';
         window.ConsentOptions.regionTimeout = 1200;
+        window.ConsentOptions.waitForUpdate = 2000;
         window.ConsentOptions.regionCache = true;
         window.ConsentOptions.regionKey = 'consent-region';
         window.ConsentOptions.regionDuration = 1;
@@ -300,6 +287,25 @@
         <button class="btn" type="button" data-theme="dark">Dark</button>
       </div>
 
+      <h2>Privacy Signal</h2>
+      <div>
+        <a class="btn" href="?gpc=0" data-gpc-link="0">GPC Off</a>
+        <a class="btn" href="?gpc=1" data-gpc-link="1">GPC On</a>
+      </div>
+
+      <h2>Opt-Out Status</h2>
+      <p>
+        Sale/sharing status:
+        <code id="optOutValue">none</code>
+        &middot; Footer output:
+        <span class="consent-status-preview" data-consent-status></span>
+      </p>
+      <p class="help">
+        Any <code>[data-consent-status]</code> element shows &ldquo;Opt-Out Request Honored&rdquo; once
+        the visitor has opted out of sale/sharing (Reject, saved choices, or a GPC signal),
+        as required by CCPA regs &sect;&sect; 7025(c)(6) and 7026(g).
+      </p>
+
       <h2>Tools</h2>
       <div>
         <button class="btn" type="button" data-consent="open">Open Preferences</button>
@@ -313,6 +319,11 @@
       <pre id="log"></pre>
 
     </main>
+
+    <footer class="demo-footer">
+      <a href="#" data-consent="open">Your Privacy Choices</a>
+      <span class="consent-status" data-consent-status></span>
+    </footer>
 
     <script>
       (function () {
@@ -374,6 +385,29 @@
         });
 
         applyTheme(theme);
+
+        const gpcActive = params.get('gpc') === '1';
+        document.querySelectorAll('[data-gpc-link]').forEach((link) => {
+          const nextParams = new URLSearchParams(params.toString());
+          nextParams.set('gpc', link.getAttribute('data-gpc-link'));
+          link.setAttribute('href', `?${nextParams.toString()}`);
+          const isActive = (link.getAttribute('data-gpc-link') === '1') === gpcActive;
+          link.setAttribute('aria-current', isActive ? 'page' : 'false');
+          link.classList.toggle('btn-primary', isActive);
+        });
+
+        const optOutValueNode = document.getElementById('optOutValue');
+        const showOptOutStatus = (event) => {
+          const status = event && event.detail && event.detail.optOutStatus;
+          if (status) {
+            optOutValueNode.textContent = status;
+          }
+        };
+        document.addEventListener('consent:ready', showOptOutStatus);
+        document.addEventListener('consent:updated', showOptOutStatus);
+        if (window.Anubis && typeof window.Anubis.getOptOutStatus === 'function') {
+          optOutValueNode.textContent = window.Anubis.getOptOutStatus();
+        }
 
         const logNode = document.getElementById('log');
         const pushLog = (label, payload) => {

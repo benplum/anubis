@@ -245,10 +245,14 @@
   }
 
   function ensureDataLayer() {
-    if (!Array.isArray(window.dataLayer)) {
-      window.dataLayer = [];
+    const configured = window.ConsentOptions && typeof window.ConsentOptions.dataLayerName === 'string'
+      ? window.ConsentOptions.dataLayerName.trim()
+      : '';
+    const name = configured || 'dataLayer';
+    if (!Array.isArray(window[name])) {
+      window[name] = [];
     }
-    return window.dataLayer;
+    return window[name];
   }
 
   function init() {

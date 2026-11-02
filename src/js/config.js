@@ -6,7 +6,9 @@ const REGION_COOKIE_FALLBACK_KEY = 'consent-region';
 const EN_STRINGS = {
   bannerTitle: 'Privacy Settings',
   bannerDescription: 'Choose how this site uses cookies and similar technologies.',
-  gpcNotice: 'Opt-Out Signal Honored.',
+  gpcNotice: 'Opt-Out Request Honored',
+  statusOptedOut: 'Opt-Out Request Honored',
+  statusOptedIn: '',
   buttonCloseNotice: 'Dismiss',
   buttonAccept: 'Accept All',
   buttonReject: 'Reject All',
@@ -66,14 +68,25 @@ export const DEFAULT_OPTIONS = {
   version: 1,
   storageKey: 'consent-options',
   storageDuration: 180,
+  cookieDomain: '',
   waitForUpdate: 500,
+  dataLayerName: 'dataLayer',
+  adsDataRedaction: false,
+  urlPassthrough: false,
+  completeConsentKeys: false,
+  saleSharingKeys: ['ad_storage', 'ad_user_data', 'ad_personalization'],
+  integrations: {
+    microsoftUet: false,
+    metaPixel: false,
+  },
   //
   defaultMode: 'opt-in',
   respectPrivacySignal: true,
   defaultConsent: {},
-  fastDefaults: true,
   unknownPolicy: 'block',
+  interceptScripts: true,
   reloadOnRevoke: true,
+  revokeCookies: 'all',
   //
   localeActive: '',
   localeFallback: 'en',
@@ -100,8 +113,9 @@ export const DEFAULT_OPTIONS = {
   },
   links: [],
   styles: '',
-  stylesTimeout: 0,
+  stylesTimeout: 5000,
   className: '',
+  equalButtons: false,
   actions: DEFAULT_ACTIONS,
   cookies: [],
 };
@@ -263,15 +277,29 @@ function normalizeActionList(inputList, fallbackList) {
     .filter((item) => item.visible !== false);
 }
 
-function normalizeActions(actions) {
+// Regulators (e.g. the EDPB cookie banner taskforce) treat a more prominent Accept
+// than Reject as a dark pattern. Give both the most prominent variant in the list.
+function equalizeAcceptReject(list) {
+  const pair = list.filter((item) => item.id === 'accept' || item.id === 'reject');
+  if (pair.length < 2 || pair[0].variant === pair[1].variant) {
+    return list;
+  }
+  // Promote to primary if either is primary; otherwise settle on a plain button so a
+  // `link` or `icon` variant never pulls the other one down.
+  const variant = pair.some((item) => item.variant === 'primary') ? 'primary' : '';
+  return list.map((item) => (item.id === 'accept' || item.id === 'reject' ? { ...item, variant } : item));
+}
+
+function normalizeActions(actions, equalButtons) {
   const source = isObject(actions) ? actions : {};
   const dialog = isObject(source.dialog) ? source.dialog : {};
+  const finish = equalButtons ? equalizeAcceptReject : (list) => list;
 
   return {
-    banner: normalizeActionList(source.banner, DEFAULT_ACTIONS.banner),
+    banner: finish(normalizeActionList(source.banner, DEFAULT_ACTIONS.banner)),
     dialog: {
-      header: normalizeActionList(dialog.header, DEFAULT_ACTIONS.dialog.header),
-      footer: normalizeActionList(dialog.footer, DEFAULT_ACTIONS.dialog.footer),
+      header: finish(normalizeActionList(dialog.header, DEFAULT_ACTIONS.dialog.header)),
+      footer: finish(normalizeActionList(dialog.footer, DEFAULT_ACTIONS.dialog.footer)),
     },
   };
 }
@@ -300,14 +328,11 @@ function normalizeStyles(stylesInput) {
   return typeof stylesInput === 'string' ? stylesInput.trim() : '';
 }
 
+// 0 waits indefinitely; anything unusable falls back to the default.
 function normalizeStylesTimeout(value) {
-  if (value === null || typeof value === 'undefined' || value === '') {
-    return 0;
-  }
-
   const timeoutMs = Number(value);
-  if (!Number.isFinite(timeoutMs) || timeoutMs < 0) {
-    return 0;
+  if (value === null || value === '' || !Number.isFinite(timeoutMs) || timeoutMs < 0) {
+    return DEFAULT_OPTIONS.stylesTimeout;
   }
 
   return Math.floor(timeoutMs);
@@ -616,7 +641,7 @@ function readRegionCache(options) {
       return { valid: false, expired: true };
     }
     return { valid: true, expired: false };
-  });
+  }, normalizeCookieDomain(options.cookieDomain));
 
   if (!entry || typeof entry !== 'object') {
     return '';
@@ -640,7 +665,11 @@ function writeRegionCache(options, value) {
   };
   const maxAgeSeconds = Math.max(1, Math.floor((config.durationDays * DAY_MS) / 1000));
 
-  writeMirroredObject(config.key, payload, maxAgeSeconds);
+  writeMirroredObject(config.key, payload, maxAgeSeconds, normalizeCookieDomain(options.cookieDomain));
+}
+
+function normalizeCookieDomain(value) {
+  return typeof value === 'string' ? value.trim() : '';
 }
 
 function freezeShallow(object) {
@@ -685,12 +714,39 @@ function normalizeBooleanOption(value, fallback) {
   return typeof value === 'boolean' ? value : fallback;
 }
 
-export async function resolveOptions(rawOptions = {}) {
+function mergeInputOptions(rawOptions) {
   const sourceOptions = isObject(rawOptions) ? rawOptions : {};
   const inputOptions = normalizePrivacySignalAliases(sourceOptions);
-  let options = applyReplacementPaths(mergeDeep(DEFAULT_OPTIONS, inputOptions), inputOptions);
+  return applyReplacementPaths(mergeDeep(DEFAULT_OPTIONS, inputOptions), inputOptions);
+}
 
+// Resolves options without waiting on `regionResolver`, so consent defaults can be
+// signaled before GTM loads. Uses the cached region when available; otherwise falls
+// back to `options.region` and reports `regionPending` so callers can stay restrictive.
+export function resolveOptionsSync(rawOptions = {}) {
+  const options = mergeInputOptions(rawOptions);
+  const fallbackRegion = normalizeRegionCode(options.region);
+
+  if (typeof options.regionResolver !== 'function') {
+    return { options: finalizeOptions(options, fallbackRegion), regionPending: false };
+  }
+
+  const cached = normalizeRegionCode(readRegionCache(options));
+  if (cached) {
+    return { options: finalizeOptions(options, cached), regionPending: false };
+  }
+
+  return { options: finalizeOptions(options, fallbackRegion), regionPending: true };
+}
+
+export async function resolveOptions(rawOptions = {}) {
+  const options = mergeInputOptions(rawOptions);
   const region = await resolveConfiguredRegion(options);
+  return finalizeOptions(options, region);
+}
+
+function finalizeOptions(baseOptions, region) {
+  let options = baseOptions;
   const regionOverrides = isObject(options.regionOverrides) ? options.regionOverrides : {};
   const regionOverrideKeys = getRegionOverrideKeys(region);
   regionOverrideKeys.forEach((overrideKey) => {
@@ -712,7 +768,10 @@ export async function resolveOptions(rawOptions = {}) {
   options.stylesTimeout = normalizeStylesTimeout(options.stylesTimeout);
   options.className = normalizeclassName(options.className);
 
-  options.actions = normalizeActions(options.actions);
+  options.equalButtons = options.equalButtons === true;
+  options.actions = normalizeActions(options.actions, options.equalButtons);
+  options.cookieDomain = normalizeCookieDomain(options.cookieDomain);
+  options.revokeCookies = options.revokeCookies === 'registry' ? 'registry' : 'all';
   options.waitForUpdate = normalizeWaitForUpdate(options.waitForUpdate);
   options.cookies = normalizeCookies(options.cookies, options.cookieMapping);
   options.respectPrivacySignal = normalizeBooleanOption(
@@ -722,6 +781,8 @@ export async function resolveOptions(rawOptions = {}) {
   options.respectDoNotTrack = options.respectPrivacySignal;
 
   const consentKeys = uniqueConsentKeys(options.categories);
+  const saleSharingInput = Array.isArray(options.saleSharingKeys) ? options.saleSharingKeys : DEFAULT_OPTIONS.saleSharingKeys;
+  options.saleSharingKeys = normalizedConsentKeys(saleSharingInput).filter((key) => consentKeys.includes(key));
   const consentMapping = buildConsentMapping(consentKeys, options.consentMapping);
   const defaultConsentInternal = buildDefaultInternalConsent({ ...options, consentKeys });
   const defaultConsentGoogle = toGoogleConsent(defaultConsentInternal, consentMapping);

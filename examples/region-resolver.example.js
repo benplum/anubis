@@ -4,8 +4,8 @@
 window.ConsentOptions = {
   autoStart: true,
   defaultMode: 'opt-out',
-  fastDefaults: true,
   regionTimeout: 1200,
+  waitForUpdate: 2000,
   regionCache: true,
   regionKey: 'consent-region',
   regionDuration: 1,

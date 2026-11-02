@@ -127,3 +127,31 @@ pre {
 pre code {
   color: var(--fg);
 }
+
+.help {
+  font-size: .875em;
+  opacity: .75;
+}
+
+.demo-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space);
+  align-items: center;
+  width: 95%;
+  max-width: 800px;
+  margin: 0 auto 60px;
+  padding-top: var(--space);
+  border-top: 1px solid var(--gray);
+  font-size: .875em;
+}
+
+.consent-status,
+.consent-status-preview {
+  font-weight: 600;
+}
+
+.consent-status::before {
+  content: "\2713\00a0";
+}
+

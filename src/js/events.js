@@ -19,6 +19,9 @@ export function bindConsentTriggers(handler) {
     if (!action) {
       return;
     }
+    if (target.tagName === 'A' && target.hasAttribute('href')) {
+      event.preventDefault();
+    }
     handler(action, target, event);
   };
 

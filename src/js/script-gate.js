@@ -13,6 +13,10 @@ function copyAttributes(fromNode, toNode) {
     }
     toNode.setAttribute(attr.name, attr.value);
   });
+  // Browsers blank the nonce attribute after parsing; only the property keeps it.
+  if (fromNode.nonce) {
+    toNode.nonce = fromNode.nonce;
+  }
 }
 
 function getScriptCategory(script) {
@@ -40,19 +44,118 @@ function getDeclaredExecutableType(script) {
   return normalized;
 }
 
-export function createScriptGate(options, isCategoryAllowed) {
-  if (typeof document === 'undefined') {
+// `isCategoryAllowed` receives the script's category ('' when missing) and is
+// evaluated on every check, so consent state may change after the gate is created.
+export function createScriptGate(isCategoryAllowed, gateOptions = {}) {
+  if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') {
     return { refresh: () => {}, disconnect: () => {} };
   }
 
   const executed = new Set();
 
   function shouldAllow(script) {
-    const category = getScriptCategory(script);
-    if (!category) {
-      return options.unknownPolicy === 'allow';
+    return isCategoryAllowed(getScriptCategory(script));
+  }
+
+  // Scripts already in the DOM when the gate starts have been prepared by the
+  // browser; changing their type cannot stop them, and re-activating them later
+  // would run them twice. Leave them alone and flag the misconfiguration.
+  function markMissed(script, reason) {
+    script.setAttribute('data-managed', '1');
+    script.setAttribute('data-missed', '1');
+    emitConsentEvent('consent:script-missed', {
+      reason,
+      script: describeScript(script),
+    });
+    if (typeof console !== 'undefined' && console.warn) {
+      console.warn(`[Anubis] Script with data-consent-category could not be blocked (${reason}). Add type="text/plain" data-type="text/javascript".`, script);
     }
-    return isCategoryAllowed(category);
+  }
+
+  // Script-created elements report `async === true` without the attribute (the
+  // "non-blocking" flag); the parser never sets it. Those run on insertion, before
+  // the observer sees them.
+  function isScriptCreated(script) {
+    return script.async === true && !script.hasAttribute('async');
+  }
+
+  // Scripts inserted by code start running during insertion, before any observer sees
+  // them, so gate them at the DOM insertion methods: a denied script is made inert
+  // before it is attached. Only insertions into the live document are inspected; a
+  // detached subtree is checked once, when it is attached.
+  function gateScriptBeforeInsert(script) {
+    if (
+      script.isConnected
+      || !script.hasAttribute('data-consent-category')
+      || script.hasAttribute('data-managed')
+      || script.getAttribute('type') === 'text/plain'
+    ) {
+      return;
+    }
+    if (shouldAllow(script)) {
+      script.setAttribute('data-managed', '1');
+      executed.add(scriptFingerprint(script));
+      return;
+    }
+    blockScript(script);
+  }
+
+  function gateBeforeInsert(node) {
+    if (!node || (node.nodeType !== 1 && node.nodeType !== 11)) {
+      return;
+    }
+    if (node.nodeType === 1 && node.tagName === 'SCRIPT') {
+      gateScriptBeforeInsert(node);
+      return;
+    }
+    if (node.firstElementChild) {
+      node.querySelectorAll('script[data-consent-category]').forEach(gateScriptBeforeInsert);
+    }
+  }
+
+  const restorers = [];
+  function intercept(proto, method, pickNodes) {
+    const original = proto && proto[method];
+    if (typeof original !== 'function') {
+      return;
+    }
+    const wrapped = function anubisGatedInsert(...args) {
+      if (this && this.isConnected) {
+        pickNodes(args).forEach(gateBeforeInsert);
+      }
+      return original.apply(this, args);
+    };
+    proto[method] = wrapped;
+    restorers.push(() => {
+      if (proto[method] === wrapped) {
+        proto[method] = original;
+      }
+    });
+  }
+
+  if (gateOptions.intercept !== false && typeof Node !== 'undefined' && typeof Element !== 'undefined') {
+    const first = (args) => [args[0]];
+    const all = (args) => args;
+    intercept(Node.prototype, 'appendChild', first);
+    intercept(Node.prototype, 'insertBefore', first);
+    intercept(Node.prototype, 'replaceChild', first);
+    ['append', 'prepend', 'before', 'after', 'replaceWith', 'replaceChildren'].forEach((method) => {
+      intercept(Element.prototype, method, all);
+    });
+    intercept(Element.prototype, 'insertAdjacentElement', (args) => [args[1]]);
+  }
+
+  // Fallback for insertion paths not intercepted above.
+  function processAddedScript(script) {
+    if (
+      script.getAttribute('type') !== 'text/plain'
+      && !script.hasAttribute('data-managed')
+      && isScriptCreated(script)
+    ) {
+      markMissed(script, 'inserted-by-script');
+      return;
+    }
+    processScript(script);
   }
 
   function blockScript(script) {
@@ -130,7 +233,7 @@ export function createScriptGate(options, isCategoryAllowed) {
     if (!(script instanceof HTMLScriptElement)) {
       return;
     }
-    if (!script.hasAttribute('data-consent-category')) {
+    if (!script.hasAttribute('data-consent-category') || script.hasAttribute('data-missed')) {
       return;
     }
 
@@ -155,10 +258,10 @@ export function createScriptGate(options, isCategoryAllowed) {
             return;
           }
           if (node.matches && node.matches('script[data-consent-category]')) {
-            processScript(node);
+            processAddedScript(node);
           }
           if (node.querySelectorAll) {
-            node.querySelectorAll('script[data-consent-category]').forEach(processScript);
+            node.querySelectorAll('script[data-consent-category]').forEach(processAddedScript);
           }
         });
       }
@@ -176,10 +279,20 @@ export function createScriptGate(options, isCategoryAllowed) {
     attributeFilter: ['data-consent-category'],
   });
 
+  document.querySelectorAll('script[data-consent-category]').forEach((script) => {
+    const type = script.getAttribute('type');
+    if (type !== 'text/plain' && !script.hasAttribute('data-managed')) {
+      markMissed(script, 'loaded-before-anubis');
+    }
+  });
+
   scan();
 
   return {
     refresh: scan,
-    disconnect: () => observer.disconnect(),
+    disconnect: () => {
+      observer.disconnect();
+      restorers.forEach((restore) => restore());
+    },
   };
 }

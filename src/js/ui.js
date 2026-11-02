@@ -326,6 +326,7 @@ export function renderConsentUI(options, hooks) {
       closeDialog: () => {},
       updateFromState: () => {},
       setPrivacySignalHonored: () => {},
+      setStatusText: () => {},
       readCategoryChoices: () => ({}),
       refreshStyles: () => {},
       destroy: () => {},
@@ -357,7 +358,7 @@ export function renderConsentUI(options, hooks) {
 
   const bannerTitleHtml = htmlString(strings.bannerTitle || 'Privacy choices');
   const bannerDescriptionHtml = htmlString(strings.bannerDescription || '');
-  const gpcNoticeHtml = htmlString(strings.gpcNotice || strings.doNotTrackNotice || 'Opt-Out Signal Honored.');
+  const gpcNoticeHtml = htmlString(strings.gpcNotice || strings.doNotTrackNotice || 'Opt-Out Request Honored');
   const dialogTitleHtml = htmlString(strings.dialogTitle || 'Consent preferences');
   const dialogDescriptionHtml = htmlString(strings.dialogDescription || '');
 
@@ -381,7 +382,7 @@ export function renderConsentUI(options, hooks) {
       </div>
     </div>
     <div class="body">
-      <p class="desc desc-gpc" id="${ids.dialogNoticeDescription}" hidden>${gpcNoticeHtml}</p>
+      <p class="desc desc-gpc desc-status" id="${ids.dialogNoticeDescription}" role="status" hidden></p>
       ${strings.dialogDescription ? `<p class="desc desc-consent" id="${ids.dialogDescription}">${dialogDescriptionHtml}</p>` : ''}
       <div class="cats">
         ${categoryRowsMarkup(options, ids)}
@@ -400,7 +401,7 @@ export function renderConsentUI(options, hooks) {
 
   const banner = container.querySelector('.banner-main');
   const bannerPrivacySignalNotice = container.querySelector('.desc-gpc-banner');
-  const dialogPrivacySignalNotice = container.querySelector('.dialog .desc-gpc');
+  const dialogStatus = container.querySelector('.dialog .desc-status');
   const dialog = container.querySelector('.dialog');
   const form = container.querySelector('.form');
   const toggleMap = {};
@@ -494,13 +495,18 @@ export function renderConsentUI(options, hooks) {
   }
 
   function setPrivacySignalHonored(honored) {
-    const privacySignalHonored = Boolean(honored);
     if (bannerPrivacySignalNotice) {
-      bannerPrivacySignalNotice.hidden = !privacySignalHonored;
+      bannerPrivacySignalNotice.hidden = !honored;
     }
-    if (dialogPrivacySignalNotice) {
-      dialogPrivacySignalNotice.hidden = !privacySignalHonored;
+  }
+
+  // Opt-out status line beside the category toggles (CCPA regs § 7026(g)).
+  function setStatusText(text) {
+    if (!dialogStatus) {
+      return;
     }
+    dialogStatus.textContent = text || '';
+    dialogStatus.hidden = !text;
   }
 
   Object.keys(toggleMap).forEach((name) => {
@@ -576,9 +582,11 @@ export function renderConsentUI(options, hooks) {
     closeDialog,
     updateFromState,
     setPrivacySignalHonored,
+    setStatusText,
     readCategoryChoices,
     refreshStyles: () => {
-      pendingBannerVisible = !banner.hidden;
+      // Keep a visibility request still waiting on the previous stylesheet.
+      pendingBannerVisible = stylesReady ? !banner.hidden : pendingBannerVisible;
       banner.hidden = true;
       refreshShadowStyles(shadowRoot, options.styles);
       armStylesWait();

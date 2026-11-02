@@ -7,22 +7,27 @@ export function startAnubis(options) {
     return bootPromise;
   }
   const resolvedOptions = options || (typeof window !== 'undefined' ? window.ConsentOptions || {} : {});
-  bootPromise = initAnubis(resolvedOptions).then((api) => {
+  const exposeApi = (api) => {
     if (typeof window !== 'undefined') {
       window.Anubis = api;
     }
-    return api;
-  });
+  };
+  bootPromise = initAnubis(resolvedOptions, { onApi: exposeApi });
   return bootPromise;
 }
 
 export default startAnubis;
 
+// Autostart one microtask later so an ESM importer's explicit `startAnubis(options)`
+// call wins. Microtasks drain before the HTML parser continues, so the IIFE still
+// signals consent defaults before the next script in the page.
 if (typeof window !== 'undefined') {
-  const shouldAutostart = !window.ConsentOptions || window.ConsentOptions.autoStart !== false;
-  if (shouldAutostart) {
-    startAnubis(window.ConsentOptions || {}).catch((error) => {
-      console.error('[Anubis] Failed to initialize', error);
-    });
-  }
+  queueMicrotask(() => {
+    const shouldAutostart = !window.ConsentOptions || window.ConsentOptions.autoStart !== false;
+    if (shouldAutostart && !bootPromise) {
+      startAnubis(window.ConsentOptions || {}).catch((error) => {
+        console.error('[Anubis] Failed to initialize', error);
+      });
+    }
+  });
 }

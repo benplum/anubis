@@ -55,28 +55,54 @@ export function readCookie(name) {
   return '';
 }
 
-export function writeCookie(name, value, maxAgeSeconds) {
+let warnedCookieDomain = false;
+
+// `domain` (e.g. `.example.com`) shares the cookie across subdomains. Any host-only
+// copy is expired first so it cannot shadow the shared one. If the browser rejects the
+// domain (staging/preview hosts that are not under it), fall back to a host-only cookie
+// so the choice is still remembered on this host.
+export function writeCookie(name, value, maxAgeSeconds, domain = '') {
   if (typeof document === 'undefined') {
     return;
   }
-  document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Max-Age=${maxAgeSeconds}; Path=/; SameSite=Lax`;
+  const secure = typeof location !== 'undefined' && location.protocol === 'https:' ? '; Secure' : '';
+  const encodedName = encodeURIComponent(name);
+  const hostOnly = (cookieValue, maxAge) => {
+    document.cookie = `${encodedName}=${encodeURIComponent(cookieValue)}; Max-Age=${maxAge}; Path=/; SameSite=Lax${secure}`;
+  };
+
+  if (!domain) {
+    hostOnly(value, maxAgeSeconds);
+    return;
+  }
+
+  hostOnly('', 0);
+  document.cookie = `${encodedName}=${encodeURIComponent(value)}; Max-Age=${maxAgeSeconds}; Path=/; SameSite=Lax; Domain=${domain}${secure}`;
+
+  if (value && maxAgeSeconds > 0 && readCookie(name) !== value) {
+    hostOnly(value, maxAgeSeconds);
+    if (!warnedCookieDomain && typeof console !== 'undefined' && console.warn) {
+      warnedCookieDomain = true;
+      console.warn(`[Anubis] cookieDomain "${domain}" was rejected on ${location.hostname}; using a host-only cookie.`);
+    }
+  }
 }
 
-export function clearMirroredObject(key) {
+export function clearMirroredObject(key, domain = '') {
   removeLocalStorageValue(key);
-  writeCookie(key, '', 0);
+  writeCookie(key, '', 0, domain);
 }
 
-export function writeMirroredObject(key, payload, maxAgeSeconds) {
+export function writeMirroredObject(key, payload, maxAgeSeconds, domain = '') {
   const serialized = JSON.stringify(payload);
   try {
     writeLocalStorageValue(key, serialized);
   } catch (_error) {
   }
-  writeCookie(key, serialized, maxAgeSeconds);
+  writeCookie(key, serialized, maxAgeSeconds, domain);
 }
 
-export function readMirroredObject(key, validator) {
+export function readMirroredObject(key, validator, domain = '') {
   const validate = typeof validator === 'function'
     ? validator
     : () => ({ valid: true, expired: false });
@@ -93,7 +119,9 @@ export function readMirroredObject(key, validator) {
     };
   };
 
-  const localRaw = readLocalStorageValue(key);
+  // localStorage is per-origin, so with a shared cookie domain the cookie is the only
+  // source of truth; a local copy may be stale from another subdomain's change.
+  const localRaw = domain ? null : readLocalStorageValue(key);
   if (localRaw) {
     const localResult = evaluate(localRaw);
     if (localResult.valid) {
@@ -101,7 +129,7 @@ export function readMirroredObject(key, validator) {
     }
     removeLocalStorageValue(key);
     if (localResult.expired) {
-      writeCookie(key, '', 0);
+      writeCookie(key, '', 0, domain);
       return null;
     }
   }
@@ -112,7 +140,7 @@ export function readMirroredObject(key, validator) {
     if (cookieResult.valid) {
       return cookieResult.parsed;
     }
-    writeCookie(key, '', 0);
+    writeCookie(key, '', 0, domain);
     if (cookieResult.expired) {
       return null;
     }
@@ -132,7 +160,7 @@ export function readStoredConsent(options) {
       return { valid: false, expired: true };
     }
     return { valid: true, expired: false };
-  });
+  }, options.cookieDomain);
 }
 
 export function saveStoredConsent(payload, options) {
@@ -145,15 +173,15 @@ export function saveStoredConsent(payload, options) {
     expiresAt: now + (ttlSeconds * 1000),
   };
 
-  writeMirroredObject(key, entry, ttlSeconds);
+  writeMirroredObject(key, entry, ttlSeconds, options.cookieDomain);
 }
 
 export function clearStoredConsent(options) {
   const key = options.storageKey;
-  clearMirroredObject(key);
+  clearMirroredObject(key, options.cookieDomain);
 }
 
-export function clearClientCookies() {
+export function clearClientCookies(shouldClear = () => true) {
   if (typeof document === 'undefined' || typeof location === 'undefined') {
     return;
   }
@@ -161,7 +189,8 @@ export function clearClientCookies() {
   const names = (document.cookie || '')
     .split(';')
     .map((part) => part.split('=')[0].trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter((name) => shouldClear(name));
 
   const host = location.hostname || '';
   const hostParts = host.split('.').filter(Boolean);

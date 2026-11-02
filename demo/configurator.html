@@ -67,8 +67,6 @@
 
             <label class="checkbox"><input id="autoStart" type="checkbox" checked /> autoStart</label>
             <br />
-            <label class="checkbox"><input id="fastDefaults" type="checkbox" checked /> fastDefaults</label>
-            <br />
             <label class="checkbox"><input id="reloadOnRevoke" type="checkbox" checked /> reloadOnRevoke</label>
 
             <h3 class="title is-6 mt-4">Locale</h3>
@@ -309,7 +307,6 @@
             storageKey: document.getElementById('storageKey').value.trim() || 'consent-options',
             storageDuration: Number(document.getElementById('storageDuration').value) || 180,
             defaultMode: document.getElementById('defaultMode').value,
-            fastDefaults: document.getElementById('fastDefaults').checked,
             unknownPolicy: document.getElementById('unknownPolicy').value,
             reloadOnRevoke: document.getElementById('reloadOnRevoke').checked,
             region: document.getElementById('region').value.trim(),
@@ -347,7 +344,6 @@
           document.getElementById('storageKey').value = source.storageKey || 'consent-options';
           document.getElementById('storageDuration').value = Number(source.storageDuration) || 180;
           document.getElementById('defaultMode').value = source.defaultMode === 'opt-in' ? 'opt-in' : 'opt-out';
-          document.getElementById('fastDefaults').checked = source.fastDefaults !== false;
           document.getElementById('unknownPolicy').value = source.unknownPolicy === 'allow' ? 'allow' : 'block';
           document.getElementById('reloadOnRevoke').checked = source.reloadOnRevoke !== false;
           document.getElementById('region').value = source.region || '';

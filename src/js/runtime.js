@@ -1,13 +1,10 @@
-import { resolveOptions, toGoogleConsent, categoryGranted, DEFAULT_OPTIONS, normalizeCategoriesDefinition } from './config.js';
+import { resolveOptions, resolveOptionsSync, toGoogleConsent, categoryGranted } from './config.js';
 import { readStoredConsent, saveStoredConsent, clearStoredConsent, clearClientCookies } from './storage.js';
-import { applyDefaultConsent, applyUpdatedConsent } from './consent-mode.js';
+import { applyDefaultConsent, applyUpdatedConsent, watchDataLayerDuringParse } from './consent-mode.js';
 import { emitConsentEvent, bindConsentTriggers } from './events.js';
 import { createScriptGate } from './script-gate.js';
 import { renderConsentUI } from './ui.js';
-
-function isObject(value) {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
+import { createStatusTargets } from './status.js';
 
 function statesEqual(a, b) {
   const keys = new Set([...Object.keys(a || {}), ...Object.keys(b || {})]);
@@ -37,7 +34,7 @@ function isValidStoredConsent(stored, version) {
   return Boolean(
     stored
     && typeof stored === 'object'
-    && Number(stored.version) === Number(version)
+    && String(stored.version) === String(version)
     && stored.grants
     && typeof stored.grants === 'object',
   );
@@ -51,46 +48,6 @@ function buildConsentEventDetail(options, state) {
     region: options.region,
     version: options.version,
   };
-}
-
-function applyFastStoredDefault(rawOptions) {
-  const input = isObject(rawOptions) ? rawOptions : {};
-  const enabled = input.fastDefaults !== false;
-  if (!enabled) {
-    return { applied: false, googleState: null };
-  }
-
-  const storageKey = typeof input.storageKey === 'string' && input.storageKey.trim()
-    ? input.storageKey.trim()
-    : DEFAULT_OPTIONS.storageKey;
-  const version = Number(input.version ?? DEFAULT_OPTIONS.version);
-
-  const stored = readStoredConsent({ storageKey });
-  const validStored = isValidStoredConsent(stored, version);
-
-  if (!validStored) {
-    return { applied: false, googleState: null };
-  }
-
-  const normalizedCategories = normalizeCategoriesDefinition(input.categories || DEFAULT_OPTIONS.categories);
-  const categories = normalizedCategories.categoryMap;
-  const requiredCategories = normalizedCategories.requiredCategories;
-  const internalState = enforceRequiredGranted(stored.grants, categories, requiredCategories);
-
-  const mappingInput = isObject(input.consentMapping) ? input.consentMapping : {};
-  const consentMapping = {};
-  Object.keys(internalState).forEach((key) => {
-    const mapped = mappingInput[key];
-    consentMapping[key] = typeof mapped === 'string' && mapped.trim() ? mapped.trim() : key;
-  });
-
-  const googleState = toGoogleConsent(internalState, consentMapping);
-  applyDefaultConsent(googleState, {
-    region: typeof input.region === 'string' ? input.region : '',
-    version,
-  });
-
-  return { applied: true, googleState };
 }
 
 function waitForBody() {
@@ -130,6 +87,29 @@ function waitForBody() {
 
 function hasGrantedToDeniedChange(previousState, nextState) {
   return Object.keys(previousState).some((key) => previousState[key] === 'granted' && nextState[key] === 'denied');
+}
+
+function cookieNamePattern(name) {
+  const escaped = name.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+  return new RegExp(`^${escaped}$`);
+}
+
+// `revokeCookies: 'registry'` clears only registered cookies in categories that lost a
+// grant. Otherwise every readable cookie is cleared except Anubis's own storage.
+function buildRevokedCookieFilter(options, previousState, nextState) {
+  const keep = new Set([options.storageKey, options.regionKey || 'consent-region']);
+  if (options.revokeCookies !== 'registry') {
+    return (name) => !keep.has(name);
+  }
+
+  const revokedCategories = Object.keys(options.categories).filter((category) => (
+    options.categories[category].some((key) => previousState[key] === 'granted' && nextState[key] === 'denied')
+  ));
+  const patterns = options.cookies
+    .filter((cookie) => revokedCategories.includes(cookie.category))
+    .map((cookie) => cookieNamePattern(cookie.name));
+
+  return (name) => !keep.has(name) && patterns.some((pattern) => pattern.test(name));
 }
 
 function createAllState(options, value) {
@@ -202,47 +182,78 @@ function detectPrivacySignal() {
   };
 }
 
-export async function initAnubis(rawOptions = {}) {
-  const fastDefault = applyFastStoredDefault(rawOptions);
-  await waitForBody();
-  const options = await resolveOptions(rawOptions);
+function computeInitialState(options, regionPending) {
   const stored = readStoredConsent(options);
-  const validStored = isValidStoredConsent(stored, options.version);
-  let hasStoredConsent = validStored;
-  let privacySignalApplied = false;
-  let privacySignalType = '';
+  const hasStoredConsent = isValidStoredConsent(stored, options.version);
+  const privacySignal = options.respectPrivacySignal ? detectPrivacySignal() : { enabled: false, type: '' };
 
-  let state = { ...options.defaultConsentInternal };
-  if (validStored) {
-    state = {
-      ...state,
-      ...stored.grants,
-    };
-    state = enforceRequiredGranted(state, options.categories, options.requiredCategories);
-  }
+  // A choice saved while a signal was active is an explicit opt-in that overrides it.
+  // GPC is the stronger signal, so a choice made under GPC also covers DNT, not vice versa.
+  const signalAcknowledged = hasStoredConsent && privacySignal.enabled && (
+    stored.privacySignal === privacySignal.type || stored.privacySignal === 'gpc'
+  );
+  const privacySignalApplied = privacySignal.enabled && !signalAcknowledged;
+  let showBanner = !hasStoredConsent;
 
-  const detectedPrivacySignal = options.respectPrivacySignal ? detectPrivacySignal() : { enabled: false, type: '' };
-  if (detectedPrivacySignal.enabled) {
-    privacySignalApplied = true;
-    privacySignalType = detectedPrivacySignal.type;
-
-    if (!hasStoredConsent) {
-      state = createAllState(options, 'denied');
-    }
-  }
-
-  if (!fastDefault.applied) {
-    applyDefaultConsent(options.defaultConsentGoogle, options);
-  }
-
+  let state;
   if (hasStoredConsent) {
-    const storedGoogleState = toGoogleConsent(state, options.consentMapping);
-    if (!fastDefault.applied || !statesEqual(fastDefault.googleState, storedGoogleState)) {
-      applyUpdatedConsent(storedGoogleState, options);
+    state = enforceRequiredGranted({ ...options.defaultConsentInternal, ...stored.grants }, options.categories, options.requiredCategories);
+    const deniedState = createAllState(options, 'denied');
+    if (privacySignalApplied && !statesEqual(state, deniedState)) {
+      // The signal conflicts with an earlier opt-in: honor the signal and let the
+      // visitor confirm or change their choice (CCPA regs § 7025(c)(3)).
+      state = deniedState;
+      showBanner = true;
     }
+  } else if (regionPending || privacySignal.enabled) {
+    // Until the region is known, stay restrictive; the resolved state is sent as an update.
+    state = createAllState(options, 'denied');
+  } else {
+    state = { ...options.defaultConsentInternal };
   }
 
-  const scriptGate = createScriptGate(options, (category) => isCategoryAllowed(state, options, category));
+  return { state, hasStoredConsent, privacySignal, privacySignalApplied, showBanner };
+}
+
+export async function initAnubis(rawOptions = {}, hooks = {}) {
+  // Everything up to the first `await` runs synchronously while the script is
+  // evaluated, so the consent default lands in dataLayer before the GTM container
+  // snippet and the script gate observes parser-inserted scripts that follow.
+  const early = resolveOptionsSync(rawOptions);
+  let options = early.options;
+  let initial = computeInitialState(options, early.regionPending);
+  let state = initial.state;
+  let hasStoredConsent = initial.hasStoredConsent;
+  let privacySignalApplied = initial.privacySignalApplied;
+  let privacySignalType = privacySignalApplied ? initial.privacySignal.type : '';
+
+  // Skip wait_for_update when a stored choice is final; tags would otherwise idle for
+  // nothing. While the region is pending the resolved rules may still change it.
+  const signaledGoogleState = toGoogleConsent(state, options.consentMapping);
+  const storedIsFinal = hasStoredConsent && !early.regionPending;
+  applyDefaultConsent(signaledGoogleState, storedIsFinal ? { ...options, waitForUpdate: null } : options);
+  watchDataLayerDuringParse();
+
+  const scriptGate = createScriptGate(
+    (category) => isCategoryAllowed(state, options, category),
+    { intercept: options.interceptScripts !== false },
+  );
+
+  await waitForBody();
+
+  if (early.regionPending) {
+    options = await resolveOptions(rawOptions);
+    initial = computeInitialState(options, false);
+    state = initial.state;
+    hasStoredConsent = initial.hasStoredConsent;
+    privacySignalApplied = initial.privacySignalApplied;
+    privacySignalType = privacySignalApplied ? initial.privacySignal.type : '';
+
+    // Always update, even when unchanged: it releases tags held by wait_for_update.
+    applyUpdatedConsent(toGoogleConsent(state, options.consentMapping), options);
+    scriptGate.refresh();
+  }
+
   function handleAction(action, meta = {}) {
     switch (action) {
       case 'open':
@@ -275,51 +286,75 @@ export async function initAnubis(rawOptions = {}) {
 
   const ui = renderConsentUI(options, { onAction: handleAction });
 
-  function applyDetectedPrivacySignal(detectedSignal, source, emitUpdatedEvent = true) {
+  // Sale/sharing opt-out status (CCPA regs §§ 7025(c)(6), 7026(g)). "opted-out" only
+  // after a processed signal or a saved choice; a default denial is not an opt-out.
+  function getOptOutStatus() {
+    const keys = options.saleSharingKeys || [];
+    if (!keys.length) {
+      return 'none';
+    }
+    if (keys.every((key) => state[key] === 'denied')) {
+      return privacySignalApplied || hasStoredConsent ? 'opted-out' : 'none';
+    }
+    return hasStoredConsent ? 'opted-in' : 'none';
+  }
+
+  function getOptOutStatusText(status) {
+    if (status === 'opted-out') {
+      return options.strings.statusOptedOut || '';
+    }
+    if (status === 'opted-in') {
+      return options.strings.statusOptedIn || '';
+    }
+    return '';
+  }
+
+  const statusTargets = createStatusTargets(() => {
+    const value = getOptOutStatus();
+    return { value, text: getOptOutStatusText(value) };
+  });
+
+  function refreshStatus() {
+    ui.setStatusText(getOptOutStatusText(getOptOutStatus()));
+    statusTargets.render();
+  }
+
+  function applyDetectedPrivacySignal(detectedSignal, source) {
     if (!detectedSignal || !detectedSignal.enabled || privacySignalApplied) {
       return false;
     }
 
-    privacySignalApplied = true;
-    privacySignalType = detectedSignal.type;
-
-    if (hasStoredConsent) {
-      ui.showBanner(true);
-      if (ui && typeof ui.setPrivacySignalHonored === 'function') {
-        ui.setPrivacySignalHonored(privacySignalApplied);
-      }
-
-      if (emitUpdatedEvent) {
-        emitConsentEvent('consent:updated', {
-          source,
-          ...buildConsentEventDetail(options, state),
-          privacySignalApplied,
-          privacySignalType,
-        });
-      }
-
-      return true;
+    const next = computeInitialState(options, false);
+    if (!next.privacySignalApplied) {
+      return false;
     }
 
-    const signalDeniedState = createAllState(options, 'denied');
-    const changed = !statesEqual(state, signalDeniedState);
+    privacySignalApplied = true;
+    privacySignalType = next.privacySignal.type;
+    const changed = !statesEqual(state, next.state);
+    state = next.state;
 
-    state = signalDeniedState;
-
-    const googleState = toGoogleConsent(state, options.consentMapping);
-    applyUpdatedConsent(googleState, options);
-    scriptGate.refresh();
-    ui.updateFromState(state);
-    ui.showBanner(true);
+    let googleState;
+    if (changed) {
+      googleState = toGoogleConsent(state, options.consentMapping);
+      applyUpdatedConsent(googleState, options);
+      scriptGate.refresh();
+      ui.updateFromState(state);
+    }
+    if (next.showBanner) {
+      ui.showBanner(true);
+    }
     if (ui && typeof ui.setPrivacySignalHonored === 'function') {
       ui.setPrivacySignalHonored(privacySignalApplied);
     }
+    refreshStatus();
 
-    if (emitUpdatedEvent && changed) {
+    if (changed) {
       emitConsentEvent('consent:updated', {
         source,
         googleState,
         ...buildConsentEventDetail(options, state),
+        optOutStatus: getOptOutStatus(),
         privacySignalApplied,
         privacySignalType,
       });
@@ -333,6 +368,7 @@ export async function initAnubis(rawOptions = {}) {
     const revoked = hasGrantedToDeniedChange(previous, nextState);
 
     state = enforceRequiredGranted(nextState, options.categories, options.requiredCategories);
+    hasStoredConsent = true;
     privacySignalApplied = false;
     privacySignalType = '';
 
@@ -340,6 +376,7 @@ export async function initAnubis(rawOptions = {}) {
       {
         version: options.version,
         grants: state,
+        privacySignal: options.respectPrivacySignal ? detectPrivacySignal().type : '',
         updatedAt: Date.now(),
       },
       options,
@@ -352,16 +389,18 @@ export async function initAnubis(rawOptions = {}) {
       source,
       googleState,
       ...buildConsentEventDetail(options, state),
+      optOutStatus: getOptOutStatus(),
     });
 
     scriptGate.refresh();
     ui.updateFromState(state);
     ui.showBanner(false);
+    refreshStatus();
 
     if (revoked) {
       emitConsentEvent('consent:revoked', { source, state, googleState });
       if (options.reloadOnRevoke) {
-        clearClientCookies();
+        clearClientCookies(buildRevokedCookieFilter(options, previous, state));
         if (typeof location !== 'undefined' && typeof location.reload === 'function') {
           location.reload();
         }
@@ -379,17 +418,11 @@ export async function initAnubis(rawOptions = {}) {
 
   function reset() {
     clearStoredConsent(options);
+    const next = computeInitialState(options, false);
     hasStoredConsent = false;
-    privacySignalApplied = false;
-    privacySignalType = '';
-    state = { ...options.defaultConsentInternal };
-
-    const resetPrivacySignal = options.respectPrivacySignal ? detectPrivacySignal() : { enabled: false, type: '' };
-    if (resetPrivacySignal.enabled) {
-      state = createAllState(options, 'denied');
-      privacySignalApplied = true;
-      privacySignalType = resetPrivacySignal.type;
-    }
+    privacySignalApplied = next.privacySignalApplied;
+    privacySignalType = privacySignalApplied ? next.privacySignal.type : '';
+    state = next.state;
 
     const resetGoogleState = toGoogleConsent(state, options.consentMapping);
     applyUpdatedConsent(resetGoogleState, options);
@@ -399,11 +432,13 @@ export async function initAnubis(rawOptions = {}) {
     if (ui && typeof ui.setPrivacySignalHonored === 'function') {
       ui.setPrivacySignalHonored(privacySignalApplied);
     }
+    refreshStatus();
 
     emitConsentEvent('consent:updated', {
       source: 'reset',
       googleState: resetGoogleState,
       ...buildConsentEventDetail(options, state),
+      optOutStatus: getOptOutStatus(),
     });
   }
 
@@ -459,24 +494,18 @@ export async function initAnubis(rawOptions = {}) {
   }
 
   ui.updateFromState(state);
-  ui.showBanner(!hasStoredConsent || privacySignalApplied);
+  ui.showBanner(initial.showBanner);
   if (ui && typeof ui.setPrivacySignalHonored === 'function') {
     ui.setPrivacySignalHonored(privacySignalApplied);
   }
+  refreshStatus();
 
   stopPrivacySignalWatch = startPrivacySignalWatch();
 
-  emitConsentEvent('consent:ready', {
-    hasStoredConsent: Boolean(hasStoredConsent),
-    doNotTrackApplied: Boolean(privacySignalApplied),
-    privacySignalApplied,
-    privacySignalType,
-    ...buildConsentEventDetail(options, state),
-  });
-
-  return {
+  const api = {
     getState: () => ({ ...state }),
     getOptions: () => options,
+    getOptOutStatus,
     open: () => ui.openDialog(),
     refreshStyles: () => {
       if (ui && typeof ui.refreshStyles === 'function') {
@@ -493,9 +522,26 @@ export async function initAnubis(rawOptions = {}) {
       stopPrivacySignalWatch();
       unbindTriggers();
       scriptGate.disconnect();
+      statusTargets.disconnect();
       if (ui && typeof ui.destroy === 'function') {
         ui.destroy();
       }
     },
   };
+
+  // Expose the API before `consent:ready` so listeners can call it.
+  if (typeof hooks.onApi === 'function') {
+    hooks.onApi(api);
+  }
+
+  emitConsentEvent('consent:ready', {
+    hasStoredConsent: Boolean(hasStoredConsent),
+    doNotTrackApplied: Boolean(privacySignalApplied),
+    privacySignalApplied,
+    privacySignalType,
+    ...buildConsentEventDetail(options, state),
+    optOutStatus: getOptOutStatus(),
+  });
+
+  return api;
 }
