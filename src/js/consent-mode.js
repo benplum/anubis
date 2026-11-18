@@ -236,6 +236,19 @@ function applyMetaPixel(consent) {
   }
 }
 
+// Microsoft Clarity has its own consent API (consentv2). Its snippet keeps an existing
+// `window.clarity` queue and replays it on load, so a matching stub lets the call land
+// before Clarity does, with no trap needed.
+function applyMicrosoftClarity(consent) {
+  window.clarity = window.clarity || function clarity() {
+    (window.clarity.q = window.clarity.q || []).push(arguments);
+  };
+  window.clarity('consentv2', {
+    ad_Storage: consent.ad_storage === 'granted' ? 'granted' : 'denied',
+    analytics_Storage: consent.analytics_storage === 'granted' ? 'granted' : 'denied',
+  });
+}
+
 function applyIntegrations(command, consent, options) {
   const integrations = options && options.integrations ? options.integrations : {};
   if (integrations.microsoftUet === true) {
@@ -243,6 +256,9 @@ function applyIntegrations(command, consent, options) {
   }
   if (integrations.metaPixel === true) {
     applyMetaPixel(consent);
+  }
+  if (integrations.microsoftClarity === true) {
+    applyMicrosoftClarity(consent);
   }
 }
 

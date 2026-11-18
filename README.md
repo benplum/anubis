@@ -137,7 +137,7 @@ Common options:
 - Categories/mapping: `categories`, `consentMapping`
 - UI/i18n: `links`, `actions`, `equalButtons`, `localeActive`, `localeFallback`, `i18n.locales`
 - Google/GTM: `dataLayerName`, `adsDataRedaction`, `urlPassthrough`, `completeConsentKeys`
-- Vendor integrations: `integrations.microsoftUet`, `integrations.metaPixel`
+- Vendor integrations: `integrations.microsoftUet`, `integrations.metaPixel`, `integrations.microsoftClarity`
 - Region: `region`, `regionResolver`, `regionTimeout`, `regionCache`, `regionKey`, `regionDuration`, `regionOverrides`
 
 `defaultMode` baseline behavior: `opt-out` starts consent keys as `granted`, while `opt-in` starts as `denied` (required categories are still forced to granted).
@@ -158,7 +158,7 @@ The region lookup starts once `<body>` exists, so the update arrives roughly `ti
 
 The region is cached for `regionDuration` days (`regionCache: true`). With `regionCache: false`, every page load goes through this pending path.
 
-Settings that apply to the default (`adsDataRedaction`, `urlPassthrough`, `integrations.microsoftUet`) may be set inside `regionOverrides`; when only the resolved region enables them they are sent just before the region update.
+Settings that apply to the default (`adsDataRedaction`, `urlPassthrough`, `integrations.microsoftUet`) may be set inside `regionOverrides`; when only the resolved region enables them they are sent just before the region update. `integrations.microsoftClarity` may also be set there; it is first sent with the region update.
 
 `stylesTimeout` controls the maximum wait (in milliseconds) for a linked theme stylesheet before allowing banner display. Default is `5000`; after that the banner is shown even if the stylesheet has not loaded, so a stalled request can never hide it. `0` waits indefinitely.
 
@@ -371,16 +371,18 @@ window.ConsentOptions = {
 ```js
 window.ConsentOptions = {
   integrations: {
-    microsoftUet: true, // Microsoft Advertising UET Consent Mode
-    metaPixel: true,    // Meta Pixel fbq('consent', 'grant' | 'revoke')
+    microsoftUet: true,     // Microsoft Advertising UET Consent Mode
+    metaPixel: true,        // Meta Pixel fbq('consent', 'grant' | 'revoke')
+    microsoftClarity: true, // Microsoft Clarity clarity('consentv2', ...)
   },
 };
 ```
 
-Both follow `ad_storage` (the `marketing` category by default) and are sent alongside every Google default/update, so no site markup changes are needed.
+UET and Meta follow `ad_storage` (the `marketing` category by default); Clarity follows `ad_storage` and `analytics_storage`. All are sent alongside every Google default/update, so no site markup changes are needed.
 
 - **Microsoft UET** receives `uetq.push('consent', 'default' | 'update', { ad_storage })`. UET Consent Mode only supports `ad_storage`. Required by Microsoft Advertising for EEA/UK/CH traffic.
 - **Meta Pixel** receives `fbq('consent', ...)`. Meta needs it before `fbq('init')`. When the pixel loads after Anubis (including via GTM), Anubis detects the pixel snippet's `window.fbq` assignment and queues the consent call ahead of `init`. If the pixel is placed before Anubis, the consent call still arrives but after `init`, so load Anubis first. GTM's Meta Pixel community template has not been verified with this; test it in GTM Preview (confirm `fbq` exists and the `consent` call precedes `init`) before enabling `metaPixel` on a site that uses it.
+- **Microsoft Clarity** receives `clarity('consentv2', { ad_Storage, analytics_Storage })` (note Clarity's capital `S`), mapped from `ad_storage` and `analytics_storage`. A key with no category is sent as `denied`. If `window.clarity` does not exist yet, Anubis creates the same queue stub as Clarity's snippet, which Clarity keeps and replays when it loads, so Clarity may load before or after Anubis (directly or via GTM).
 
 ### Equal button prominence
 
@@ -473,6 +475,10 @@ Demo pages (`index`, `preview`, `configurator`) use Bulma CSS from CDN for basel
 - Third-party and HttpOnly cookies cannot be reliably cleared by client JS.
 
 ## Changelog
+
+### v1.4.0
+
+- New opt-in vendor integration: Microsoft Clarity consent (`integrations.microsoftClarity`), sent as `clarity('consentv2', ...)` from `ad_storage` and `analytics_storage`.
 
 ### v1.3.0
 

@@ -13,7 +13,8 @@
   "equalButtons": false,
   "integrations": {
     "microsoftUet": false,
-    "metaPixel": false
+    "metaPixel": false,
+    "microsoftClarity": false
   },
   "defaultMode": "opt-out",
   "respectPrivacySignal": true,

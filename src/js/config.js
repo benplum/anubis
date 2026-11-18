@@ -78,6 +78,7 @@ export const DEFAULT_OPTIONS = {
   integrations: {
     microsoftUet: false,
     metaPixel: false,
+    microsoftClarity: false,
   },
   //
   defaultMode: 'opt-in',
