@@ -14,7 +14,8 @@
   "integrations": {
     "microsoftUet": false,
     "metaPixel": false,
-    "microsoftClarity": false
+    "microsoftClarity": false,
+    "talkFurther": false
   },
   "defaultMode": "opt-out",
   "respectPrivacySignal": true,

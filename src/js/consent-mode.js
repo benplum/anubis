@@ -249,6 +249,65 @@ function applyMicrosoftClarity(consent) {
   });
 }
 
+let furtherConsent = null;
+let furtherPending = false;
+
+function sendFurtherConsent(manager) {
+  try {
+    manager.setConsent({ ...furtherConsent });
+  } catch (error) {
+    if (typeof console !== 'undefined' && console.error) {
+      console.error('[Anubis] TalkFurther setConsent failed', error);
+    }
+  }
+}
+
+// TalkFurther only creates `window.FurtherSiteManager` at DOMContentLoaded (or when its
+// async script runs, if later), so calling it earlier throws. Trap that assignment and
+// report the latest choice to the new instance, which holds it until Further initializes.
+function installFurtherTrap() {
+  const descriptor = Object.getOwnPropertyDescriptor(window, 'FurtherSiteManager');
+  if (descriptor && !descriptor.configurable) {
+    return;
+  }
+
+  Object.defineProperty(window, 'FurtherSiteManager', {
+    configurable: true,
+    enumerable: true,
+    get() {
+      return undefined;
+    },
+    set(manager) {
+      Object.defineProperty(window, 'FurtherSiteManager', {
+        configurable: true, enumerable: true, writable: true, value: manager,
+      });
+      if (furtherPending && manager && typeof manager.setConsent === 'function') {
+        furtherPending = false;
+        sendFurtherConsent(manager);
+      }
+    },
+  });
+}
+
+// TalkFurther's Consent-Required Mode withholds every category until it is told
+// otherwise, and only a literal `true` grants one, so all three are always sent.
+function applyTalkFurther(consent) {
+  furtherConsent = {
+    functional: consent.functionality_storage === 'granted',
+    analytics: consent.analytics_storage === 'granted',
+    advertising: consent.ad_storage === 'granted',
+  };
+  const manager = window.FurtherSiteManager;
+  if (manager && typeof manager.setConsent === 'function') {
+    sendFurtherConsent(manager);
+    return;
+  }
+  if (!furtherPending) {
+    furtherPending = true;
+    installFurtherTrap();
+  }
+}
+
 function applyIntegrations(command, consent, options) {
   const integrations = options && options.integrations ? options.integrations : {};
   if (integrations.microsoftUet === true) {
@@ -259,6 +318,9 @@ function applyIntegrations(command, consent, options) {
   }
   if (integrations.microsoftClarity === true) {
     applyMicrosoftClarity(consent);
+  }
+  if (integrations.talkFurther === true) {
+    applyTalkFurther(consent);
   }
 }
 

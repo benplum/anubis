@@ -79,6 +79,7 @@ export const DEFAULT_OPTIONS = {
     microsoftUet: false,
     metaPixel: false,
     microsoftClarity: false,
+    talkFurther: false,
   },
   //
   defaultMode: 'opt-in',
